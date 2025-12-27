@@ -307,39 +307,176 @@ for use with tonic services.
 
 ---
 
-## Key Transitive Dependencies
+## Sub-Dependencies (2-3 levels deep)
 
-These are notable dependencies pulled in by our direct dependencies:
+### clap Sub-Dependencies
+```
+clap
+├── clap_builder          # Core argument parsing logic
+│   ├── anstyle          # ANSI styling for help text
+│   └── strsim           # String similarity for suggestions
+└── clap_derive          # Derive macro implementation
+    ├── proc-macro2      # Procedural macro utilities
+    ├── quote            # Rust code generation
+    └── syn              # Rust syntax parsing
+```
 
-#### hyper
-Pulled by: tonic | [crates.io](https://crates.io/crates/hyper)
+### serde Sub-Dependencies
+```
+serde
+└── serde_derive         # Derive macro for Serialize/Deserialize
 
-Fast HTTP implementation for Rust. Powers tonic's HTTP/2 transport layer.
+serde_json
+├── itoa                 # Fast integer-to-string conversion
+├── memchr               # Optimized byte search
+└── serde_core           # Core serde traits
+```
 
-#### tower
-Pulled by: tonic | [crates.io](https://crates.io/crates/tower)
+### chrono Sub-Dependencies
+```
+chrono
+├── iana-time-zone       # IANA timezone database access
+│   └── core-foundation-sys  # macOS system bindings
+├── num-traits           # Numeric traits (Zero, One, etc.)
+└── serde                # Optional serialization
+```
 
-Modular service framework. Provides middleware, retry logic, and load balancing.
+### toml Sub-Dependencies
+```
+toml
+├── serde                # Serialization framework
+├── serde_spanned        # Span tracking for error messages
+├── toml_datetime        # DateTime parsing
+└── toml_edit            # TOML document editing
+    └── winnow           # Parser combinator library
+```
 
-#### digest
-Pulled by: sha2, md-5 | [crates.io](https://crates.io/crates/digest)
+### sha2/md-5 Sub-Dependencies
+```
+sha2 / md-5
+├── cfg-if               # Conditional compilation helper
+├── cpufeatures          # CPU feature detection (SHA extensions)
+└── digest               # Cryptographic hash traits
+    ├── block-buffer     # Block processing utilities
+    ├── crypto-common    # Common crypto types
+    └── generic-array    # Fixed-size arrays
+```
 
-Cryptographic hash function traits. Common interface used by RustCrypto hashes.
+### rand Sub-Dependencies
+```
+rand
+├── rand_chacha          # ChaCha20 RNG implementation
+│   └── ppv-lite86       # SIMD-friendly ChaCha implementation
+└── rand_core            # Core RNG traits
+    └── getrandom        # OS-level random bytes
+        └── libc         # C library bindings (Unix)
+```
 
-#### getrandom
-Pulled by: rand, uuid | [crates.io](https://crates.io/crates/getrandom)
+### tokio Sub-Dependencies
+```
+tokio
+├── bytes                # Byte buffer utilities
+├── libc                 # Unix C library bindings
+├── mio                  # Low-level I/O primitives
+│   └── libc             # System calls
+├── pin-project-lite     # Lightweight pin projection
+├── socket2              # Socket configuration
+└── tokio-macros         # Async macros (#[tokio::main])
+```
 
-Cross-platform random number generation. Provides OS-level randomness.
+### tonic Sub-Dependencies
+```
+tonic
+├── axum                 # HTTP framework for routing
+│   ├── axum-core        # Core request/response types
+│   ├── matchit          # URL path matching
+│   └── tower-service    # Service trait
+├── h2                   # HTTP/2 implementation
+│   ├── fnv              # Fast hash function
+│   ├── futures-core     # Async stream traits
+│   └── indexmap         # Ordered hash map
+├── http                 # HTTP types (Request, Response)
+├── http-body            # HTTP body traits
+├── hyper                # HTTP implementation
+│   ├── httparse         # HTTP parsing
+│   └── want             # Readiness signaling
+├── hyper-util           # Hyper utilities
+├── tower                # Middleware framework
+│   ├── tower-layer      # Layer composition
+│   └── tower-service    # Service trait
+└── tracing              # Structured logging
+    └── tracing-core     # Core tracing types
+```
 
-#### console
-Pulled by: dialoguer, indicatif | [crates.io](https://crates.io/crates/console)
+### comfy-table Sub-Dependencies
+```
+comfy-table
+├── crossterm            # Cross-platform terminal manipulation
+│   ├── bitflags         # Bit flag enums
+│   ├── libc             # Unix bindings
+│   ├── mio              # I/O primitives
+│   └── parking_lot      # Fast mutex
+├── unicode-segmentation # Unicode grapheme clusters
+└── unicode-width        # Character display width
+```
 
-Terminal styling and interaction utilities. Handles terminal capabilities.
+### dialoguer Sub-Dependencies
+```
+dialoguer
+├── console              # Terminal capabilities
+│   ├── libc             # Unix bindings
+│   ├── terminal_size    # Terminal dimensions
+│   └── unicode-width    # Character width
+├── shell-words          # Shell word splitting
+├── tempfile             # Temporary file creation
+├── thiserror            # Error derive
+└── zeroize              # Secure memory zeroing
+```
 
-#### unicode-width
-Pulled by: comfy-table | [crates.io](https://crates.io/crates/unicode-width)
+### url Sub-Dependencies
+```
+url
+├── form_urlencoded      # URL encoding utilities
+├── idna                 # Internationalized domains
+│   ├── icu_normalizer   # Unicode normalization
+│   └── unicode-bidi     # Bidirectional text
+└── percent-encoding     # Percent encoding/decoding
+```
 
-Unicode character width calculation. Essential for proper table formatting.
+### prost Sub-Dependencies
+```
+prost
+├── bytes                # Byte buffers
+└── prost-derive         # Derive macros
+    ├── proc-macro2      # Macro utilities
+    ├── quote            # Code generation
+    └── syn              # Syntax parsing
+```
+
+---
+
+## Key Transitive Dependencies Summary
+
+| Dependency | Pulled By | Purpose |
+|------------|-----------|---------|
+| **hyper** | tonic | HTTP/1.1 and HTTP/2 implementation |
+| **tower** | tonic, axum | Service middleware framework |
+| **h2** | tonic | Pure Rust HTTP/2 |
+| **axum** | tonic | Web application framework |
+| **digest** | sha2, md-5 | Hash function traits |
+| **getrandom** | rand, uuid | OS random bytes |
+| **console** | dialoguer | Terminal capabilities |
+| **crossterm** | comfy-table | Cross-platform terminal |
+| **libc** | tokio, mio, console | C library bindings |
+| **proc-macro2** | clap, serde, prost | Proc macro support |
+| **syn** | clap, serde, prost | Rust syntax parsing |
+| **quote** | clap, serde, prost | Code generation |
+| **bytes** | tokio, prost, tonic | Byte buffer utilities |
+| **futures-core** | tokio-stream, h2 | Async stream traits |
+| **pin-project-lite** | tokio, tokio-stream | Pin projection |
+| **unicode-width** | comfy-table, console | Character width |
+| **tracing** | tonic | Structured logging |
+| **indexmap** | h2, toml_edit | Ordered hash maps |
 
 ---
 
