@@ -4,8 +4,8 @@ use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 
 use super::commands::{
-    CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, HashArgs, JsonArgs,
-    NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs,
+    CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs,
+    JsonArgs, NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -104,6 +104,10 @@ pub enum Commands {
 
     /// Fun terminal effects (progress bars, spinners, hacker mode)
     Fun(FunArgs),
+
+    /// Search for patterns in files (like grep)
+    #[command(visible_alias = "g")]
+    Grep(GrepArgs),
 
     /// Generate shell completions
     Completions {

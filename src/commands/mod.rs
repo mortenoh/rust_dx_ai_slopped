@@ -7,6 +7,7 @@ pub mod encode;
 pub mod env;
 pub mod expr;
 pub mod fun;
+pub mod grep;
 pub mod hash;
 pub mod json;
 pub mod net;

@@ -45,6 +45,8 @@ chrono = { version = "0.4", features = ["serde"] }
 directories = "6"
 thiserror = "2"
 anyhow = "1"
+regex = "1"
+walkdir = "2"
 
 # Terminal UI
 colored = "3"

@@ -140,6 +140,9 @@ fn main() -> Result<()> {
         // Fun command: fun terminal effects
         Commands::Fun(args) => commands::fun::run(args),
 
+        // Grep command: search for patterns in files
+        Commands::Grep(args) => commands::grep::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);
