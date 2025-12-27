@@ -5,7 +5,7 @@ use clap_complete::Shell;
 
 use super::commands::{
     CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs,
-    HttpArgs, JsonArgs, NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs,
+    HttpArgs, JsonArgs, NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs, WatchArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -111,6 +111,10 @@ pub enum Commands {
 
     /// Make HTTP requests
     Http(HttpArgs),
+
+    /// Watch files for changes and run commands
+    #[command(visible_alias = "w")]
+    Watch(WatchArgs),
 
     /// Generate shell completions
     Completions {

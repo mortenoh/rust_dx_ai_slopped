@@ -16,3 +16,4 @@ pub mod rand;
 pub mod text;
 pub mod time;
 pub mod uuid;
+pub mod watch;

@@ -48,6 +48,8 @@ anyhow = "1"
 regex = "1"
 walkdir = "2"
 ureq = "3"
+notify = "7"
+notify-debouncer-mini = "0.5"
 
 # Terminal UI
 colored = "3"

@@ -16,6 +16,7 @@ pub mod rand;
 pub mod text;
 pub mod time;
 pub mod uuid;
+pub mod watch;
 
 pub use calc::{CalcArgs, CalcCommand};
 pub use chat::{ChatArgs, ChatCommand};
@@ -33,3 +34,4 @@ pub use rand::{RandArgs, RandCommand};
 pub use text::{TextArgs, TextCommand};
 pub use time::{TimeArgs, TimeCommand, TimeFormat};
 pub use uuid::{UuidArgs, UuidFormat, UuidVersion};
+pub use watch::WatchArgs;

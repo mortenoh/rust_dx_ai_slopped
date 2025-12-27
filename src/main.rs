@@ -146,6 +146,9 @@ fn main() -> Result<()> {
         // Http command: make HTTP requests
         Commands::Http(args) => commands::http::run(args),
 
+        // Watch command: watch files and run commands
+        Commands::Watch(args) => commands::watch::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);
