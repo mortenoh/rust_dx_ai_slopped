@@ -11,11 +11,19 @@ pub struct ExprArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum ExprCommand {
-    /// Evaluate a math expression
+    /// Evaluate a math expression (reads from stdin if no expression given)
     #[command(visible_alias = "e")]
     Eval {
         /// Math expression (e.g., "2+2", "sqrt(16)", "2^10", "sin(pi/2)")
-        expression: String,
+        /// If omitted, reads multi-line input from stdin (end with Ctrl+D)
+        expression: Option<String>,
+    },
+
+    /// Run a program from file (supports variables and multi-line)
+    #[command(visible_alias = "r")]
+    Run {
+        /// File path (use "-" for stdin)
+        file: String,
     },
 
     /// Parse expression and show AST as JSON

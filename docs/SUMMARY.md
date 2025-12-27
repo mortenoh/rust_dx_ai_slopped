@@ -51,6 +51,7 @@
 - [rand - Random Generation](./part-3-dx-command-reference/rand.md)
 - [text - Text Transforms](./part-3-dx-command-reference/text.md)
 - [calc - Calculator](./part-3-dx-command-reference/calc.md)
+- [expr - Expression Evaluator](./part-3-dx-command-reference/expr.md)
 - [net - Network Utilities](./part-3-dx-command-reference/net.md)
 - [chat - gRPC Chat](./part-3-dx-command-reference/chat.md)
 

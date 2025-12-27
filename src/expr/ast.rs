@@ -4,6 +4,7 @@
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Binary operators
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -57,6 +58,9 @@ pub enum Expr {
     /// A named constant (pi, e, tau)
     Constant { name: String },
 
+    /// A variable reference
+    Variable { name: String },
+
     /// A binary operation: left op right
     BinOp {
         op: BinOp,
@@ -71,6 +75,50 @@ pub enum Expr {
     FuncCall { name: String, arg: Box<Expr> },
 }
 
+/// A statement in a program
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum Statement {
+    /// Variable assignment: name = expr
+    Assignment { name: String, value: Expr },
+    /// An expression (last one's value is the program result)
+    Expression(Expr),
+}
+
+/// A program is a sequence of statements
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Program {
+    pub statements: Vec<Statement>,
+}
+
+/// Evaluation context holding variable bindings
+#[derive(Debug, Clone, Default)]
+pub struct Context {
+    variables: HashMap<String, f64>,
+}
+
+impl Context {
+    /// Create a new empty context
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Create a context with predefined variables
+    pub fn with_vars(vars: HashMap<String, f64>) -> Self {
+        Self { variables: vars }
+    }
+
+    /// Set a variable value
+    pub fn set(&mut self, name: &str, value: f64) {
+        self.variables.insert(name.to_string(), value);
+    }
+
+    /// Get a variable value
+    pub fn get(&self, name: &str) -> Option<f64> {
+        self.variables.get(name).copied()
+    }
+}
+
 impl Expr {
     /// Create a number expression
     pub fn number(value: f64) -> Self {
@@ -80,6 +128,11 @@ impl Expr {
     /// Create a constant expression
     pub fn constant(name: impl Into<String>) -> Self {
         Expr::Constant { name: name.into() }
+    }
+
+    /// Create a variable expression
+    pub fn variable(name: impl Into<String>) -> Self {
+        Expr::Variable { name: name.into() }
     }
 
     /// Create a binary operation expression
@@ -107,8 +160,13 @@ impl Expr {
         }
     }
 
-    /// Evaluate the expression and return the result
+    /// Evaluate the expression and return the result (no variables)
     pub fn eval(&self) -> Result<f64> {
+        self.eval_with_context(&Context::new())
+    }
+
+    /// Evaluate the expression with a variable context
+    pub fn eval_with_context(&self, ctx: &Context) -> Result<f64> {
         match self {
             Expr::Number { value } => Ok(*value),
 
@@ -119,9 +177,13 @@ impl Expr {
                 _ => bail!("Unknown constant: {}", name),
             },
 
+            Expr::Variable { name } => ctx
+                .get(name)
+                .ok_or_else(|| anyhow::anyhow!("Undefined variable: {}", name)),
+
             Expr::BinOp { op, left, right } => {
-                let l = left.eval()?;
-                let r = right.eval()?;
+                let l = left.eval_with_context(ctx)?;
+                let r = right.eval_with_context(ctx)?;
 
                 match op {
                     BinOp::Add => Ok(l + r),
@@ -144,14 +206,14 @@ impl Expr {
             }
 
             Expr::UnaryOp { op, expr } => {
-                let val = expr.eval()?;
+                let val = expr.eval_with_context(ctx)?;
                 match op {
                     UnaryOp::Neg => Ok(-val),
                 }
             }
 
             Expr::FuncCall { name, arg } => {
-                let val = arg.eval()?;
+                let val = arg.eval_with_context(ctx)?;
                 match name.as_str() {
                     "sin" => Ok(val.sin()),
                     "cos" => Ok(val.cos()),
@@ -193,11 +255,85 @@ impl Expr {
                         }
                         Ok(val.log10())
                     }
+                    "print" => {
+                        println!("{}", val);
+                        Ok(val)
+                    }
                     _ => bail!("Unknown function: {}", name),
                 }
             }
         }
     }
+}
+
+impl Statement {
+    /// Evaluate the statement, potentially modifying context
+    /// Returns the value of the expression (for assignments, the assigned value)
+    pub fn eval(&self, ctx: &mut Context) -> Result<f64> {
+        match self {
+            Statement::Assignment { name, value } => {
+                // Check for reserved names
+                if matches!(name.as_str(), "pi" | "e" | "tau") {
+                    bail!("Cannot assign to constant: {}", name);
+                }
+                if is_function_name(name) {
+                    bail!("Cannot assign to function name: {}", name);
+                }
+                let result = value.eval_with_context(ctx)?;
+                ctx.set(name, result);
+                Ok(result)
+            }
+            Statement::Expression(expr) => expr.eval_with_context(ctx),
+        }
+    }
+}
+
+impl Program {
+    /// Evaluate all statements and return the last expression's value
+    pub fn eval(&self) -> Result<f64> {
+        self.eval_with_context(&mut Context::new())
+    }
+
+    /// Evaluate all statements with a given context
+    pub fn eval_with_context(&self, ctx: &mut Context) -> Result<f64> {
+        if self.statements.is_empty() {
+            bail!("Empty program");
+        }
+
+        let mut result = 0.0;
+        for stmt in &self.statements {
+            result = stmt.eval(ctx)?;
+        }
+        Ok(result)
+    }
+}
+
+/// Check if a name is a built-in function
+fn is_function_name(name: &str) -> bool {
+    matches!(
+        name,
+        "sin"
+            | "cos"
+            | "tan"
+            | "asin"
+            | "acos"
+            | "atan"
+            | "sinh"
+            | "cosh"
+            | "tanh"
+            | "sqrt"
+            | "cbrt"
+            | "abs"
+            | "floor"
+            | "ceil"
+            | "round"
+            | "trunc"
+            | "exp"
+            | "ln"
+            | "log2"
+            | "log10"
+            | "print"
+    )
 }
 
 #[cfg(test)]

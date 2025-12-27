@@ -28,7 +28,7 @@
 
 use anyhow::{Context, Result, bail};
 
-use super::ast::{BinOp, Expr, UnaryOp};
+use super::ast::{BinOp, Expr, Program, Statement, UnaryOp};
 
 /// Expression parser using recursive descent.
 ///
@@ -46,9 +46,9 @@ impl<'a> Parser<'a> {
 
     /// Parse the entire expression and return the AST.
     pub fn parse(&mut self) -> Result<Expr> {
-        self.skip_whitespace();
+        self.skip_all_whitespace();
         let result = self.expr()?;
-        self.skip_whitespace();
+        self.skip_all_whitespace();
         if self.pos < self.input.len() {
             bail!(
                 "Unexpected character at position {}: '{}'",
@@ -57,6 +57,120 @@ impl<'a> Parser<'a> {
             );
         }
         Ok(result)
+    }
+
+    /// Parse a multi-line program (statements separated by newlines or semicolons)
+    pub fn parse_program(&mut self) -> Result<Program> {
+        let mut statements = Vec::new();
+
+        loop {
+            self.skip_whitespace_not_newline();
+            self.skip_empty_lines();
+
+            if self.pos >= self.input.len() {
+                break;
+            }
+
+            let stmt = self.statement()?;
+            statements.push(stmt);
+
+            self.skip_whitespace_not_newline();
+
+            // Expect newline, semicolon, or EOF
+            match self.current_char() {
+                None => break,
+                Some('\n') | Some('\r') => {
+                    self.skip_newlines();
+                }
+                Some(';') => {
+                    self.advance();
+                }
+                Some(c) => {
+                    bail!(
+                        "Expected newline or semicolon, got '{}' at position {}",
+                        c,
+                        self.pos
+                    );
+                }
+            }
+        }
+
+        Ok(Program { statements })
+    }
+
+    /// Parse a single statement (assignment or expression)
+    fn statement(&mut self) -> Result<Statement> {
+        self.skip_whitespace_not_newline();
+
+        // Look ahead: if we have identifier followed by '=', it's an assignment
+        let start_pos = self.pos;
+
+        if let Some(c) = self.current_char()
+            && c.is_ascii_alphabetic()
+        {
+            let name = self.identifier();
+            self.skip_whitespace_not_newline();
+
+            if self.current_char() == Some('=') {
+                // Check it's not '==' (comparison - not supported yet, but guard against it)
+                let _eq_pos = self.pos;
+                self.advance();
+                if self.current_char() == Some('=') {
+                    // It's '==', rewind and parse as expression
+                    self.pos = start_pos;
+                } else {
+                    // It's assignment
+                    let value = self.expr()?;
+                    return Ok(Statement::Assignment { name, value });
+                }
+            } else {
+                // Not assignment, rewind and parse as expression
+                self.pos = start_pos;
+            }
+        }
+
+        // Parse as expression
+        let expr = self.expr()?;
+        Ok(Statement::Expression(expr))
+    }
+
+    /// Skip whitespace except newlines
+    fn skip_whitespace_not_newline(&mut self) {
+        while let Some(c) = self.current_char() {
+            if c.is_whitespace() && c != '\n' && c != '\r' {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+    }
+
+    /// Skip newline characters
+    fn skip_newlines(&mut self) {
+        while let Some(c) = self.current_char() {
+            if c == '\n' || c == '\r' {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+    }
+
+    /// Skip empty lines (whitespace-only lines)
+    fn skip_empty_lines(&mut self) {
+        loop {
+            let start = self.pos;
+            self.skip_whitespace_not_newline();
+            match self.current_char() {
+                Some('\n') | Some('\r') => {
+                    self.skip_newlines();
+                }
+                _ => {
+                    self.pos = start;
+                    break;
+                }
+            }
+        }
     }
 
     /// Get current character without advancing.
@@ -71,8 +185,19 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Skip whitespace characters.
+    /// Skip whitespace characters (not including newlines for statement separation).
     fn skip_whitespace(&mut self) {
+        while let Some(c) = self.current_char() {
+            if c.is_whitespace() && c != '\n' && c != '\r' {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+    }
+
+    /// Skip all whitespace including newlines
+    fn skip_all_whitespace(&mut self) {
         while let Some(c) = self.current_char() {
             if c.is_whitespace() {
                 self.advance();
@@ -135,7 +260,7 @@ impl<'a> Parser<'a> {
         Ok(left)
     }
 
-    /// Parse: power = unary ('^' power)?  (right-associative)
+    /// Parse: power = unary (('^' | '**') power)?  (right-associative)
     fn power(&mut self) -> Result<Expr> {
         let base = self.unary()?;
 
@@ -144,6 +269,19 @@ impl<'a> Parser<'a> {
             self.advance();
             let exp = self.power()?; // Right-associative: recurse into power
             Ok(Expr::binop(BinOp::Pow, base, exp))
+        } else if self.current_char() == Some('*') {
+            // Check for **
+            let start = self.pos;
+            self.advance();
+            if self.current_char() == Some('*') {
+                self.advance();
+                let exp = self.power()?;
+                Ok(Expr::binop(BinOp::Pow, base, exp))
+            } else {
+                // Just a single *, rewind and let term() handle it
+                self.pos = start;
+                Ok(base)
+            }
         } else {
             Ok(base)
         }
@@ -161,7 +299,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Parse: call = identifier '(' expr ')' | primary
+    /// Parse: call = identifier '(' expr ')' | constant | variable | primary
     fn call(&mut self) -> Result<Expr> {
         self.skip_whitespace();
 
@@ -185,9 +323,12 @@ impl<'a> Parser<'a> {
                 }
                 self.advance();
                 return Ok(Expr::func_call(name, arg));
-            } else {
-                // Constant
+            } else if matches!(name.as_str(), "pi" | "e" | "tau") {
+                // Built-in constant
                 return Ok(Expr::constant(name));
+            } else {
+                // Variable reference
+                return Ok(Expr::variable(name));
             }
         }
 
@@ -367,6 +508,15 @@ mod tests {
     }
 
     #[test]
+    fn test_power_double_star() {
+        // ** is an alternative syntax for power (like Python)
+        assert_eq!(parse("2 ** 3").unwrap(), 8.0);
+        assert_eq!(parse("2 ** 10").unwrap(), 1024.0);
+        assert_eq!(parse("2 ** 3 ** 2").unwrap(), 512.0); // right-associative
+        assert_eq!(parse("2 * 3 ** 2").unwrap(), 18.0); // precedence
+    }
+
+    #[test]
     fn test_power_right_associative() {
         // 2^3^2 should be 2^(3^2) = 2^9 = 512, not (2^3)^2 = 8^2 = 64
         assert_eq!(parse("2 ^ 3 ^ 2").unwrap(), 512.0);
@@ -455,7 +605,96 @@ mod tests {
     }
 
     #[test]
-    fn test_unknown_constant() {
-        assert!(parse("xyz").is_err());
+    fn test_variable_reference() {
+        // Variables should parse but fail at eval time if undefined
+        let ast = Parser::new("xyz").parse().unwrap();
+        assert!(matches!(ast, Expr::Variable { ref name } if name == "xyz"));
+        // Undefined variable should fail at eval
+        assert!(ast.eval().is_err());
+    }
+
+    #[test]
+    fn test_program_single_statement() {
+        let prog = Parser::new("42").parse_program().unwrap();
+        assert_eq!(prog.statements.len(), 1);
+        assert_eq!(prog.eval().unwrap(), 42.0);
+    }
+
+    #[test]
+    fn test_program_multiple_statements_semicolon() {
+        let prog = Parser::new("x = 5; y = 10; x + y").parse_program().unwrap();
+        assert_eq!(prog.statements.len(), 3);
+        assert_eq!(prog.eval().unwrap(), 15.0);
+    }
+
+    #[test]
+    fn test_program_multiple_statements_newline() {
+        let prog = Parser::new("x = 5\ny = 10\nx + y").parse_program().unwrap();
+        assert_eq!(prog.statements.len(), 3);
+        assert_eq!(prog.eval().unwrap(), 15.0);
+    }
+
+    #[test]
+    fn test_program_variable_assignment() {
+        let prog = Parser::new("x = 2 + 3").parse_program().unwrap();
+        assert_eq!(prog.eval().unwrap(), 5.0);
+    }
+
+    #[test]
+    fn test_program_variable_reference() {
+        let prog = Parser::new("x = 5; x * 2").parse_program().unwrap();
+        assert_eq!(prog.eval().unwrap(), 10.0);
+    }
+
+    #[test]
+    fn test_program_variable_shadowing() {
+        let prog = Parser::new("x = 5; x = 10; x").parse_program().unwrap();
+        assert_eq!(prog.eval().unwrap(), 10.0);
+    }
+
+    #[test]
+    fn test_program_with_functions_and_variables() {
+        let prog = Parser::new("r = 5; pi * r ^ 2").parse_program().unwrap();
+        let result = prog.eval().unwrap();
+        assert!((result - 78.53981633974483).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_program_multiline_with_indentation() {
+        let prog = Parser::new(
+            r#"
+            x = 5
+            y = x + 3
+            y * 2
+        "#,
+        )
+        .parse_program()
+        .unwrap();
+        assert_eq!(prog.eval().unwrap(), 16.0);
+    }
+
+    #[test]
+    fn test_program_cannot_assign_to_constant() {
+        let prog = Parser::new("pi = 5").parse_program().unwrap();
+        assert!(prog.eval().is_err());
+    }
+
+    #[test]
+    fn test_program_cannot_assign_to_function() {
+        let prog = Parser::new("sin = 5").parse_program().unwrap();
+        assert!(prog.eval().is_err());
+    }
+
+    #[test]
+    fn test_program_undefined_variable() {
+        let prog = Parser::new("x + 5").parse_program().unwrap();
+        assert!(prog.eval().is_err());
+    }
+
+    #[test]
+    fn test_program_print_function() {
+        // print should return its argument
+        let prog = Parser::new("x = print(42); x + 1").parse_program().unwrap();
+        assert_eq!(prog.eval().unwrap(), 43.0);
     }
 }
