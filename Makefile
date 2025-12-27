@@ -1,7 +1,10 @@
-.PHONY: help build build-all release release-all test bench lint fmt clean doc doc-pdf serve install all dist dist-compressed
+.PHONY: help build build-all release release-all test bench lint fmt clean doc doc-pdf serve install all dist dist-compressed install-mdbook
 
 # Binary name
 BINARY := dx
+
+# Tool versions (keep in sync with CI)
+MDBOOK_VERSION := 0.5.2
 
 # Output directory for collected binaries
 DIST_DIR := dist
@@ -39,6 +42,7 @@ help:
 	@echo "  serve       - Serve mdbook locally"
 	@echo "  clean       - Clean build artifacts"
 	@echo "  install     - Install binary"
+	@echo "  install-mdbook - Install mdbook (v$(MDBOOK_VERSION), same as CI)"
 	@echo "  examples    - Run all examples"
 	@echo "  all         - Run lint, test, build"
 	@echo "  ci          - Run CI checks"
@@ -200,6 +204,20 @@ clean:
 # Install
 install:
 	cargo install --path .
+
+# Install mdbook (same version as CI)
+install-mdbook:
+	@echo "Installing mdbook v$(MDBOOK_VERSION)..."
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		if [ "$$(uname -m)" = "arm64" ]; then \
+			curl -sSL https://github.com/rust-lang/mdBook/releases/download/v$(MDBOOK_VERSION)/mdbook-v$(MDBOOK_VERSION)-aarch64-apple-darwin.tar.gz | tar -xz -C /usr/local/bin; \
+		else \
+			curl -sSL https://github.com/rust-lang/mdBook/releases/download/v$(MDBOOK_VERSION)/mdbook-v$(MDBOOK_VERSION)-x86_64-apple-darwin.tar.gz | tar -xz -C /usr/local/bin; \
+		fi; \
+	else \
+		curl -sSL https://github.com/rust-lang/mdBook/releases/download/v$(MDBOOK_VERSION)/mdbook-v$(MDBOOK_VERSION)-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /usr/local/bin; \
+	fi
+	@echo "Installed: $$(mdbook --version)"
 
 # Run examples
 examples:
