@@ -138,3 +138,4 @@
 - [Troubleshooting](./appendices/c-troubleshooting.md)
 - [Resources](./appendices/d-resources.md)
 - [Expression Language Guide](./appendices/e-expr-language.md)
+- [dx-progress Library](./appendices/f-dx-progress.md)
