@@ -368,15 +368,13 @@ fn build_cli_command() -> ClapCommand {
             ClapCommand::new("chat")
                 .about("Real-time chat using gRPC")
                 .subcommand(
-                    ClapCommand::new("server")
-                        .about("Start chat server")
-                        .arg(
-                            Arg::new("port")
-                                .short('p')
-                                .long("port")
-                                .help("Port to listen on")
-                                .default_value("50051"),
-                        ),
+                    ClapCommand::new("server").about("Start chat server").arg(
+                        Arg::new("port")
+                            .short('p')
+                            .long("port")
+                            .help("Port to listen on")
+                            .default_value("50051"),
+                    ),
                 )
                 .subcommand(
                     ClapCommand::new("client")

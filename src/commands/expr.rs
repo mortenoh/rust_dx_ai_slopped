@@ -69,9 +69,9 @@ fn cmd_list() -> Result<()> {
     println!();
 
     println!("{}", "CONSTANTS".yellow());
-    println!("  pi   {:<18} {}", "3.14159...", "Circle ratio");
-    println!("  e    {:<18} {}", "2.71828...", "Euler's number");
-    println!("  tau  {:<18} {}", "6.28318...", "2 * pi");
+    println!("  pi   {:<18} Circle ratio", "3.14159...");
+    println!("  e    {:<18} Euler's number", "2.71828...");
+    println!("  tau  {:<18} 2 * pi", "6.28318...");
     println!();
 
     println!("{}", "FUNCTIONS".yellow());

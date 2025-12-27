@@ -166,25 +166,28 @@ impl<'a> Parser<'a> {
         self.skip_whitespace();
 
         // Check if it starts with a letter (identifier)
-        if let Some(c) = self.current_char() {
-            if c.is_ascii_alphabetic() {
-                let name = self.identifier();
+        if let Some(c) = self.current_char()
+            && c.is_ascii_alphabetic()
+        {
+            let name = self.identifier();
 
+            self.skip_whitespace();
+            if self.current_char() == Some('(') {
+                // Function call
+                self.advance();
+                let arg = self.expr()?;
                 self.skip_whitespace();
-                if self.current_char() == Some('(') {
-                    // Function call
-                    self.advance();
-                    let arg = self.expr()?;
-                    self.skip_whitespace();
-                    if self.current_char() != Some(')') {
-                        bail!("Expected ')' after function argument at position {}", self.pos);
-                    }
-                    self.advance();
-                    return Ok(Expr::func_call(name, arg));
-                } else {
-                    // Constant
-                    return Ok(Expr::constant(name));
+                if self.current_char() != Some(')') {
+                    bail!(
+                        "Expected ')' after function argument at position {}",
+                        self.pos
+                    );
                 }
+                self.advance();
+                return Ok(Expr::func_call(name, arg));
+            } else {
+                // Constant
+                return Ok(Expr::constant(name));
             }
         }
 
@@ -335,7 +338,11 @@ mod tests {
 
         // Should be: Add(2, Mul(3, 4))
         match ast {
-            Expr::BinOp { op: BinOp::Add, left, right } => {
+            Expr::BinOp {
+                op: BinOp::Add,
+                left,
+                right,
+            } => {
                 assert!(matches!(*left, Expr::Number { value } if value == 2.0));
                 assert!(matches!(*right, Expr::BinOp { op: BinOp::Mul, .. }));
             }

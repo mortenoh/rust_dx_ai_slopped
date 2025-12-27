@@ -133,11 +133,9 @@ fn main() -> Result<()> {
 
         // Chat command: gRPC-based real-time chat (async)
         // Uses tokio runtime since chat is the only async command
-        Commands::Chat(args) => {
-            tokio::runtime::Runtime::new()
-                .expect("Failed to create tokio runtime")
-                .block_on(commands::chat::run(args))
-        }
+        Commands::Chat(args) => tokio::runtime::Runtime::new()
+            .expect("Failed to create tokio runtime")
+            .block_on(commands::chat::run(args)),
 
         // Completions command: generate shell completions
         Commands::Completions { shell } => {

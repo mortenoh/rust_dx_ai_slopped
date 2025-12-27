@@ -7,8 +7,8 @@ use colored::Colorize;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use tokio::sync::broadcast;
-use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::Stream;
+use tokio_stream::wrappers::BroadcastStream;
 use tonic::{Request, Response, Status};
 
 /// Capacity of the broadcast channel
@@ -30,10 +30,7 @@ impl ChatService {
 #[tonic::async_trait]
 impl Chat for ChatService {
     /// Handle incoming messages from clients
-    async fn send_message(
-        &self,
-        request: Request<ChatMessage>,
-    ) -> Result<Response<Empty>, Status> {
+    async fn send_message(&self, request: Request<ChatMessage>) -> Result<Response<Empty>, Status> {
         let msg = request.into_inner();
 
         // Log the message on server

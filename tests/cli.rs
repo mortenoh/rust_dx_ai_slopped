@@ -43,10 +43,7 @@ fn test_version_flag() {
 #[test]
 fn test_hash_no_args_reads_stdin() {
     // hash without args reads from stdin
-    dx().arg("hash")
-        .write_stdin("")
-        .assert()
-        .success();
+    dx().arg("hash").write_stdin("").assert().success();
 }
 
 #[test]
@@ -70,7 +67,9 @@ fn test_hash_string_sha256() {
     dx().args(["hash", "-s", "hello", "-a", "sha256"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"));
+        .stdout(predicate::str::contains(
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ));
 }
 
 #[test]
@@ -88,17 +87,12 @@ fn test_hash_string_sha512() {
 #[test]
 fn test_encode_no_args_reads_stdin() {
     // encode without args reads from stdin
-    dx().arg("encode")
-        .write_stdin("test")
-        .assert()
-        .success();
+    dx().arg("encode").write_stdin("test").assert().success();
 }
 
 #[test]
 fn test_encode_help() {
-    dx().args(["encode", "--help"])
-        .assert()
-        .success();
+    dx().args(["encode", "--help"]).assert().success();
 }
 
 #[test]
@@ -139,41 +133,42 @@ fn test_encode_decode_hex() {
 
 #[test]
 fn test_uuid_no_args_generates_uuid() {
-    dx().arg("uuid")
-        .assert()
-        .success()
-        .stdout(predicate::str::is_match(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").unwrap());
+    dx().arg("uuid").assert().success().stdout(
+        predicate::str::is_match(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+            .unwrap(),
+    );
 }
 
 #[test]
 fn test_uuid_help() {
-    dx().args(["uuid", "--help"])
-        .assert()
-        .success();
+    dx().args(["uuid", "--help"]).assert().success();
 }
 
 #[test]
 fn test_uuid_v4() {
-    dx().args(["uuid", "-T", "v4"])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_match(r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").unwrap());
+    dx().args(["uuid", "-T", "v4"]).assert().success().stdout(
+        predicate::str::is_match(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+        )
+        .unwrap(),
+    );
 }
 
 #[test]
 fn test_uuid_v7() {
-    dx().args(["uuid", "-T", "v7"])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_match(r"[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").unwrap());
+    dx().args(["uuid", "-T", "v7"]).assert().success().stdout(
+        predicate::str::is_match(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+        )
+        .unwrap(),
+    );
 }
 
 #[test]
 fn test_uuid_count() {
-    dx().args(["uuid", "-c", "3"])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_match(r"(?s)[0-9a-f-]{36}.*[0-9a-f-]{36}.*[0-9a-f-]{36}").unwrap());
+    dx().args(["uuid", "-c", "3"]).assert().success().stdout(
+        predicate::str::is_match(r"(?s)[0-9a-f-]{36}.*[0-9a-f-]{36}.*[0-9a-f-]{36}").unwrap(),
+    );
 }
 
 // ============================================================================
@@ -190,9 +185,7 @@ fn test_time_no_args() {
 
 #[test]
 fn test_time_help() {
-    dx().args(["time", "--help"])
-        .assert()
-        .success();
+    dx().args(["time", "--help"]).assert().success();
 }
 
 #[test]
@@ -233,9 +226,7 @@ fn test_json_no_args() {
 
 #[test]
 fn test_json_help() {
-    dx().args(["json", "--help"])
-        .assert()
-        .success();
+    dx().args(["json", "--help"]).assert().success();
 }
 
 #[test]
@@ -295,16 +286,12 @@ fn test_env_no_args() {
 
 #[test]
 fn test_env_help() {
-    dx().args(["env", "--help"])
-        .assert()
-        .success();
+    dx().args(["env", "--help"]).assert().success();
 }
 
 #[test]
 fn test_env_get_path() {
-    dx().args(["env", "get", "PATH"])
-        .assert()
-        .success();
+    dx().args(["env", "get", "PATH"]).assert().success();
 }
 
 #[test]
@@ -316,9 +303,7 @@ fn test_env_get_nonexistent() {
 
 #[test]
 fn test_env_list() {
-    dx().args(["env", "list"])
-        .assert()
-        .success();
+    dx().args(["env", "list"]).assert().success();
 }
 
 // ============================================================================
@@ -335,16 +320,12 @@ fn test_config_no_args() {
 
 #[test]
 fn test_config_help() {
-    dx().args(["config", "--help"])
-        .assert()
-        .success();
+    dx().args(["config", "--help"]).assert().success();
 }
 
 #[test]
 fn test_config_show() {
-    dx().args(["config", "show"])
-        .assert()
-        .success();
+    dx().args(["config", "show"]).assert().success();
 }
 
 #[test]
@@ -369,9 +350,7 @@ fn test_rand_no_args() {
 
 #[test]
 fn test_rand_help() {
-    dx().args(["rand", "--help"])
-        .assert()
-        .success();
+    dx().args(["rand", "--help"]).assert().success();
 }
 
 #[test]
@@ -484,9 +463,7 @@ fn test_text_no_args() {
 
 #[test]
 fn test_text_help() {
-    dx().args(["text", "--help"])
-        .assert()
-        .success();
+    dx().args(["text", "--help"]).assert().success();
 }
 
 #[test]
@@ -592,9 +569,7 @@ fn test_calc_no_args() {
 
 #[test]
 fn test_calc_help() {
-    dx().args(["calc", "--help"])
-        .assert()
-        .success();
+    dx().args(["calc", "--help"]).assert().success();
 }
 
 #[test]
@@ -675,9 +650,7 @@ fn test_expr_no_args() {
 
 #[test]
 fn test_expr_help() {
-    dx().args(["expr", "--help"])
-        .assert()
-        .success();
+    dx().args(["expr", "--help"]).assert().success();
 }
 
 #[test]
@@ -813,23 +786,17 @@ fn test_expr_list() {
 
 #[test]
 fn test_expr_eval_error_unknown_function() {
-    dx().args(["expr", "eval", "unknown(5)"])
-        .assert()
-        .failure();
+    dx().args(["expr", "eval", "unknown(5)"]).assert().failure();
 }
 
 #[test]
 fn test_expr_eval_error_division_by_zero() {
-    dx().args(["expr", "eval", "1/0"])
-        .assert()
-        .failure();
+    dx().args(["expr", "eval", "1/0"]).assert().failure();
 }
 
 #[test]
 fn test_expr_eval_error_sqrt_negative() {
-    dx().args(["expr", "eval", "sqrt(-1)"])
-        .assert()
-        .failure();
+    dx().args(["expr", "eval", "sqrt(-1)"]).assert().failure();
 }
 
 // ============================================================================
@@ -846,16 +813,12 @@ fn test_net_no_args() {
 
 #[test]
 fn test_net_help() {
-    dx().args(["net", "--help"])
-        .assert()
-        .success();
+    dx().args(["net", "--help"]).assert().success();
 }
 
 #[test]
 fn test_net_ip() {
-    dx().args(["net", "ip"])
-        .assert()
-        .success();
+    dx().args(["net", "ip"]).assert().success();
 }
 
 // ============================================================================
@@ -872,9 +835,7 @@ fn test_chat_no_args() {
 
 #[test]
 fn test_chat_help() {
-    dx().args(["chat", "--help"])
-        .assert()
-        .success();
+    dx().args(["chat", "--help"]).assert().success();
 }
 
 // ============================================================================
@@ -883,30 +844,22 @@ fn test_chat_help() {
 
 #[test]
 fn test_alias_h_for_hash() {
-    dx().args(["h", "-s", "test"])
-        .assert()
-        .success();
+    dx().args(["h", "-s", "test"]).assert().success();
 }
 
 #[test]
 fn test_alias_e_for_encode() {
-    dx().args(["e", "-s", "test"])
-        .assert()
-        .success();
+    dx().args(["e", "-s", "test"]).assert().success();
 }
 
 #[test]
 fn test_alias_u_for_uuid() {
-    dx().args(["u"])
-        .assert()
-        .success();
+    dx().args(["u"]).assert().success();
 }
 
 #[test]
 fn test_alias_t_for_time() {
-    dx().args(["t", "now"])
-        .assert()
-        .success();
+    dx().args(["t", "now"]).assert().success();
 }
 
 #[test]
@@ -919,23 +872,17 @@ fn test_alias_j_for_json() {
 
 #[test]
 fn test_alias_r_for_rand() {
-    dx().args(["r", "int"])
-        .assert()
-        .success();
+    dx().args(["r", "int"]).assert().success();
 }
 
 #[test]
 fn test_alias_c_for_calc() {
-    dx().args(["c", "bytes", "1024"])
-        .assert()
-        .success();
+    dx().args(["c", "bytes", "1024"]).assert().success();
 }
 
 #[test]
 fn test_alias_x_for_expr() {
-    dx().args(["x", "eval", "1+1"])
-        .assert()
-        .success();
+    dx().args(["x", "eval", "1+1"]).assert().success();
 }
 
 // ============================================================================
@@ -944,16 +891,12 @@ fn test_alias_x_for_expr() {
 
 #[test]
 fn test_no_color_flag() {
-    dx().args(["--no-color", "expr", "list"])
-        .assert()
-        .success();
+    dx().args(["--no-color", "expr", "list"]).assert().success();
 }
 
 #[test]
 fn test_verbose_flag() {
-    dx().args(["--verbose", "uuid"])
-        .assert()
-        .success();
+    dx().args(["--verbose", "uuid"]).assert().success();
 }
 
 // ============================================================================

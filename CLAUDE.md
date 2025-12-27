@@ -10,6 +10,12 @@ Do not add any AI attribution to commits, PRs, or anywhere else. This means:
 - No "Co-Authored-By: Claude" lines
 - No AI-related comments in code or documentation
 
+### Pre-commit Checks
+Always run `make lint` before committing. This runs `cargo fmt` and `cargo clippy --fix`.
+
+### GitHub CLI
+Use `gh` (GitHub CLI) to check PRs, build status, and other GitHub operations.
+
 ### Conventional Commits
 Use conventional commits for all commit messages and branch names:
 

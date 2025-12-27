@@ -13,11 +13,7 @@ pub async fn run(name: &str, server: &str) -> Result<()> {
         .await
         .context("Failed to connect to chat server")?;
 
-    println!(
-        "{} Connected to {}",
-        "✓".green().bold(),
-        server.cyan()
-    );
+    println!("{} Connected to {}", "✓".green().bold(), server.cyan());
     println!(
         "{}",
         "Type messages and press Enter to send. Ctrl+C to quit.".dimmed()

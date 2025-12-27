@@ -65,10 +65,7 @@ pub enum Expr {
     },
 
     /// A unary operation: op expr
-    UnaryOp {
-        op: UnaryOp,
-        expr: Box<Expr>,
-    },
+    UnaryOp { op: UnaryOp, expr: Box<Expr> },
 
     /// A function call: name(arg)
     FuncCall { name: String, arg: Box<Expr> },
@@ -216,35 +213,19 @@ mod tests {
     #[test]
     fn test_binop() {
         // 2 + 3
-        let expr = Expr::binop(
-            BinOp::Add,
-            Expr::number(2.0),
-            Expr::number(3.0),
-        );
+        let expr = Expr::binop(BinOp::Add, Expr::number(2.0), Expr::number(3.0));
         assert_eq!(expr.eval().unwrap(), 5.0);
 
         // 10 - 4
-        let expr = Expr::binop(
-            BinOp::Sub,
-            Expr::number(10.0),
-            Expr::number(4.0),
-        );
+        let expr = Expr::binop(BinOp::Sub, Expr::number(10.0), Expr::number(4.0));
         assert_eq!(expr.eval().unwrap(), 6.0);
 
         // 3 * 4
-        let expr = Expr::binop(
-            BinOp::Mul,
-            Expr::number(3.0),
-            Expr::number(4.0),
-        );
+        let expr = Expr::binop(BinOp::Mul, Expr::number(3.0), Expr::number(4.0));
         assert_eq!(expr.eval().unwrap(), 12.0);
 
         // 15 / 3
-        let expr = Expr::binop(
-            BinOp::Div,
-            Expr::number(15.0),
-            Expr::number(3.0),
-        );
+        let expr = Expr::binop(BinOp::Div, Expr::number(15.0), Expr::number(3.0));
         assert_eq!(expr.eval().unwrap(), 5.0);
     }
 
@@ -255,10 +236,7 @@ mod tests {
         assert_eq!(expr.eval().unwrap(), -5.0);
 
         // --5 (double negation)
-        let expr = Expr::unary(
-            UnaryOp::Neg,
-            Expr::unary(UnaryOp::Neg, Expr::number(5.0)),
-        );
+        let expr = Expr::unary(UnaryOp::Neg, Expr::unary(UnaryOp::Neg, Expr::number(5.0)));
         assert_eq!(expr.eval().unwrap(), 5.0);
     }
 
@@ -275,11 +253,7 @@ mod tests {
 
     #[test]
     fn test_division_by_zero() {
-        let expr = Expr::binop(
-            BinOp::Div,
-            Expr::number(1.0),
-            Expr::number(0.0),
-        );
+        let expr = Expr::binop(BinOp::Div, Expr::number(1.0), Expr::number(0.0));
         assert!(expr.eval().is_err());
     }
 }
