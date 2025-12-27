@@ -178,23 +178,39 @@ src/
 
 ## Expression Library (`src/expr/`)
 
-A reusable recursive descent parser with AST support:
+A full-featured expression evaluator with user-defined functions, lambdas, and closures:
 
 ```rust
-use rust_cli_complete::expr;
+use rust_cli_complete::expr::{eval, eval_program, eval_with_context, Context};
 
-// Evaluate expression
-let result = expr::parse("2 + 3 * 4")?;  // 14.0
+// Simple evaluation
+let result = eval("2 + 3 * 4")?;  // 14.0
 
-// Get AST (serializable with serde)
-let ast = expr::parse_to_ast("sin(pi/2)")?;
-let json = serde_json::to_string(&ast)?;
+// Multi-statement programs with variables
+let result = eval_program("x = 5; y = x + 3; y * 2")?;  // 16.0
+
+// User-defined functions
+let result = eval_program("def square(x) = x * x; square(5)")?;  // 25.0
+
+// With predefined variables
+let mut ctx = Context::new();
+ctx.set("radius", 5.0);
+let area = eval_with_context("pi * radius ^ 2", &mut ctx)?;
 ```
 
 **Supported features:**
-- Operators: `+`, `-`, `*`, `/`, `%` (modulo), `^` (power, right-associative)
-- Constants: `pi`, `e`, `tau`
-- Functions: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, sqrt, cbrt, abs, floor, ceil, round, trunc, exp, ln, log2, log10
+- Arithmetic: `+`, `-`, `*`, `/`, `%`, `^`, `**`
+- Comparison: `==`, `!=`, `<`, `>`, `<=`, `>=`
+- Logical: `and`/`&&`, `or`/`||`, `not`/`!`
+- Conditionals: `if ... then ... else ...`
+- Constants: `pi`, `e`, `tau`, `true`, `false`
+- 30+ built-in functions (trig, log, rounding, multi-arg, variadic)
+- Variables and multi-statement programs
+- User-defined functions: `def name(params) = expr`
+- Lambda expressions: `x => expr`, `(a, b) => expr`
+- Closures that capture outer scope
+- Comments: `# to end of line`
+- AST serialization to JSON with serde
 
 ## Development Commands
 

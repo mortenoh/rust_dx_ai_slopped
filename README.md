@@ -4,13 +4,22 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 
 ## Features
 
-- **hash** - Compute file and string hashes (SHA-256, SHA-512, MD5)
-- **encode** - Encode/decode data (Base64, hex, URL)
-- **uuid** - Generate UUIDs (v4, v7)
-- **time** - Time utilities and conversions
-- **json** - JSON formatting and validation
-- **env** - Environment variable utilities
-- **config** - Configuration management
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `hash` | `h` | Compute file/string hashes (SHA-256, SHA-512, MD5) |
+| `encode` | `e` | Encode/decode data (Base64, hex, URL) |
+| `uuid` | `u` | Generate UUIDs (v4, v7) |
+| `time` | `t` | Time utilities and conversions |
+| `json` | `j` | JSON formatting, validation, and querying |
+| `env` | - | Environment variable utilities |
+| `config` | `cfg` | Configuration management |
+| `rand` | `r` | Random generation (numbers, strings, passwords) |
+| `text` | - | Text transformations (case, slugify) |
+| `calc` | `c` | Unit conversions (bytes, time, base, percent) |
+| `expr` | `x` | Expression evaluator with functions and variables |
+| `net` | - | Network utilities (IP, DNS, ports) |
+| `chat` | - | gRPC-based real-time chat |
+| `completions` | - | Generate shell completions |
 
 ## Installation
 
@@ -18,21 +27,72 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 cargo install --path .
 ```
 
-## Usage
+Or download pre-built binaries from the [Releases](https://github.com/mortenoh/rust_dx_ai_slopped/releases) page.
+
+## Quick Examples
 
 ```bash
-# Hash a file
-dx hash file.txt
+# Hash a string
+dx hash sha256 "hello world"
 
 # Encode to base64
-dx encode --base64 "hello world"
+dx encode base64 "hello world"
 
 # Generate UUID
-dx uuid
+dx uuid v4
 
 # Format JSON
-dx json format data.json
+echo '{"a":1}' | dx json fmt -
+
+# Expression evaluation
+dx expr eval "2 + 3 * 4"                    # 14
+dx expr eval "sqrt(16) + pi"                # 7.14159...
+dx expr eval "def square(x) = x*x; square(5)"  # 25
 ```
+
+## Expression Language
+
+The `expr` command provides a powerful mathematical expression evaluator:
+
+```bash
+# Basic math with operator precedence
+dx expr eval "2 + 3 * 4"           # 14
+dx expr eval "2 ^ 10"              # 1024
+
+# Built-in functions and constants
+dx expr eval "sin(pi / 2)"         # 1
+dx expr eval "log2(1024)"          # 10
+dx expr eval "max(3, 7)"           # 7
+dx expr eval "clamp(15, 0, 10)"    # 10
+
+# Variables and multi-statement programs
+dx expr eval "x = 5; y = x + 3; y * 2"   # 16
+
+# User-defined functions
+dx expr eval "def factorial(n) = if n <= 1 then 1 else n * factorial(n-1); factorial(5)"  # 120
+
+# Lambda expressions and closures
+dx expr eval "double = x => x * 2; double(10)"   # 20
+
+# Conditionals
+dx expr eval "if 5 > 3 then 100 else 200"        # 100
+
+# Run from file
+dx expr run script.dx
+```
+
+**Features:**
+- Arithmetic: `+`, `-`, `*`, `/`, `%`, `^`, `**`
+- Comparison: `==`, `!=`, `<`, `>`, `<=`, `>=`
+- Logical: `and`, `or`, `not` (or `&&`, `||`, `!`)
+- Conditionals: `if ... then ... else ...`
+- 30+ built-in functions (trig, log, rounding, etc.)
+- User-defined functions with `def`
+- Lambda expressions: `x => x * 2`
+- Closures that capture outer scope
+- Comments: `# comment`
+
+See the [Expression Language Guide](https://mortenoh.github.io/rust_dx_ai_slopped/appendices/e-expr-language.html) for the complete reference.
 
 ## Documentation
 
@@ -46,6 +106,8 @@ mdbook serve --open
 mdbook build
 ```
 
+**Online:** [https://mortenoh.github.io/rust_dx_ai_slopped/](https://mortenoh.github.io/rust_dx_ai_slopped/)
+
 ### Documentation Contents
 
 - **Part 1**: Rust Fundamentals
@@ -57,6 +119,7 @@ mdbook build
 - **Part 7**: Cross-Platform Development
 - **Part 8**: Production Readiness
 - **Part 9**: Optimization
+- **Appendices**: Cargo Reference, Common Crates, Expression Language Guide
 
 ## Development
 
@@ -65,7 +128,7 @@ make help    # Show all available commands
 make build   # Build debug binary
 make test    # Run tests
 make bench   # Run benchmarks
-make lint    # Run clippy
+make lint    # Run clippy and fmt
 make fmt     # Format code
 ```
 
