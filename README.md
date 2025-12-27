@@ -19,6 +19,7 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 | `expr` | `x` | Expression evaluator with functions and variables |
 | `net` | - | Network utilities (IP, DNS, ports) |
 | `chat` | - | gRPC-based real-time chat |
+| `fun` | - | Fun terminal effects (spinners, progress, hacker) |
 | `completions` | - | Generate shell completions |
 
 ## Installation

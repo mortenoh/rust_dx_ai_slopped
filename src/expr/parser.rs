@@ -153,36 +153,37 @@ impl<'a> Parser<'a> {
         let start_pos = self.pos;
 
         if let Some(c) = self.current_char()
-            && (c.is_ascii_alphabetic() || c == '_') {
-                let name = self.identifier();
-                self.skip_whitespace_not_newline();
+            && (c.is_ascii_alphabetic() || c == '_')
+        {
+            let name = self.identifier();
+            self.skip_whitespace_not_newline();
 
-                match self.current_char() {
-                    Some('=') => {
-                        self.advance();
-                        match self.current_char() {
-                            Some('=') => {
-                                // It's '==', rewind and parse as expression
-                                self.pos = start_pos;
-                            }
-                            Some('>') => {
-                                // It's '=>', rewind and parse as lambda expression
-                                self.pos = start_pos;
-                            }
-                            _ => {
-                                // It's assignment: name = expr
-                                self.skip_whitespace_not_newline();
-                                let value = self.expr()?;
-                                return Ok(Statement::Assignment { name, value });
-                            }
+            match self.current_char() {
+                Some('=') => {
+                    self.advance();
+                    match self.current_char() {
+                        Some('=') => {
+                            // It's '==', rewind and parse as expression
+                            self.pos = start_pos;
+                        }
+                        Some('>') => {
+                            // It's '=>', rewind and parse as lambda expression
+                            self.pos = start_pos;
+                        }
+                        _ => {
+                            // It's assignment: name = expr
+                            self.skip_whitespace_not_newline();
+                            let value = self.expr()?;
+                            return Ok(Statement::Assignment { name, value });
                         }
                     }
-                    _ => {
-                        // Not assignment, rewind and parse as expression
-                        self.pos = start_pos;
-                    }
+                }
+                _ => {
+                    // Not assignment, rewind and parse as expression
+                    self.pos = start_pos;
                 }
             }
+        }
 
         // Parse as expression
         let expr = self.expr()?;
@@ -572,70 +573,71 @@ impl<'a> Parser<'a> {
 
         // Check if it starts with a letter (identifier)
         if let Some(c) = self.current_char()
-            && (c.is_ascii_alphabetic() || c == '_') {
-                // Check for keywords first
-                if self.check_keyword("if") {
-                    return self.conditional();
-                }
-                if self.check_keyword("true") {
-                    self.advance_n(4);
-                    return Ok(Expr::constant("true"));
-                }
-                if self.check_keyword("false") {
-                    self.advance_n(5);
-                    return Ok(Expr::constant("false"));
-                }
+            && (c.is_ascii_alphabetic() || c == '_')
+        {
+            // Check for keywords first
+            if self.check_keyword("if") {
+                return self.conditional();
+            }
+            if self.check_keyword("true") {
+                self.advance_n(4);
+                return Ok(Expr::constant("true"));
+            }
+            if self.check_keyword("false") {
+                self.advance_n(5);
+                return Ok(Expr::constant("false"));
+            }
 
-                let name = self.identifier();
+            let name = self.identifier();
 
+            self.skip_whitespace();
+
+            // Check for lambda: identifier => expr
+            if self.matches("=>") {
+                self.advance_n(2);
+                self.skip_whitespace();
+                let body = self.expr()?;
+                return Ok(Expr::lambda(vec![name], body));
+            }
+
+            if self.current_char() == Some('(') {
+                // Function call
+                self.advance();
                 self.skip_whitespace();
 
-                // Check for lambda: identifier => expr
-                if self.matches("=>") {
-                    self.advance_n(2);
-                    self.skip_whitespace();
-                    let body = self.expr()?;
-                    return Ok(Expr::lambda(vec![name], body));
-                }
-
-                if self.current_char() == Some('(') {
-                    // Function call
-                    self.advance();
-                    self.skip_whitespace();
-
-                    let mut args = Vec::new();
-                    if self.current_char() != Some(')') {
-                        loop {
-                            self.skip_whitespace();
-                            let arg = self.expr()?;
-                            args.push(arg);
-                            self.skip_whitespace();
-                            match self.current_char() {
-                                Some(',') => {
-                                    self.advance();
-                                }
-                                Some(')') => break,
-                                _ => bail!("Expected ',' or ')' in function call"),
+                let mut args = Vec::new();
+                if self.current_char() != Some(')') {
+                    loop {
+                        self.skip_whitespace();
+                        let arg = self.expr()?;
+                        args.push(arg);
+                        self.skip_whitespace();
+                        match self.current_char() {
+                            Some(',') => {
+                                self.advance();
                             }
+                            Some(')') => break,
+                            _ => bail!("Expected ',' or ')' in function call"),
                         }
                     }
-
-                    if self.current_char() != Some(')') {
-                        bail!(
-                            "Expected ')' after function arguments at position {}",
-                            self.pos
-                        );
-                    }
-                    self.advance();
-                    return Ok(Expr::func_call_multi(name, args));
-                } else if matches!(name.as_str(), "pi" | "e" | "tau") {
-                    // Built-in constant
-                    return Ok(Expr::constant(name));
-                } else {
-                    // Variable reference
-                    return Ok(Expr::variable(name));
                 }
+
+                if self.current_char() != Some(')') {
+                    bail!(
+                        "Expected ')' after function arguments at position {}",
+                        self.pos
+                    );
+                }
+                self.advance();
+                return Ok(Expr::func_call_multi(name, args));
+            } else if matches!(name.as_str(), "pi" | "e" | "tau") {
+                // Built-in constant
+                return Ok(Expr::constant(name));
+            } else {
+                // Variable reference
+                return Ok(Expr::variable(name));
             }
+        }
 
         self.primary()
     }
@@ -699,53 +701,54 @@ impl<'a> Parser<'a> {
 
                 // Check if this looks like parameter list
                 if let Some(c) = self.current_char()
-                    && (c.is_ascii_alphabetic() || c == '_' || c == ')') {
-                        // Try parsing as parameters
-                        if c != ')' {
-                            let first_param = self.identifier();
-                            self.skip_whitespace();
+                    && (c.is_ascii_alphabetic() || c == '_' || c == ')')
+                {
+                    // Try parsing as parameters
+                    if c != ')' {
+                        let first_param = self.identifier();
+                        self.skip_whitespace();
 
-                            match self.current_char() {
-                                Some(',') | Some(')') => {
-                                    // Looks like parameter list
-                                    params.push(first_param);
-                                    while self.current_char() == Some(',') {
-                                        self.advance();
-                                        self.skip_whitespace();
-                                        let param = self.identifier();
-                                        if param.is_empty() {
-                                            // Not a valid parameter list
-                                            break;
-                                        }
-                                        params.push(param);
-                                        self.skip_whitespace();
+                        match self.current_char() {
+                            Some(',') | Some(')') => {
+                                // Looks like parameter list
+                                params.push(first_param);
+                                while self.current_char() == Some(',') {
+                                    self.advance();
+                                    self.skip_whitespace();
+                                    let param = self.identifier();
+                                    if param.is_empty() {
+                                        // Not a valid parameter list
+                                        break;
                                     }
-
-                                    if self.current_char() == Some(')') {
-                                        self.advance();
-                                        self.skip_whitespace();
-                                        if self.matches("=>") {
-                                            is_lambda = true;
-                                        }
-                                    }
+                                    params.push(param);
+                                    self.skip_whitespace();
                                 }
-                                _ => {
-                                    // Not a parameter list, rewind
-                                    self.pos = start_pos;
+
+                                if self.current_char() == Some(')') {
+                                    self.advance();
+                                    self.skip_whitespace();
+                                    if self.matches("=>") {
+                                        is_lambda = true;
+                                    }
                                 }
                             }
-                        } else {
-                            // Empty params: () => expr
-                            self.advance(); // skip )
-                            self.skip_whitespace();
-                            if self.matches("=>") {
-                                is_lambda = true;
-                            } else {
-                                // Rewind - it was () without =>
+                            _ => {
+                                // Not a parameter list, rewind
                                 self.pos = start_pos;
                             }
                         }
+                    } else {
+                        // Empty params: () => expr
+                        self.advance(); // skip )
+                        self.skip_whitespace();
+                        if self.matches("=>") {
+                            is_lambda = true;
+                        } else {
+                            // Rewind - it was () without =>
+                            self.pos = start_pos;
+                        }
                     }
+                }
 
                 if is_lambda {
                     // Parse lambda body

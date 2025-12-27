@@ -936,3 +936,62 @@ fn test_completions_help() {
         .stdout(predicate::str::contains("zsh"))
         .stdout(predicate::str::contains("fish"));
 }
+
+// ============================================================================
+// Fun command tests (help only, actual animations are timing-dependent)
+// ============================================================================
+
+#[test]
+fn test_fun_no_args() {
+    dx().arg("fun")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn test_fun_help() {
+    dx().args(["fun", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("progress"))
+        .stdout(predicate::str::contains("hacker"))
+        .stdout(predicate::str::contains("countdown"))
+        .stdout(predicate::str::contains("spinners"));
+}
+
+#[test]
+fn test_fun_progress_help() {
+    dx().args(["fun", "progress", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("duration"))
+        .stdout(predicate::str::contains("style"));
+}
+
+#[test]
+fn test_fun_hacker_help() {
+    dx().args(["fun", "hacker", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("duration"))
+        .stdout(predicate::str::contains("intensity"));
+}
+
+#[test]
+fn test_fun_countdown_help() {
+    dx().args(["fun", "countdown", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("seconds"))
+        .stdout(predicate::str::contains("message"));
+}
+
+#[test]
+fn test_fun_spinners_help() {
+    dx().args(["fun", "spinners", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("duration"))
+        .stdout(predicate::str::contains("name"));
+}

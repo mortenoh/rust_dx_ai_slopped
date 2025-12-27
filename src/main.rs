@@ -137,6 +137,9 @@ fn main() -> Result<()> {
             .expect("Failed to create tokio runtime")
             .block_on(commands::chat::run(args)),
 
+        // Fun command: fun terminal effects
+        Commands::Fun(args) => commands::fun::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);
