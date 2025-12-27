@@ -70,7 +70,7 @@ fn cmd_string(length: usize, count: usize) -> Result<()> {
 fn cmd_hex(bytes: usize, count: usize) -> Result<()> {
     let mut rng = rand::rng();
     for _ in 0..count {
-        let data: Vec<u8> = (0..bytes).map(|_| rng.random()).collect();
+        let data: Vec<u8> = (0..bytes).map(|_| rng.random::<u8>()).collect();
         println!("{}", hex::encode(data));
     }
     Ok(())
