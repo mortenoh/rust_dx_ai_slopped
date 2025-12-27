@@ -5,7 +5,7 @@ use clap_complete::Shell;
 
 use super::commands::{
     CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs,
-    JsonArgs, NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs,
+    HttpArgs, JsonArgs, NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -108,6 +108,9 @@ pub enum Commands {
     /// Search for patterns in files (like grep)
     #[command(visible_alias = "g")]
     Grep(GrepArgs),
+
+    /// Make HTTP requests
+    Http(HttpArgs),
 
     /// Generate shell completions
     Completions {

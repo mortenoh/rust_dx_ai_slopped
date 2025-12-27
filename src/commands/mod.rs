@@ -9,6 +9,7 @@ pub mod expr;
 pub mod fun;
 pub mod grep;
 pub mod hash;
+pub mod http;
 pub mod json;
 pub mod net;
 pub mod rand;

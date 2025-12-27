@@ -143,6 +143,9 @@ fn main() -> Result<()> {
         // Grep command: search for patterns in files
         Commands::Grep(args) => commands::grep::run(args),
 
+        // Http command: make HTTP requests
+        Commands::Http(args) => commands::http::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);
