@@ -97,8 +97,33 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          find artifacts -type f -exec mv {} release/ \;
-          ls -la release/
+
+          # Move raw binaries to release folder
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            file=$(find "$dir" -type f | head -1)
+            cp "$file" "release/$name"
+          done
+
+          # Create archives with just 'dx' inside
+          cd release
+          for f in dx-linux-* dx-macos-*; do
+            if [[ -f "$f" && "$f" != *.tar.gz ]]; then
+              cp "$f" dx
+              chmod +x dx
+              tar -czvf "${f}.tar.gz" dx
+              rm dx
+            fi
+          done
+
+          # Create zip for Windows
+          if [[ -f "dx-windows-x86_64.exe" ]]; then
+            cp "dx-windows-x86_64.exe" dx.exe
+            zip dx-windows-x86_64.zip dx.exe
+            rm dx.exe
+          fi
+
+          ls -la
 
       - name: Delete existing release
         run: gh release delete latest --yes || true
@@ -109,20 +134,26 @@ jobs:
         run: |
           gh release create latest \
             --title "Latest Build" \
-            --notes "🚀 Automatically built from commit ${{ github.sha }}
+            --notes "Automatically built from commit ${{ github.sha }}
 
-          **Download:**
-          - Linux x86_64: \`dx-linux-x86_64\`
-          - Linux x86_64 (static): \`dx-linux-x86_64-musl\`
-          - Linux ARM64: \`dx-linux-aarch64\`
-          - macOS x86_64: \`dx-macos-x86_64\`
-          - macOS ARM64: \`dx-macos-aarch64\`
-          - Windows x86_64: \`dx-windows-x86_64.exe\`
+          ## Archives (recommended)
+          Extract to get \`dx\` binary:
+          | Platform | Archive |
+          |----------|---------|
+          | Linux x86_64 | \`dx-linux-x86_64.tar.gz\` |
+          | Linux x86_64 (static) | \`dx-linux-x86_64-musl.tar.gz\` |
+          | Linux ARM64 | \`dx-linux-aarch64.tar.gz\` |
+          | macOS x86_64 | \`dx-macos-x86_64.tar.gz\` |
+          | macOS ARM64 | \`dx-macos-aarch64.tar.gz\` |
+          | Windows x86_64 | \`dx-windows-x86_64.zip\` |
 
-          **Install (Unix):**
+          ## Raw binaries
+          Direct download (rename to \`dx\` after):
+          \`dx-linux-x86_64\`, \`dx-linux-aarch64\`, \`dx-macos-x86_64\`, \`dx-macos-aarch64\`, \`dx-windows-x86_64.exe\`
+
+          ## Quick install (Linux/macOS)
           \`\`\`bash
-          curl -L https://github.com/${{ github.repository }}/releases/download/latest/dx-linux-x86_64 -o dx
-          chmod +x dx
+          curl -L https://github.com/${{ github.repository }}/releases/download/latest/dx-linux-x86_64.tar.gz | tar xz
           sudo mv dx /usr/local/bin/
           \`\`\`" \
             --latest \
