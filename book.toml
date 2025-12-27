@@ -1,0 +1,29 @@
+[book]
+title = "dx - Developer Toolkit"
+authors = ["Tutorial Author"]
+description = "A comprehensive developer toolkit CLI"
+language = "en"
+src = "docs"
+
+[build]
+build-dir = "site"
+create-missing = true
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "coal"
+git-repository-url = "https://github.com/user/dx"
+no-section-label = false
+
+[output.html.fold]
+enable = true
+level = 1
+
+# PDF output via mdbook-pdf
+# Install: cargo install mdbook-pdf
+# Requires Chrome or Edge browser
+[output.pdf]
+
+[output.html.search]
+enable = true
+limit-results = 30

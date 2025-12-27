@@ -1,0 +1,30 @@
+syntax = "proto3";
+package chat;
+
+// Chat service for real-time messaging
+service Chat {
+    // Client sends a message to be broadcast to all subscribers
+    rpc SendMessage(ChatMessage) returns (Empty);
+
+    // Client subscribes to receive messages from all users
+    rpc Subscribe(SubscribeRequest) returns (stream ChatMessage);
+}
+
+// Request to subscribe to the chat
+message SubscribeRequest {
+    // Display name of the user joining
+    string name = 1;
+}
+
+// A chat message
+message ChatMessage {
+    // Name of the sender
+    string sender = 1;
+    // Message content
+    string content = 2;
+    // Unix timestamp in milliseconds
+    int64 timestamp = 3;
+}
+
+// Empty response
+message Empty {}
