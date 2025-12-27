@@ -44,7 +44,7 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
+//! ```rust,no_run
 //! use rust_cli_complete::config::Settings;
 //!
 //! // Load settings (creates defaults if file doesn't exist)
@@ -59,6 +59,7 @@
 //! let mut settings = Settings::load()?;
 //! settings.set("hash.algorithm", "sha512")?;
 //! settings.save()?;
+//! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
 //! ## External Documentation

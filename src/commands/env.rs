@@ -193,7 +193,7 @@ fn cmd_check(names: &[String], strict: bool) -> Result<()> {
 /// escaped using the `'\''` technique (end quote, literal quote, start quote).
 ///
 /// ## Docker Format
-/// ```
+/// ```text
 /// KEY=value
 /// ```
 /// Simple key=value format for Docker's `--env-file` option.
