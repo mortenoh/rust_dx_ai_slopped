@@ -103,7 +103,10 @@ fn should_include(path: &Path, args: &GrepArgs) -> bool {
     }
 
     // Skip binary files (simple heuristic: check extension)
-    let binary_extensions = ["exe", "bin", "o", "so", "dylib", "dll", "a", "png", "jpg", "gif", "pdf", "zip", "tar", "gz"];
+    let binary_extensions = [
+        "exe", "bin", "o", "so", "dylib", "dll", "a", "png", "jpg", "gif", "pdf", "zip", "tar",
+        "gz",
+    ];
     if let Some(ext) = path.extension() {
         if binary_extensions.contains(&ext.to_string_lossy().to_lowercase().as_str()) {
             return false;
@@ -185,7 +188,14 @@ fn search_file(path: &Path, regex: &Regex, args: &GrepArgs) -> Result<usize> {
         }
 
         // Show matching line
-        print_match_line(path, *line_num, line, regex, show_filename, args.line_number);
+        print_match_line(
+            path,
+            *line_num,
+            line,
+            regex,
+            show_filename,
+            args.line_number,
+        );
 
         // Show context after
         if after > 0 {
@@ -198,7 +208,14 @@ fn search_file(path: &Path, regex: &Regex, args: &GrepArgs) -> Result<usize> {
     Ok(match_count)
 }
 
-fn print_match_line(path: &Path, line_num: usize, line: &str, regex: &Regex, show_filename: bool, show_line_num: bool) {
+fn print_match_line(
+    path: &Path,
+    line_num: usize,
+    line: &str,
+    regex: &Regex,
+    show_filename: bool,
+    show_line_num: bool,
+) {
     let mut output = String::new();
 
     if show_filename {
@@ -218,7 +235,13 @@ fn print_match_line(path: &Path, line_num: usize, line: &str, regex: &Regex, sho
     println!("{}", output);
 }
 
-fn print_context_line(path: &Path, line_num: usize, line: &str, show_filename: bool, show_line_num: bool) {
+fn print_context_line(
+    path: &Path,
+    line_num: usize,
+    line: &str,
+    show_filename: bool,
+    show_line_num: bool,
+) {
     let mut output = String::new();
 
     if show_filename {

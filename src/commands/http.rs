@@ -104,10 +104,7 @@ fn cmd_get(url: &str, headers: &[String], format: OutputFormat, timeout: u64) ->
     let response = request.call().context("Failed to send GET request")?;
 
     let status = response.status().as_u16();
-    let status_text = response
-        .status()
-        .canonical_reason()
-        .unwrap_or("Unknown");
+    let status_text = response.status().canonical_reason().unwrap_or("Unknown");
 
     match format {
         OutputFormat::Headers => {
@@ -171,9 +168,7 @@ fn cmd_post(
         String::new()
     };
 
-    let response = request
-        .send(&body)
-        .context("Failed to send POST request")?;
+    let response = request.send(&body).context("Failed to send POST request")?;
 
     let status = response.status().as_u16();
     let status_text = response.status().canonical_reason().unwrap_or("Unknown");
