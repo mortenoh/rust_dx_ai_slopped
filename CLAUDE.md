@@ -307,7 +307,10 @@ Key crates used:
 - `serde` / `serde_json` - Serialization
 - `tokio` - Async runtime (for chat command)
 - `tonic` - gRPC (for chat command)
+- `dx-progress` - Our terminal progress library (OSC 9;4 support)
 - `assert_cmd` / `predicates` - CLI testing
+
+See **[DEPENDENCIES.md](./DEPENDENCIES.md)** for complete documentation of all dependencies including descriptions, links, and transitive dependencies.
 
 ## File Naming Conventions
 
