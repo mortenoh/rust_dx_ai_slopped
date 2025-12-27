@@ -137,3 +137,4 @@
 - [Common Crates](./appendices/b-common-crates.md)
 - [Troubleshooting](./appendices/c-troubleshooting.md)
 - [Resources](./appendices/d-resources.md)
+- [Expression Language Guide](./appendices/e-expr-language.md)
