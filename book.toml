@@ -19,10 +19,11 @@ no-section-label = false
 enable = true
 level = 1
 
-# PDF output via mdbook-pdf
+# PDF output via mdbook-pdf (optional)
 # Install: cargo install mdbook-pdf
 # Requires Chrome or Edge browser
 [output.pdf]
+optional = true
 
 [output.html.search]
 enable = true
