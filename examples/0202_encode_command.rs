@@ -6,7 +6,7 @@
 
 #![allow(dead_code)]
 
-use base64::{Engine, engine::general_purpose};
+use base64::{engine::general_purpose, Engine};
 
 // =========================================================================
 // ENCODING FORMATS

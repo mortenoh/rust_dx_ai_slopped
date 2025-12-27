@@ -8,7 +8,7 @@
 
 use std::io::Write;
 use std::path::PathBuf;
-use tempfile::{NamedTempFile, TempDir, tempdir};
+use tempfile::{tempdir, NamedTempFile, TempDir};
 
 fn main() {
     println!("=== Test Fixtures with tempfile ===\n");

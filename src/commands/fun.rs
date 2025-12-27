@@ -4,7 +4,7 @@
 
 use crate::cli::commands::fun::{FunArgs, FunCommand};
 use crate::utils::progress::{
-    self, ProgressState, SPINNER_FRAMES, osc_progress, osc_progress_clear,
+    self, osc_progress, osc_progress_clear, ProgressState, SPINNER_FRAMES,
 };
 use anyhow::Result;
 use colored::Colorize;

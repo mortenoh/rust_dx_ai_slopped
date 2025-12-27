@@ -6,7 +6,7 @@
 
 #![allow(dead_code)]
 
-use dialoguer::{Confirm, Input, MultiSelect, Password, Select, theme::ColorfulTheme};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Password, Select};
 
 fn main() {
     println!("=== Interactive Prompts with dialoguer ===\n");

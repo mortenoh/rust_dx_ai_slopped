@@ -160,8 +160,8 @@ mod ast;
 mod parser;
 
 pub use ast::{
-    BinOp, Callable, Context, Expr, FuncBody, FuncDef, Program, Statement, UnaryOp,
-    is_builtin_function_name, is_keyword,
+    is_builtin_function_name, is_keyword, BinOp, Callable, Context, Expr, FuncBody, FuncDef,
+    Program, Statement, UnaryOp,
 };
 
 use anyhow::Result;

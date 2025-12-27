@@ -70,7 +70,7 @@ fn compile_protos() -> Result<(), Box<dyn std::error::Error>> {
 // in Cargo.toml. These are separate from [dependencies].
 
 use clap::{Arg, Command as ClapCommand, ValueHint};
-use clap_complete::{Shell, generate_to};
+use clap_complete::{generate_to, Shell};
 use clap_mangen::Man;
 
 fn main() {

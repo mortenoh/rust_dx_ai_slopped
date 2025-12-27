@@ -44,7 +44,7 @@ impl ConfigStore {
         self.values.iter()
     }
 
-    pub fn list_prefix(&self, prefix: &str) -> impl Iterator<Item = (&String, &String)> {
+    pub fn list_prefix<'a>(&'a self, prefix: &'a str) -> impl Iterator<Item = (&'a String, &'a String)> {
         self.values
             .iter()
             .filter(move |(k, _)| k.starts_with(prefix))

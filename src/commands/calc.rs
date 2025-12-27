@@ -11,7 +11,7 @@
 //! ```
 
 use crate::cli::commands::calc::{CalcArgs, CalcCommand};
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use colored::Colorize;
 
 pub fn run(args: CalcArgs) -> Result<()> {

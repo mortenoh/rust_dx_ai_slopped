@@ -1,10 +1,12 @@
 [package]
 name = "dx-progress"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
 description = "Terminal progress reporting with OSC 9;4 support for Ghostty, Windows Terminal, and ConEmu"
-authors = ["Developer"]
-license = "MIT"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
 keywords = ["terminal", "progress", "cli", "osc", "ghostty"]
 categories = ["command-line-interface"]
 

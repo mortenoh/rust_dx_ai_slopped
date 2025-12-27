@@ -7,8 +7,8 @@ use colored::Colorize;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use tokio::sync::broadcast;
-use tokio_stream::Stream;
 use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::Stream;
 use tonic::{Request, Response, Status};
 
 /// Capacity of the broadcast channel

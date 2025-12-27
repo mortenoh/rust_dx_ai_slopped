@@ -73,7 +73,7 @@ fn demonstrate_error_construction() {
 // ANYHOW - APPLICATION ERRORS
 // =========================================================================
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 
 /// Example function returning anyhow::Result
 fn load_config(path: &str) -> Result<String> {

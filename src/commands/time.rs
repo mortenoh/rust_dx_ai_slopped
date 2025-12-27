@@ -41,7 +41,7 @@
 //! - Unix time: <https://en.wikipedia.org/wiki/Unix_time>
 
 use crate::cli::commands::time::{TimeArgs, TimeCommand, TimeFormat};
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Local, TimeZone, Utc};
 use colored::Colorize;
 

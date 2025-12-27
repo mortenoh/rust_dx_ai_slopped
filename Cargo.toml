@@ -1,15 +1,21 @@
 [workspace]
 members = [".", "crates/progress"]
 
+[workspace.package]
+edition = "2021"
+authors = ["Morten Haraldsen <morten@haraldsen.io>"]
+license = "MIT"
+repository = "https://github.com/mortenoh/rust_dx_ai_slopped"
+
 [package]
 name = "rust_cli_complete"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
 description = "A production-ready CLI toolkit demonstrating best practices"
-authors = ["Developer"]
-license = "MIT"
+authors.workspace = true
+license.workspace = true
 readme = "README.md"
-repository = "https://github.com/example/rust_cli_complete"
+repository.workspace = true
 keywords = ["cli", "developer-tools", "cross-platform"]
 categories = ["command-line-utilities", "development-tools"]
 

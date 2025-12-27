@@ -2,7 +2,7 @@
 //!
 //! Defines the AST nodes and evaluation logic.
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::rc::Rc;

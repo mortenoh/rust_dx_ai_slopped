@@ -57,7 +57,11 @@ pub fn format_uuid(uuid: &Uuid, format: Format, uppercase: bool) -> String {
         Format::Braced => uuid.braced().to_string(),
     };
 
-    if uppercase { s.to_uppercase() } else { s }
+    if uppercase {
+        s.to_uppercase()
+    } else {
+        s
+    }
 }
 
 /// Parse a UUID string

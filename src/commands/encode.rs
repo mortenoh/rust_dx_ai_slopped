@@ -37,8 +37,8 @@
 //! - Base64 RFC 4648: <https://datatracker.ietf.org/doc/html/rfc4648>
 
 use crate::cli::commands::encode::{EncodeArgs, EncodingFormat};
-use anyhow::{Context, Result, bail};
-use base64::{Engine, engine::general_purpose};
+use anyhow::{bail, Context, Result};
+use base64::{engine::general_purpose, Engine};
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;

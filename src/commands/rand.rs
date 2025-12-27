@@ -13,8 +13,8 @@
 
 use crate::cli::commands::rand::{RandArgs, RandCommand};
 use anyhow::Result;
-use rand::Rng;
 use rand::prelude::{IndexedRandom, SliceRandom};
+use rand::Rng;
 
 pub fn run(args: RandArgs) -> Result<()> {
     match args.command {
