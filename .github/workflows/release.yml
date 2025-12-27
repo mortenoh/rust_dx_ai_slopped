@@ -125,7 +125,7 @@ jobs:
           chmod +x dx
           sudo mv dx /usr/local/bin/
           \`\`\`" \
-            --prerelease \
+            --latest \
             release/*
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
