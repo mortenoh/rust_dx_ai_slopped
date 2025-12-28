@@ -1,5 +1,6 @@
 use crate::cli::commands::egui::{EguiArgs, EguiCommand};
 use anyhow::Result;
+use chrono::Timelike;
 use eframe::egui::{self, Color32, RichText};
 
 // Layout constants for consistent styling
@@ -187,7 +188,7 @@ impl eframe::App for CounterApp {
 
 fn cmd_clock() -> Result<()> {
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([300.0, 150.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([350.0, 450.0]),
         ..Default::default()
     };
 
@@ -205,20 +206,92 @@ impl eframe::App for ClockApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
-                ui.heading("Clock");
+                ui.heading("Analog Clock");
                 ui.add_space(SECTION_SPACING);
 
+                let now = chrono::Local::now();
+
+                // Calculate time components with smooth second hand
+                let nanos = now.timestamp_subsec_nanos() as f32;
+                let seconds = now.second() as f32 + nanos / 1_000_000_000.0;
+                let minutes = now.minute() as f32 + seconds / 60.0;
+                let hours = (now.hour() % 12) as f32 + minutes / 60.0;
+
+                // Clock dimensions
+                let available = ui.available_size();
+                let clock_size = available.x.min(available.y - 80.0).min(280.0);
+                let (response, painter) =
+                    ui.allocate_painter(egui::vec2(available.x, clock_size), egui::Sense::hover());
+
+                let center = response.rect.center();
+                let radius = clock_size / 2.0 - 10.0;
+
+                // Colors
+                let stroke_color = if ui.visuals().dark_mode {
+                    Color32::from_gray(200)
+                } else {
+                    Color32::from_gray(60)
+                };
+                let face_color = if ui.visuals().dark_mode {
+                    Color32::from_gray(30)
+                } else {
+                    Color32::from_gray(250)
+                };
+                let second_color = Color32::from_rgb(220, 50, 50);
+
+                // Draw clock face background
+                painter.circle_filled(center, radius, face_color);
+                painter.circle_stroke(center, radius, egui::Stroke::new(2.0, stroke_color));
+
+                // Draw tick marks
+                for i in 0..60 {
+                    let angle =
+                        (i as f32) * std::f32::consts::TAU / 60.0 - std::f32::consts::FRAC_PI_2;
+                    let is_hour = i % 5 == 0;
+
+                    let inner_r = if is_hour { radius - 15.0 } else { radius - 8.0 };
+                    let outer_r = radius - 3.0;
+
+                    let inner = center + egui::vec2(angle.cos() * inner_r, angle.sin() * inner_r);
+                    let outer = center + egui::vec2(angle.cos() * outer_r, angle.sin() * outer_r);
+
+                    let width = if is_hour { 2.0 } else { 1.0 };
+                    painter.line_segment([inner, outer], egui::Stroke::new(width, stroke_color));
+                }
+
+                // Helper to draw clock hands
+                let draw_hand = |angle: f32, length: f32, width: f32, color: Color32| {
+                    let adjusted_angle = angle - std::f32::consts::FRAC_PI_2;
+                    let end = center
+                        + egui::vec2(adjusted_angle.cos() * length, adjusted_angle.sin() * length);
+                    painter.line_segment([center, end], egui::Stroke::new(width, color));
+                };
+
+                // Draw hands
+                let hour_angle = hours * std::f32::consts::TAU / 12.0;
+                let minute_angle = minutes * std::f32::consts::TAU / 60.0;
+                let second_angle = seconds * std::f32::consts::TAU / 60.0;
+
+                draw_hand(hour_angle, radius * 0.5, 6.0, stroke_color);
+                draw_hand(minute_angle, radius * 0.75, 4.0, stroke_color);
+                draw_hand(second_angle, radius * 0.85, 2.0, second_color);
+
+                // Center dot
+                painter.circle_filled(center, 6.0, stroke_color);
+                painter.circle_filled(center, 3.0, second_color);
+
+                ui.add_space(SECTION_SPACING);
+
+                // Digital time display below
                 egui::Frame::group(ui.style())
                     .inner_margin(ITEM_SPACING)
                     .show(ui, |ui| {
-                        let now = chrono::Local::now();
                         ui.vertical_centered(|ui| {
                             ui.label(
                                 RichText::new(now.format("%H:%M:%S").to_string())
-                                    .size(48.0)
+                                    .size(32.0)
                                     .monospace(),
                             );
-                            ui.add_space(ITEM_SPACING);
                             ui.label(now.format("%A, %B %d, %Y").to_string());
                         });
                     });
