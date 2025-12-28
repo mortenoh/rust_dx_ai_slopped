@@ -54,6 +54,12 @@
 - [expr - Expression Evaluator](./part-3-dx-command-reference/expr.md)
 - [net - Network Utilities](./part-3-dx-command-reference/net.md)
 - [chat - gRPC Chat](./part-3-dx-command-reference/chat.md)
+- [fun - Terminal Fun](./part-3-dx-command-reference/fun.md)
+- [grep - Regex Search](./part-3-dx-command-reference/grep.md)
+- [http - HTTP Client](./part-3-dx-command-reference/http.md)
+- [watch - File Watcher](./part-3-dx-command-reference/watch.md)
+- [system - System Info](./part-3-dx-command-reference/system.md)
+- [ui - TUI Dashboard](./part-3-dx-command-reference/ui.md)
 
 ---
 
@@ -139,3 +145,6 @@
 - [Resources](./appendices/d-resources.md)
 - [Expression Language Guide](./appendices/e-expr-language.md)
 - [dx-progress Library](./appendices/f-dx-progress.md)
+- [Cargo Features](./appendices/g-cargo-features.md)
+- [Terminal UI with Ratatui](./appendices/h-ratatui-guide.md)
+- [Async Rust with Tokio](./appendices/i-async-tokio.md)
