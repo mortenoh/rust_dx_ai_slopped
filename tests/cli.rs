@@ -995,3 +995,32 @@ fn test_fun_spinners_help() {
         .stdout(predicate::str::contains("duration"))
         .stdout(predicate::str::contains("name"));
 }
+
+#[test]
+fn test_fun_work_help() {
+    dx().args(["fun", "work", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("duration"))
+        .stdout(predicate::str::contains("tasks"));
+}
+
+#[test]
+fn test_fun_fortune_help() {
+    dx().args(["fun", "fortune", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("animal"))
+        .stdout(predicate::str::contains("say"))
+        .stdout(predicate::str::contains("list"));
+}
+
+#[test]
+fn test_fun_fortune_list() {
+    dx().args(["fun", "fortune", "--list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("cow"))
+        .stdout(predicate::str::contains("tux"))
+        .stdout(predicate::str::contains("cat"));
+}

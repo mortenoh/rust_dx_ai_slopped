@@ -49,4 +49,25 @@ pub enum FunCommand {
         #[arg(short, long)]
         name: Option<String>,
     },
+    /// Simulate doing fake work with progress bars
+    Work {
+        /// Total duration in seconds
+        #[arg(short, long, default_value = "30")]
+        duration: u64,
+        /// Number of fake tasks to complete
+        #[arg(short, long, default_value = "8")]
+        tasks: usize,
+    },
+    /// Show random programming wisdom with ASCII art
+    Fortune {
+        /// ASCII art animal (cow, tux, ghost, dragon, cat, dog)
+        #[arg(short, long)]
+        animal: Option<String>,
+        /// Custom message instead of random fortune
+        #[arg(short, long)]
+        say: Option<String>,
+        /// List available animals
+        #[arg(short, long)]
+        list: bool,
+    },
 }

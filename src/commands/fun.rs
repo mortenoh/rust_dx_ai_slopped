@@ -26,6 +26,8 @@ pub fn run(args: FunArgs) -> Result<()> {
             simple,
         } => cmd_countdown(seconds, message, simple),
         FunCommand::Spinners { duration, name } => cmd_spinners(duration, name),
+        FunCommand::Work { duration, tasks } => cmd_work(duration, tasks),
+        FunCommand::Fortune { animal, say, list } => cmd_fortune(animal, say, list),
     }
 }
 
@@ -532,5 +534,343 @@ fn run_spinner_manual(frames: &[&str], duration_ms: u64) -> Result<()> {
         thread::sleep(Duration::from_millis(80));
     }
     eprintln!("\r\x1b[K{} Done!", "✓".green());
+    Ok(())
+}
+
+/// Fake developer tasks for the work command
+const WORK_TASKS: &[&str] = &[
+    "Compiling shaders",
+    "Optimizing database indexes",
+    "Syncing distributed nodes",
+    "Downloading dependencies",
+    "Running static analysis",
+    "Generating bytecode",
+    "Warming up caches",
+    "Validating schemas",
+    "Minifying assets",
+    "Building Docker images",
+    "Provisioning containers",
+    "Encrypting secrets",
+    "Resolving merge conflicts",
+    "Updating lockfiles",
+    "Calibrating neural networks",
+    "Defragmenting memory pools",
+    "Indexing search corpus",
+    "Compressing artifacts",
+    "Verifying checksums",
+    "Transpiling modules",
+    "Linking binaries",
+    "Spawning worker threads",
+    "Initializing state machine",
+    "Loading configuration",
+    "Establishing connections",
+    "Parsing manifests",
+    "Serializing objects",
+    "Hydrating components",
+    "Prefetching resources",
+    "Analyzing dependencies",
+];
+
+/// Simulate doing fake work with progress bars
+fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
+    let mut rng = rand::rng();
+    let total_ms = duration * 1000;
+    let time_per_task = total_ms / num_tasks as u64;
+
+    // Shuffle and pick tasks
+    let mut task_indices: Vec<usize> = (0..WORK_TASKS.len()).collect();
+    for i in (1..task_indices.len()).rev() {
+        let j = rng.random_range(0..=i);
+        task_indices.swap(i, j);
+    }
+    let selected_tasks: Vec<&str> = task_indices
+        .into_iter()
+        .take(num_tasks)
+        .map(|i| WORK_TASKS[i])
+        .collect();
+
+    println!("{}", "Starting build process...".cyan().bold());
+    println!();
+
+    for (task_idx, task) in selected_tasks.iter().enumerate() {
+        let overall_progress = (task_idx * 100) / num_tasks;
+        osc_progress(overall_progress as u64, ProgressState::Normal);
+
+        // Print task header
+        print!(
+            "{} {}{}",
+            format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
+            task.cyan(),
+            "...".dimmed()
+        );
+        io::stdout().flush().ok();
+
+        // Animate progress for this task
+        let task_start = Instant::now();
+        let mut progress = 0u64;
+        let mut frame = 0usize;
+
+        while progress < 100 {
+            // Random increment with occasional stalls
+            let increment = if rng.random_bool(0.1) {
+                thread::sleep(Duration::from_millis(200));
+                1
+            } else {
+                rng.random_range(2..8)
+            };
+
+            progress = (progress + increment).min(100);
+
+            // Calculate remaining time
+            let elapsed = task_start.elapsed().as_millis() as u64;
+            let target_progress = ((elapsed * 100) / time_per_task).min(100);
+            progress = progress.max(target_progress);
+
+            // Draw inline progress
+            let spinner = SPINNER_FRAMES[frame % SPINNER_FRAMES.len()];
+            let filled = (progress as usize * 20) / 100;
+            let empty = 20 - filled;
+            let bar = format!("{}{}", "█".repeat(filled), "░".repeat(empty));
+
+            print!(
+                "\r{} {}... {} [{}] {}%",
+                format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
+                task.cyan(),
+                spinner.green(),
+                bar.blue(),
+                progress
+            );
+            io::stdout().flush().ok();
+
+            frame += 1;
+            thread::sleep(Duration::from_millis(60));
+
+            // Exit if we've spent enough time
+            if task_start.elapsed().as_millis() >= time_per_task as u128 {
+                progress = 100;
+            }
+        }
+
+        // Complete this task
+        println!(
+            "\r{} {}... {} Done!",
+            format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
+            task.cyan(),
+            "✓".green()
+        );
+    }
+
+    osc_progress_clear();
+    println!();
+    println!(
+        "{} {} tasks completed successfully!",
+        "✓".green().bold(),
+        num_tasks
+    );
+
+    Ok(())
+}
+
+/// Programming fortunes/wisdom
+const FORTUNES: &[&str] = &[
+    "There are only two hard things in CS: cache invalidation and naming things.",
+    "It works on my machine!",
+    "// TODO: fix this later",
+    "Have you tried turning it off and on again?",
+    "The best code is no code at all.",
+    "It's not a bug, it's a feature.",
+    "99 little bugs in the code, 99 little bugs. Take one down, patch it around, 127 little bugs in the code.",
+    "A good programmer is someone who always looks both ways before crossing a one-way street.",
+    "Deleted code is debugged code.",
+    "First, solve the problem. Then, write the code.",
+    "Code never lies, comments sometimes do.",
+    "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.",
+    "Programming is like writing a book... except if you miss a single comma on page 126 the whole thing makes no sense.",
+    "The computer was born to solve problems that did not exist before.",
+    "Weeks of coding can save you hours of planning.",
+    "If debugging is the process of removing bugs, then programming must be the process of putting them in.",
+    "The only way to learn a new programming language is by writing programs in it.",
+    "Programming today is a race between software engineers striving to build bigger and better idiot-proof programs, and the universe trying to build bigger and better idiots. So far, the universe is winning.",
+    "I don't always test my code, but when I do, I do it in production.",
+    "There's no place like 127.0.0.1",
+    "SELECT * FROM users WHERE clue > 0; -- 0 rows returned",
+    "git commit -m 'Fixed a bug' (narrator: they did not fix the bug)",
+    "There are 10 kinds of people: those who understand binary and those who don't.",
+    "A SQL query walks into a bar, walks up to two tables and asks... 'Can I join you?'",
+    "Why do programmers prefer dark mode? Because light attracts bugs.",
+    "Algorithm: a word used by programmers when they don't want to explain what they did.",
+    "Documentation is like sex: when it's good, it's very good; when it's bad, it's better than nothing.",
+    "Copy and paste is a design pattern.",
+    "Real programmers count from 0.",
+    "The S in IoT stands for Security.",
+    "In theory, there is no difference between theory and practice. In practice, there is.",
+    "Measuring programming progress by lines of code is like measuring aircraft building progress by weight.",
+    "The code you write makes you a programmer. The code you delete makes you a good one. The code you don't have to write makes you a great one.",
+    "Talk is cheap. Show me the code.",
+    "Software is like entropy: it is difficult to grasp, weighs nothing, and obeys the Second Law of Thermodynamics; i.e., it always increases.",
+];
+
+/// ASCII art animals
+const ANIMALS: &[(&str, &[&str])] = &[
+    (
+        "cow",
+        &[
+            r"        \   ^__^",
+            r"         \  (oo)\_______",
+            r"            (__)\       )\/\",
+            r"                ||----w |",
+            r"                ||     ||",
+        ],
+    ),
+    (
+        "tux",
+        &[
+            r"   \",
+            r"    \",
+            r"        .-.",
+            r"       |o_o |",
+            r"       |:_/ |",
+            r"      //   \ \",
+            r"     (|     | )",
+            r"    /'\_   _/`\",
+            r"    \___)=(___/",
+        ],
+    ),
+    (
+        "ghost",
+        &[
+            r"   \",
+            r"    \",
+            r"     .-..",
+            r"    ( o o )",
+            r"    |  O  |",
+            r"    |     |",
+            r"    '~~~~~'",
+        ],
+    ),
+    (
+        "dragon",
+        &[
+            r"      \                    / \  //\",
+            r"       \    |\___/|      /   \//  \\",
+            r"            /0  0  \__  /    //  | \ \",
+            r"           /     /  \/_/    //   |  \  \",
+            r"           @_^_@'/   \/_   //    |   \   \",
+            r"           //_^_/     \/_ //     |    \    \",
+            r"        ( //) |        \///      |     \     \",
+            r"      ( / /) _|_ /   )  //       |      \     _\",
+            r"    ( // /) '/,_ _ _/  ( ; -.    |    _ _\.-~        .-~~~^-.",
+            r"  (( / / )) ,-{        _      `-.|.-~-.           .googl    `,",
+            r" (( // / ))  '/\      /                 ~-. _ .-~      .-~^-.  \",
+            r" (( /// ))      `.   {            }                   /      \  \",
+            r"  (( / ))     .googl `googl       googl  googl.googl /googl  }  \\",
+            r"              googl   googl      googl    googl.goggoogglgoglgoggl|",
+        ],
+    ),
+    (
+        "cat",
+        &[r"  \", r"   \", r"    /\_/\", r"   ( o.o )", r"    > ^ <"],
+    ),
+    (
+        "dog",
+        &[
+            r"  \",
+            r"   \",
+            r"        / \__",
+            r"       (    @\___",
+            r"       /         O",
+            r"      /   (_____/",
+            r"     /_____/   U",
+        ],
+    ),
+];
+
+/// Show random programming wisdom with ASCII art
+fn cmd_fortune(animal: Option<String>, say: Option<String>, list: bool) -> Result<()> {
+    // Handle --list flag
+    if list {
+        println!("{}", "Available animals:".cyan().bold());
+        for (name, _) in ANIMALS {
+            println!("  {}", name);
+        }
+        return Ok(());
+    }
+
+    // Pick fortune or use custom message
+    let message = if let Some(custom) = say {
+        custom
+    } else {
+        let mut rng = rand::rng();
+        FORTUNES[rng.random_range(0..FORTUNES.len())].to_string()
+    };
+
+    // Pick animal
+    let selected_animal = if let Some(ref name) = animal {
+        ANIMALS
+            .iter()
+            .find(|(n, _)| *n == name.as_str())
+            .map(|(_, art)| *art)
+    } else {
+        let mut rng = rand::rng();
+        Some(ANIMALS[rng.random_range(0..ANIMALS.len())].1)
+    };
+
+    let animal_art = match selected_animal {
+        Some(art) => art,
+        None => {
+            println!("Unknown animal: {}", animal.unwrap());
+            println!("Use --list to see available animals.");
+            return Ok(());
+        }
+    };
+
+    // Build speech bubble
+    let max_width = 60;
+    let words: Vec<&str> = message.split_whitespace().collect();
+    let mut lines: Vec<String> = Vec::new();
+    let mut current_line = String::new();
+
+    for word in words {
+        if current_line.is_empty() {
+            current_line = word.to_string();
+        } else if current_line.len() + 1 + word.len() <= max_width {
+            current_line.push(' ');
+            current_line.push_str(word);
+        } else {
+            lines.push(current_line);
+            current_line = word.to_string();
+        }
+    }
+    if !current_line.is_empty() {
+        lines.push(current_line);
+    }
+
+    // Find max line width
+    let bubble_width = lines.iter().map(|l| l.len()).max().unwrap_or(0);
+
+    // Print speech bubble
+    println!(" {}", "_".repeat(bubble_width + 2));
+
+    for (i, line) in lines.iter().enumerate() {
+        let padding = " ".repeat(bubble_width - line.len());
+        let (left, right) = if lines.len() == 1 {
+            ('<', '>')
+        } else if i == 0 {
+            ('/', '\\')
+        } else if i == lines.len() - 1 {
+            ('\\', '/')
+        } else {
+            ('|', '|')
+        };
+        println!("{} {}{} {}", left, line.yellow(), padding, right);
+    }
+
+    println!(" {}", "-".repeat(bubble_width + 2));
+
+    // Print animal
+    for line in animal_art {
+        println!("{}", line);
+    }
+
     Ok(())
 }
