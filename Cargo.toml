@@ -52,7 +52,6 @@ thiserror = "2"
 anyhow = "1"
 regex = "1"
 walkdir = "2"
-openssl = { version = "0.10", features = ["vendored"] }
 ureq = { version = "3", default-features = false, features = ["native-tls", "gzip"] }
 notify = "7"
 notify-debouncer-mini = "0.5"
@@ -105,6 +104,10 @@ tonic-prost-build = "0.14.2"
 [[bench]]
 name = "hash_bench"
 harness = false
+
+# Linux-specific: vendored OpenSSL for cross-compilation (native-tls uses OpenSSL on Linux)
+[target.'cfg(target_os = "linux")'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
 
 [profile.release]
 lto = true
