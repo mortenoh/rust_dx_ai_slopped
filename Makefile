@@ -20,9 +20,9 @@ LINUX_TARGETS := x86_64-unknown-linux-gnu \
 MACOS_TARGETS := x86_64-apple-darwin \
                  aarch64-apple-darwin
 
-# Windows targets (gnullvm uses LLVM linker, no mingw-w64 needed)
-WINDOWS_TARGETS := x86_64-pc-windows-gnullvm \
-                   aarch64-pc-windows-gnullvm
+# Windows targets (MSVC via cargo-xwin for full Windows API support)
+WINDOWS_TARGETS := x86_64-pc-windows-msvc \
+                   aarch64-pc-windows-msvc
 
 ALL_TARGETS := $(LINUX_TARGETS) $(MACOS_TARGETS)
 
@@ -85,7 +85,7 @@ build-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --target $$target || echo "Failed: $$target"; \
+		cargo xwin build --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 release:
@@ -111,7 +111,7 @@ release-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --release --target $$target || echo "Failed: $$target"; \
+		cargo xwin build --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 # Distribute - collect all binaries into dist/

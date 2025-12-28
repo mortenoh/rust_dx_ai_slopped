@@ -19,27 +19,31 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             name: dx-linux-x86_64
-            features: ui
+            features: ui,egui
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
             name: dx-linux-x86_64-musl
-            features: ui
+            features: ui,egui
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             name: dx-linux-aarch64
-            features: ui
+            features: ui,egui
           - target: x86_64-apple-darwin
             os: macos-latest
             name: dx-macos-x86_64
-            features: ui
+            features: ui,egui
           - target: aarch64-apple-darwin
             os: macos-latest
             name: dx-macos-aarch64
-            features: ui
+            features: ui,egui
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             name: dx-windows-x86_64.exe
-            features: ui
+            features: ui,egui
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+            name: dx-windows-aarch64.exe
+            features: ui,egui
 
     steps:
       - uses: actions/checkout@v4
@@ -129,11 +133,14 @@ jobs:
           done
 
           # Create zip for Windows
-          if [[ -f "dx-windows-x86_64.exe" ]]; then
-            cp "dx-windows-x86_64.exe" dx.exe
-            zip dx-windows-x86_64.zip dx.exe
-            rm dx.exe
-          fi
+          for winbin in dx-windows-*.exe; do
+            if [[ -f "$winbin" ]]; then
+              zipname="${winbin%.exe}.zip"
+              cp "$winbin" dx.exe
+              zip "$zipname" dx.exe
+              rm dx.exe
+            fi
+          done
 
           ls -la
 
@@ -158,10 +165,11 @@ jobs:
           | macOS x86_64 | \`dx-macos-x86_64.tar.gz\` |
           | macOS ARM64 | \`dx-macos-aarch64.tar.gz\` |
           | Windows x86_64 | \`dx-windows-x86_64.zip\` |
+          | Windows ARM64 | \`dx-windows-aarch64.zip\` |
 
           ## Raw binaries
           Direct download (rename to \`dx\` after):
-          \`dx-linux-x86_64\`, \`dx-linux-aarch64\`, \`dx-macos-x86_64\`, \`dx-macos-aarch64\`, \`dx-windows-x86_64.exe\`
+          \`dx-linux-x86_64\`, \`dx-linux-aarch64\`, \`dx-macos-x86_64\`, \`dx-macos-aarch64\`, \`dx-windows-x86_64.exe\`, \`dx-windows-aarch64.exe\`
 
           ## Quick install (Linux/macOS)
           \`\`\`bash

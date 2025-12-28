@@ -67,8 +67,8 @@ The dx project builds for these targets:
 | `aarch64-unknown-linux-gnu` | Linux | ARM64 | glibc | Raspberry Pi 4, AWS Graviton |
 | `x86_64-apple-darwin` | macOS | x86_64 | - | Intel Macs |
 | `aarch64-apple-darwin` | macOS | ARM64 | - | Apple Silicon (M1/M2/M3) |
-| `x86_64-pc-windows-gnullvm` | Windows | x86_64 | MSVC | Most Windows PCs |
-| `aarch64-pc-windows-gnullvm` | Windows | ARM64 | MSVC | Surface Pro X, Windows ARM |
+| `x86_64-pc-windows-msvc` | Windows | x86_64 | MSVC | Most Windows PCs |
+| `aarch64-pc-windows-msvc` | Windows | ARM64 | MSVC | Surface Pro X, Windows ARM |
 
 ### Binary Naming Convention
 
@@ -79,7 +79,7 @@ dx-{target}.exe       # Windows
 # Examples:
 dx-x86_64-unknown-linux-gnu
 dx-aarch64-apple-darwin
-dx-x86_64-pc-windows-gnullvm.exe
+dx-x86_64-pc-windows-msvc.exe
 ```
 
 ---
@@ -96,8 +96,8 @@ If you're on an M1/M2/M3 Mac, you have excellent options for testing all platfor
 | `x86_64-apple-darwin` | Rosetta 2 | ⚡ ~80-90% native |
 | `aarch64-unknown-linux-gnu` | UTM/OrbStack | 🚀 Near-native |
 | `x86_64-unknown-linux-gnu` | UTM+Rosetta/Docker | 🔶 ~60-70% |
-| `aarch64-pc-windows-gnullvm` | UTM/Parallels | 🚀 Near-native |
-| `x86_64-pc-windows-gnullvm` | UTM (emulated) | 🐢 ~10-20% |
+| `aarch64-pc-windows-msvc` | UTM/Parallels | 🚀 Near-native |
+| `x86_64-pc-windows-msvc` | UTM (emulated) | 🐢 ~10-20% |
 
 ### UTM (Free, Recommended)
 
@@ -358,7 +358,7 @@ qemu-system-aarch64 \
 
 ```bash
 sudo apt install wine64
-wine ./dx-x86_64-pc-windows-gnullvm.exe --version
+wine ./dx-x86_64-pc-windows-msvc.exe --version
 ```
 
 Note: Wine has limitations with complex applications.
@@ -405,10 +405,10 @@ If you're on Windows ARM (Surface Pro X, etc.):
 
 ```powershell
 # Native ARM64 Windows
-.\dx-aarch64-pc-windows-gnullvm.exe --version
+.\dx-aarch64-pc-windows-msvc.exe --version
 
 # x86_64 via emulation
-.\dx-x86_64-pc-windows-gnullvm.exe --version
+.\dx-x86_64-pc-windows-msvc.exe --version
 ```
 
 ### Hyper-V for VMs
@@ -838,9 +838,9 @@ rustup default stable
 
 ```powershell
 # Copy from shared folder or download
-.\dx-aarch64-pc-windows-gnullvm.exe --version
-.\dx-aarch64-pc-windows-gnullvm.exe system info
-.\dx-aarch64-pc-windows-gnullvm.exe egui demo
+.\dx-aarch64-pc-windows-msvc.exe --version
+.\dx-aarch64-pc-windows-msvc.exe system info
+.\dx-aarch64-pc-windows-msvc.exe egui demo
 ```
 
 ### Debian x86_64 in UTM (with Rosetta)

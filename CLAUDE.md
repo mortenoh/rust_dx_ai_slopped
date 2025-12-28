@@ -242,7 +242,7 @@ cargo run -- completions bash > dx.bash
 cargo run -- completions zsh > _dx
 cargo run -- completions fish > dx.fish
 
-# Cross-compile (requires cargo-zigbuild)
+# Cross-compile (requires cargo-zigbuild for Linux, cargo-xwin for Windows)
 make build-all                 # All targets
 make release-all               # Release builds for all targets
 ```

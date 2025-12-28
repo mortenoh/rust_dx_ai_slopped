@@ -197,16 +197,18 @@ rustup target add aarch64-unknown-linux-gnu
 rustup target add x86_64-apple-darwin
 rustup target add aarch64-apple-darwin
 
-# Windows targets (gnullvm = LLVM linker, no mingw-w64 needed)
-rustup target add x86_64-pc-windows-gnullvm
-rustup target add aarch64-pc-windows-gnullvm
+# Windows targets (MSVC via cargo-xwin)
+rustup target add x86_64-pc-windows-msvc
+rustup target add aarch64-pc-windows-msvc
 ```
 
 Install Homebrew dependencies:
 
 ```bash
-# Required for cross-compilation (Linux and Windows)
-cargo install cargo-zigbuild
+# Required for cross-compilation
+cargo install cargo-zigbuild  # Linux targets
+cargo install cargo-xwin      # Windows MSVC targets
+brew install llvm             # Required for cargo-xwin
 ```
 
 ### Building for All Platforms
@@ -246,8 +248,8 @@ dist/
 ├── dx-aarch64-unknown-linux-gnu
 ├── dx-x86_64-apple-darwin
 ├── dx-aarch64-apple-darwin
-├── dx-x86_64-pc-windows-gnullvm.exe
-└── dx-aarch64-pc-windows-gnullvm.exe
+├── dx-x86_64-pc-windows-msvc.exe
+└── dx-aarch64-pc-windows-msvc.exe
 ```
 
 ### Compressed Distribution (UPX)
@@ -285,8 +287,8 @@ Individual binaries are placed in `target/<triple>/release/`:
 | Linux ARM64 | `target/aarch64-unknown-linux-gnu/release/dx` |
 | macOS x86_64 | `target/x86_64-apple-darwin/release/dx` |
 | macOS ARM64 | `target/aarch64-apple-darwin/release/dx` |
-| Windows x86_64 | `target/x86_64-pc-windows-gnullvm/release/dx.exe` |
-| Windows ARM64 | `target/aarch64-pc-windows-gnullvm/release/dx.exe` |
+| Windows x86_64 | `target/x86_64-pc-windows-msvc/release/dx.exe` |
+| Windows ARM64 | `target/aarch64-pc-windows-msvc/release/dx.exe` |
 
 ## License
 
