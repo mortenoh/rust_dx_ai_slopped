@@ -52,7 +52,7 @@ thiserror = "2"
 anyhow = "1"
 regex = "1"
 walkdir = "2"
-ureq = "3"
+ureq = { version = "3", default-features = false, features = ["native-tls", "gzip"] }
 notify = "7"
 notify-debouncer-mini = "0.5"
 
