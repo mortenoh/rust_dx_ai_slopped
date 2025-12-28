@@ -34,6 +34,20 @@ pub fn run(args: FunArgs) -> Result<()> {
         } => cmd_work(duration, tasks, &style, list_styles),
         FunCommand::Fortune { animal, say, list } => cmd_fortune(animal, say, list),
         FunCommand::Bounce { duration, message } => cmd_bounce(duration, message),
+        FunCommand::Clock {
+            duration,
+            twelve_hour,
+            seconds,
+        } => cmd_clock(duration, twelve_hour, seconds),
+        FunCommand::Qr { text, invert } => cmd_qr(&text, invert),
+        FunCommand::Life {
+            duration,
+            pattern,
+            width,
+            height,
+        } => cmd_life(duration, &pattern, width, height),
+        FunCommand::Matrix { duration, density } => cmd_matrix(duration, density),
+        FunCommand::Banner { text } => cmd_banner(&text),
     }
 }
 
@@ -1004,3 +1018,641 @@ fn cmd_bounce(duration: u64, message: Option<String>) -> Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// ASCII CLOCK
+// ============================================================================
+
+/// Big ASCII digits for clock display (5 rows each)
+const ASCII_DIGITS: [&[&str]; 10] = [
+    // 0
+    &[" ██████ ", "██    ██", "██    ██", "██    ██", " ██████ "],
+    // 1
+    &["   ██   ", " ████   ", "   ██   ", "   ██   ", " ██████ "],
+    // 2
+    &[" ██████ ", "      ██", " ██████ ", "██      ", " ██████ "],
+    // 3
+    &[" ██████ ", "      ██", "  █████ ", "      ██", " ██████ "],
+    // 4
+    &["██    ██", "██    ██", " ███████", "      ██", "      ██"],
+    // 5
+    &[" ██████ ", "██      ", " ██████ ", "      ██", " ██████ "],
+    // 6
+    &[" ██████ ", "██      ", " ██████ ", "██    ██", " ██████ "],
+    // 7
+    &[" ███████", "      ██", "     ██ ", "    ██  ", "   ██   "],
+    // 8
+    &[" ██████ ", "██    ██", " ██████ ", "██    ██", " ██████ "],
+    // 9
+    &[" ██████ ", "██    ██", " ███████", "      ██", " ██████ "],
+];
+
+const ASCII_COLON: &[&str] = &["   ", " ██", "   ", " ██", "   "];
+
+/// Big ASCII clock display
+fn cmd_clock(duration: u64, twelve_hour: bool, show_seconds: bool) -> Result<()> {
+    let start = Instant::now();
+
+    // Enable raw mode for keyboard input (q/Esc to quit)
+    enable_raw_mode();
+
+    // Hide cursor
+    print!("\x1b[?25l");
+    io::stdout().flush().ok();
+
+    // Install Ctrl+C handler
+    let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let r = running.clone();
+    ctrlc_setup(move || {
+        r.store(false, std::sync::atomic::Ordering::SeqCst);
+    });
+
+    while running.load(std::sync::atomic::Ordering::SeqCst) {
+        // Check duration
+        if duration > 0 && start.elapsed().as_secs() >= duration {
+            break;
+        }
+
+        // Check for q or Escape
+        if check_quit_key() {
+            break;
+        }
+
+        let now = chrono::Local::now();
+        let (hour, minute, second) = if twelve_hour {
+            let h = now.format("%I").to_string().parse::<u32>().unwrap_or(12);
+            (
+                h,
+                now.format("%M").to_string(),
+                now.format("%S").to_string(),
+            )
+        } else {
+            (
+                now.format("%H").to_string().parse::<u32>().unwrap_or(0),
+                now.format("%M").to_string(),
+                now.format("%S").to_string(),
+            )
+        };
+
+        // Get terminal size for centering
+        let (term_width, term_height) = terminal_size::terminal_size()
+            .map(|(w, h)| (w.0 as usize, h.0 as usize))
+            .unwrap_or((80, 24));
+
+        // Calculate clock width (each digit is ~9 chars wide, colon is 4)
+        let clock_width = if show_seconds {
+            // HH:MM:SS = 6 digits + 2 colons
+            6 * 9 + 2 * 4
+        } else {
+            // HH:MM = 4 digits + 1 colon
+            4 * 9 + 4
+        };
+
+        let h_padding = term_width.saturating_sub(clock_width) / 2;
+        let v_padding = term_height.saturating_sub(7) / 2; // 5 rows + 2 for AM/PM
+
+        // Clear screen and move to top
+        print!("\x1b[2J\x1b[H");
+
+        // Build time digits
+        let hour_str = format!("{:02}", hour);
+        let digits: Vec<usize> = if show_seconds {
+            vec![
+                hour_str.chars().next().unwrap().to_digit(10).unwrap_or(0) as usize,
+                hour_str.chars().nth(1).unwrap().to_digit(10).unwrap_or(0) as usize,
+                10, // colon
+                minute.chars().next().unwrap().to_digit(10).unwrap_or(0) as usize,
+                minute.chars().nth(1).unwrap().to_digit(10).unwrap_or(0) as usize,
+                10, // colon
+                second.chars().next().unwrap().to_digit(10).unwrap_or(0) as usize,
+                second.chars().nth(1).unwrap().to_digit(10).unwrap_or(0) as usize,
+            ]
+        } else {
+            vec![
+                hour_str.chars().next().unwrap().to_digit(10).unwrap_or(0) as usize,
+                hour_str.chars().nth(1).unwrap().to_digit(10).unwrap_or(0) as usize,
+                10, // colon
+                minute.chars().next().unwrap().to_digit(10).unwrap_or(0) as usize,
+                minute.chars().nth(1).unwrap().to_digit(10).unwrap_or(0) as usize,
+            ]
+        };
+
+        // Vertical padding
+        for _ in 0..v_padding {
+            println!();
+        }
+
+        // Print each row
+        for row in 0..5 {
+            print!("{}", " ".repeat(h_padding));
+            for &d in &digits {
+                let pattern = if d == 10 {
+                    ASCII_COLON[row]
+                } else {
+                    ASCII_DIGITS[d][row]
+                };
+                print!("{} ", pattern.cyan());
+            }
+            println!();
+        }
+
+        // Show AM/PM for 12-hour
+        if twelve_hour {
+            let ampm = now.format("%p").to_string();
+            println!("{}{}", " ".repeat(h_padding), ampm.dimmed());
+        }
+
+        io::stdout().flush().ok();
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    // Disable raw mode and show cursor
+    disable_raw_mode();
+    print!("\x1b[?25h");
+    io::stdout().flush().ok();
+
+    Ok(())
+}
+
+// ============================================================================
+// QR CODE
+// ============================================================================
+
+/// Generate QR code in terminal
+fn cmd_qr(text: &str, invert: bool) -> Result<()> {
+    use qrcode::QrCode;
+
+    let code = QrCode::new(text.as_bytes()).map_err(|e| anyhow::anyhow!("QR error: {}", e))?;
+
+    let (dark, light) = if invert {
+        ("  ", "██")
+    } else {
+        ("██", "  ")
+    };
+
+    // Add quiet zone (border)
+    let width = code.width();
+
+    // Top border
+    for _ in 0..width + 4 {
+        print!("{}", light);
+    }
+    println!();
+    for _ in 0..width + 4 {
+        print!("{}", light);
+    }
+    println!();
+
+    // QR code with side borders
+    for y in 0..width {
+        print!("{}{}", light, light); // Left border
+        for x in 0..width {
+            let module = code[(x, y)];
+            let is_dark = module == qrcode::Color::Dark;
+            print!("{}", if is_dark { dark } else { light });
+        }
+        println!("{}{}", light, light); // Right border
+    }
+
+    // Bottom border
+    for _ in 0..width + 4 {
+        print!("{}", light);
+    }
+    println!();
+    for _ in 0..width + 4 {
+        print!("{}", light);
+    }
+    println!();
+
+    Ok(())
+}
+
+// ============================================================================
+// GAME OF LIFE
+// ============================================================================
+
+/// Conway's Game of Life
+fn cmd_life(duration: u64, pattern: &str, width: usize, height: usize) -> Result<()> {
+    let mut rng = rand::rng();
+    let start = Instant::now();
+
+    // Enable raw mode for keyboard input (q/Esc to quit)
+    enable_raw_mode();
+
+    // Initialize grid
+    let mut grid = vec![vec![false; width]; height];
+
+    match pattern {
+        "glider" => {
+            // Classic glider at top-left
+            if height > 3 && width > 3 {
+                grid[1][2] = true;
+                grid[2][3] = true;
+                grid[3][1] = true;
+                grid[3][2] = true;
+                grid[3][3] = true;
+            }
+        }
+        "blinker" => {
+            // Simple blinker in center
+            let cy = height / 2;
+            let cx = width / 2;
+            if cy > 0 && cx > 1 {
+                grid[cy][cx - 1] = true;
+                grid[cy][cx] = true;
+                grid[cy][cx + 1] = true;
+            }
+        }
+        "pulsar" => {
+            // Pulsar pattern (period 3)
+            let cy = height / 2;
+            let cx = width / 2;
+            if height > 15 && width > 15 {
+                // Pulsar is complex, add simplified version
+                for &dy in &[-6i32, -1, 1, 6] {
+                    for &dx in &[-4i32, -3, -2, 2, 3, 4] {
+                        let y = (cy as i32 + dy) as usize;
+                        let x = (cx as i32 + dx) as usize;
+                        if y < height && x < width {
+                            grid[y][x] = true;
+                        }
+                    }
+                }
+            }
+        }
+        _ => {
+            // Random
+            for row in grid.iter_mut() {
+                for cell in row.iter_mut() {
+                    *cell = rng.random_bool(0.3);
+                }
+            }
+        }
+    }
+
+    // Hide cursor
+    print!("\x1b[?25l");
+    io::stdout().flush().ok();
+
+    let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let r = running.clone();
+    ctrlc_setup(move || {
+        r.store(false, std::sync::atomic::Ordering::SeqCst);
+    });
+
+    let mut generation = 0u64;
+
+    while running.load(std::sync::atomic::Ordering::SeqCst) {
+        if duration > 0 && start.elapsed().as_secs() >= duration {
+            break;
+        }
+
+        // Check for q or Escape
+        if check_quit_key() {
+            break;
+        }
+
+        // Clear and draw
+        print!("\x1b[2J\x1b[H");
+        println!(
+            "{} Generation: {}\n",
+            "Game of Life".cyan().bold(),
+            generation
+        );
+
+        for row in &grid {
+            for &cell in row {
+                if cell {
+                    print!("{}", "██".green());
+                } else {
+                    print!("  ");
+                }
+            }
+            println!();
+        }
+
+        println!("\n{}", "Press q, Esc, or Ctrl+C to exit".dimmed());
+        io::stdout().flush().ok();
+
+        // Compute next generation
+        let mut next = vec![vec![false; width]; height];
+        for y in 0..height {
+            for x in 0..width {
+                let neighbors = count_neighbors(&grid, x, y, width, height);
+                next[y][x] = matches!((grid[y][x], neighbors), (true, 2) | (true, 3) | (false, 3));
+            }
+        }
+        grid = next;
+        generation += 1;
+
+        thread::sleep(Duration::from_millis(100));
+    }
+
+    // Disable raw mode and show cursor
+    disable_raw_mode();
+    print!("\x1b[?25h");
+    io::stdout().flush().ok();
+
+    Ok(())
+}
+
+fn count_neighbors(grid: &[Vec<bool>], x: usize, y: usize, width: usize, height: usize) -> usize {
+    let mut count = 0;
+    for dy in -1i32..=1 {
+        for dx in -1i32..=1 {
+            if dx == 0 && dy == 0 {
+                continue;
+            }
+            let nx = (x as i32 + dx).rem_euclid(width as i32) as usize;
+            let ny = (y as i32 + dy).rem_euclid(height as i32) as usize;
+            if grid[ny][nx] {
+                count += 1;
+            }
+        }
+    }
+    count
+}
+
+// ============================================================================
+// MATRIX RAIN
+// ============================================================================
+
+/// Matrix-style falling code rain
+fn cmd_matrix(duration: u64, density: u8) -> Result<()> {
+    let mut rng = rand::rng();
+    let start = Instant::now();
+
+    // Enable raw mode for keyboard input (q/Esc to quit)
+    enable_raw_mode();
+
+    // Get terminal size
+    let (width, height) = terminal_size::terminal_size()
+        .map(|(w, h)| (w.0 as usize, h.0 as usize))
+        .unwrap_or((80, 24));
+
+    // Katakana-like characters + digits
+    let chars: Vec<char> = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789"
+        .chars()
+        .collect();
+
+    // Column states: (position, speed, length, active)
+    let num_columns = width / 2;
+    let mut columns: Vec<(f32, f32, usize, bool)> = (0..num_columns)
+        .map(|_| {
+            (
+                rng.random_range(-(height as f32)..0.0),
+                rng.random_range(0.3..1.0),
+                rng.random_range(5..15),
+                rng.random_bool(density as f64 / 10.0),
+            )
+        })
+        .collect();
+
+    // Screen buffer
+    let mut screen: Vec<Vec<char>> = vec![vec![' '; num_columns]; height];
+
+    // Hide cursor
+    print!("\x1b[?25l");
+    io::stdout().flush().ok();
+
+    let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let r = running.clone();
+    ctrlc_setup(move || {
+        r.store(false, std::sync::atomic::Ordering::SeqCst);
+    });
+
+    while running.load(std::sync::atomic::Ordering::SeqCst) {
+        if duration > 0 && start.elapsed().as_secs() >= duration {
+            break;
+        }
+
+        // Check for q or Escape
+        if check_quit_key() {
+            break;
+        }
+
+        // Update columns
+        for (i, (pos, speed, len, active)) in columns.iter_mut().enumerate() {
+            if !*active {
+                if rng.random_bool(0.02 * density as f64) {
+                    *active = true;
+                    *pos = 0.0;
+                    *len = rng.random_range(5..15);
+                    *speed = rng.random_range(0.3..1.0);
+                }
+                continue;
+            }
+
+            *pos += *speed;
+
+            // Add character at head position
+            let head_y = *pos as i32;
+            if head_y >= 0 && (head_y as usize) < height {
+                screen[head_y as usize][i] = chars[rng.random_range(0..chars.len())];
+            }
+
+            // Clear tail
+            let tail_y = head_y - (*len as i32);
+            if tail_y >= 0 && (tail_y as usize) < height {
+                screen[tail_y as usize][i] = ' ';
+            }
+
+            // Reset if off screen
+            if tail_y > height as i32 {
+                *active = false;
+            }
+        }
+
+        // Render
+        print!("\x1b[H"); // Move to top
+        for (y, row) in screen.iter().enumerate() {
+            for (x, &ch) in row.iter().enumerate() {
+                let head_y = columns[x].0 as i32;
+                if ch != ' ' {
+                    if y as i32 == head_y {
+                        // Bright head
+                        print!("\x1b[97m{}\x1b[0m", ch); // White
+                    } else if y as i32 > head_y - 3 {
+                        // Bright green near head
+                        print!("\x1b[92m{}\x1b[0m", ch);
+                    } else {
+                        // Dark green
+                        print!("\x1b[32m{}\x1b[0m", ch);
+                    }
+                } else {
+                    print!(" ");
+                }
+            }
+            println!();
+        }
+
+        io::stdout().flush().ok();
+        thread::sleep(Duration::from_millis(50));
+    }
+
+    // Disable raw mode, restore cursor and clear
+    disable_raw_mode();
+    print!("\x1b[?25h\x1b[2J\x1b[H");
+    io::stdout().flush().ok();
+
+    Ok(())
+}
+
+// ============================================================================
+// ASCII BANNER
+// ============================================================================
+
+/// Simple block letter font (each letter is 5 rows x variable width)
+const BANNER_FONT: &[(char, &[&str])] = &[
+    ('A', &["  █  ", " █ █ ", "█████", "█   █", "█   █"]),
+    ('B', &["████ ", "█   █", "████ ", "█   █", "████ "]),
+    ('C', &[" ████", "█    ", "█    ", "█    ", " ████"]),
+    ('D', &["████ ", "█   █", "█   █", "█   █", "████ "]),
+    ('E', &["█████", "█    ", "████ ", "█    ", "█████"]),
+    ('F', &["█████", "█    ", "████ ", "█    ", "█    "]),
+    ('G', &[" ████", "█    ", "█  ██", "█   █", " ████"]),
+    ('H', &["█   █", "█   █", "█████", "█   █", "█   █"]),
+    ('I', &["█████", "  █  ", "  █  ", "  █  ", "█████"]),
+    ('J', &["█████", "   █ ", "   █ ", "█  █ ", " ██  "]),
+    ('K', &["█   █", "█  █ ", "███  ", "█  █ ", "█   █"]),
+    ('L', &["█    ", "█    ", "█    ", "█    ", "█████"]),
+    ('M', &["█   █", "██ ██", "█ █ █", "█   █", "█   █"]),
+    ('N', &["█   █", "██  █", "█ █ █", "█  ██", "█   █"]),
+    ('O', &[" ███ ", "█   █", "█   █", "█   █", " ███ "]),
+    ('P', &["████ ", "█   █", "████ ", "█    ", "█    "]),
+    ('Q', &[" ███ ", "█   █", "█   █", "█  █ ", " ██ █"]),
+    ('R', &["████ ", "█   █", "████ ", "█  █ ", "█   █"]),
+    ('S', &[" ████", "█    ", " ███ ", "    █", "████ "]),
+    ('T', &["█████", "  █  ", "  █  ", "  █  ", "  █  "]),
+    ('U', &["█   █", "█   █", "█   █", "█   █", " ███ "]),
+    ('V', &["█   █", "█   █", "█   █", " █ █ ", "  █  "]),
+    ('W', &["█   █", "█   █", "█ █ █", "██ ██", "█   █"]),
+    ('X', &["█   █", " █ █ ", "  █  ", " █ █ ", "█   █"]),
+    ('Y', &["█   █", " █ █ ", "  █  ", "  █  ", "  █  "]),
+    ('Z', &["█████", "   █ ", "  █  ", " █   ", "█████"]),
+    ('0', &[" ███ ", "█  ██", "█ █ █", "██  █", " ███ "]),
+    ('1', &[" █   ", "██   ", " █   ", " █   ", "███  "]),
+    ('2', &[" ███ ", "█   █", "  ██ ", " █   ", "█████"]),
+    ('3', &["████ ", "    █", " ███ ", "    █", "████ "]),
+    ('4', &["█  █ ", "█  █ ", "█████", "   █ ", "   █ "]),
+    ('5', &["█████", "█    ", "████ ", "    █", "████ "]),
+    ('6', &[" ███ ", "█    ", "████ ", "█   █", " ███ "]),
+    ('7', &["█████", "    █", "   █ ", "  █  ", " █   "]),
+    ('8', &[" ███ ", "█   █", " ███ ", "█   █", " ███ "]),
+    ('9', &[" ███ ", "█   █", " ████", "    █", " ███ "]),
+    (' ', &["     ", "     ", "     ", "     ", "     "]),
+    ('!', &["  █  ", "  █  ", "  █  ", "     ", "  █  "]),
+    ('.', &["     ", "     ", "     ", "     ", "  █  "]),
+    ('-', &["     ", "     ", "█████", "     ", "     "]),
+];
+
+/// Big ASCII text banner
+fn cmd_banner(text: &str) -> Result<()> {
+    let text = text.to_uppercase();
+
+    // Build 5 rows
+    let mut rows: Vec<String> = vec![String::new(); 5];
+
+    for ch in text.chars() {
+        if let Some((_, pattern)) = BANNER_FONT.iter().find(|(c, _)| *c == ch) {
+            for (i, line) in pattern.iter().enumerate() {
+                rows[i].push_str(line);
+                rows[i].push(' '); // spacing between letters
+            }
+        } else {
+            // Unknown char - add space
+            for row in &mut rows {
+                row.push_str("     ");
+                row.push(' ');
+            }
+        }
+    }
+
+    // Print with color
+    println!();
+    for row in &rows {
+        println!("  {}", row.cyan());
+    }
+    println!();
+
+    Ok(())
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/// Setup Ctrl+C handler (best effort)
+fn ctrlc_setup<F>(handler: F)
+where
+    F: FnOnce() + Send + 'static,
+{
+    // Simple best-effort handler using std
+    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let handler = std::sync::Mutex::new(Some(handler));
+        let _ = ctrlc::set_handler(move || {
+            if let Ok(mut guard) = handler.lock() {
+                if let Some(f) = guard.take() {
+                    f();
+                }
+            }
+        });
+    }));
+}
+
+/// Check if q or Escape was pressed (non-blocking)
+#[cfg(unix)]
+fn check_quit_key() -> bool {
+    use std::os::unix::io::AsRawFd;
+
+    let stdin_fd = std::io::stdin().as_raw_fd();
+
+    // Try to read a byte without blocking (VMIN=0, VTIME=0 should already be set)
+    let mut buf = [0u8; 1];
+    match nix::unistd::read(stdin_fd, &mut buf) {
+        Ok(1) => buf[0] == b'q' || buf[0] == b'Q' || buf[0] == 27, // 27 = Escape
+        _ => false,
+    }
+}
+
+#[cfg(not(unix))]
+fn check_quit_key() -> bool {
+    false // q/Esc not supported on Windows, use Ctrl+C
+}
+
+/// Enable raw mode for keyboard input (Unix only)
+#[cfg(unix)]
+fn enable_raw_mode() {
+    let stdin = std::io::stdin();
+
+    if let Ok(mut termios) = nix::sys::termios::tcgetattr(&stdin) {
+        // Disable canonical mode and echo
+        termios.local_flags &=
+            !(nix::sys::termios::LocalFlags::ICANON | nix::sys::termios::LocalFlags::ECHO);
+        // Non-blocking reads
+        termios.control_chars[nix::sys::termios::SpecialCharacterIndices::VMIN as usize] = 0;
+        termios.control_chars[nix::sys::termios::SpecialCharacterIndices::VTIME as usize] = 0;
+
+        let _ = nix::sys::termios::tcsetattr(&stdin, nix::sys::termios::SetArg::TCSANOW, &termios);
+    }
+}
+
+#[cfg(not(unix))]
+fn enable_raw_mode() {}
+
+/// Disable raw mode (Unix only)
+#[cfg(unix)]
+fn disable_raw_mode() {
+    let stdin = std::io::stdin();
+
+    if let Ok(mut termios) = nix::sys::termios::tcgetattr(&stdin) {
+        // Re-enable canonical mode and echo
+        termios.local_flags |=
+            nix::sys::termios::LocalFlags::ICANON | nix::sys::termios::LocalFlags::ECHO;
+
+        let _ = nix::sys::termios::tcsetattr(&stdin, nix::sys::termios::SetArg::TCSANOW, &termios);
+    }
+}
+
+#[cfg(not(unix))]
+fn disable_raw_mode() {}

@@ -85,4 +85,53 @@ pub enum FunCommand {
         #[arg(short, long)]
         message: Option<String>,
     },
+    /// Big ASCII digital clock
+    Clock {
+        /// Duration in seconds (0 = run until Ctrl+C)
+        #[arg(short, long, default_value = "0")]
+        duration: u64,
+        /// Use 12-hour format
+        #[arg(long)]
+        twelve_hour: bool,
+        /// Show seconds
+        #[arg(long, default_value = "true")]
+        seconds: bool,
+    },
+    /// Generate QR code in terminal
+    Qr {
+        /// Text or URL to encode
+        text: String,
+        /// Invert colors (white on black)
+        #[arg(short, long)]
+        invert: bool,
+    },
+    /// Conway's Game of Life simulation
+    Life {
+        /// Duration in seconds (0 = run until Ctrl+C)
+        #[arg(short, long, default_value = "0")]
+        duration: u64,
+        /// Starting pattern (random, glider, blinker, pulsar)
+        #[arg(short, long, default_value = "random")]
+        pattern: String,
+        /// Grid width
+        #[arg(long, default_value = "60")]
+        width: usize,
+        /// Grid height
+        #[arg(long, default_value = "20")]
+        height: usize,
+    },
+    /// Matrix-style falling code rain
+    Matrix {
+        /// Duration in seconds (0 = run until Ctrl+C)
+        #[arg(short, long, default_value = "0")]
+        duration: u64,
+        /// Column density (1-10)
+        #[arg(long, default_value = "5")]
+        density: u8,
+    },
+    /// Big ASCII text banner (figlet-style)
+    Banner {
+        /// Text to display
+        text: String,
+    },
 }
