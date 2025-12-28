@@ -3,6 +3,8 @@
 pub mod calc;
 pub mod chat;
 pub mod config;
+#[cfg(feature = "egui")]
+pub mod egui;
 pub mod encode;
 pub mod env;
 pub mod expr;

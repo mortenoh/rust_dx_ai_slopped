@@ -3,6 +3,8 @@
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 
+#[cfg(feature = "egui")]
+use super::commands::EguiArgs;
 #[cfg(feature = "ui")]
 use super::commands::UiArgs;
 use super::commands::{
@@ -125,6 +127,10 @@ pub enum Commands {
     /// Interactive TUI dashboard (requires --features ui)
     #[cfg(feature = "ui")]
     Ui(UiArgs),
+
+    /// Interactive GUI demos with egui (requires --features egui)
+    #[cfg(feature = "egui")]
+    Egui(EguiArgs),
 
     /// Generate shell completions
     Completions {

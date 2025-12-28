@@ -3,6 +3,9 @@
 # Binary name
 BINARY := dx
 
+# Features to enable by default
+FEATURES := ui,egui
+
 # Tool versions (keep in sync with CI)
 MDBOOK_VERSION := 0.5.2
 
@@ -47,9 +50,9 @@ help:
 	@echo "  all           - Run lint, test, build"
 	@echo "  ci            - Run CI checks"
 	@echo ""
-	@echo "Feature flags:"
-	@echo "  --features ui - Enable TUI dashboard (ratatui/crossterm)"
-	@echo "                  Example: cargo build --features ui"
+	@echo "Features enabled by default: $(FEATURES)"
+	@echo "  ui   - TUI dashboard (ratatui/crossterm)"
+	@echo "  egui - GUI demos (eframe/egui)"
 	@echo ""
 	@echo "Cross-compilation targets:"
 	@echo "  Linux:   $(LINUX_TARGETS)"
@@ -60,7 +63,7 @@ all: lint test build
 
 # Build
 build:
-	cargo build
+	cargo build --features $(FEATURES)
 
 build-all: build-linux build-macos build-windows
 
@@ -86,7 +89,7 @@ build-windows:
 	done
 
 release:
-	cargo build --release
+	cargo build --release --features $(FEATURES)
 
 release-all: release-linux release-macos release-windows
 
@@ -158,10 +161,10 @@ dist-compressed: dist
 
 # Test
 test:
-	cargo test
+	cargo test --features $(FEATURES)
 
 test-verbose:
-	cargo test -- --nocapture
+	cargo test --features $(FEATURES) -- --nocapture
 
 # Benchmark
 bench:
@@ -170,7 +173,7 @@ bench:
 # Lint and format
 lint:
 	cargo fmt
-	cargo clippy --fix --allow-dirty --allow-staged -- -D warnings
+	cargo clippy --features $(FEATURES) --fix --allow-dirty --allow-staged -- -D warnings
 
 fmt:
 	cargo fmt
@@ -180,7 +183,7 @@ fmt-check:
 
 # Documentation
 doc:
-	cargo doc --no-deps --open
+	cargo doc --features $(FEATURES) --no-deps --open
 
 doc-book:
 	mdbook build
@@ -207,7 +210,7 @@ clean:
 
 # Install
 install:
-	cargo install --path .
+	cargo install --path . --features $(FEATURES)
 
 # Install mdbook (same version as CI)
 install-mdbook:
@@ -225,5 +228,5 @@ install-mdbook:
 
 # Check everything (CI)
 ci: fmt-check lint test
-	cargo build --release
+	cargo build --release --features $(FEATURES)
 

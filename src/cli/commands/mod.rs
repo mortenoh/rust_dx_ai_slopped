@@ -3,6 +3,8 @@
 pub mod calc;
 pub mod chat;
 pub mod config;
+#[cfg(feature = "egui")]
+pub mod egui;
 pub mod encode;
 pub mod env;
 pub mod expr;
@@ -24,6 +26,8 @@ pub mod watch;
 pub use calc::{CalcArgs, CalcCommand};
 pub use chat::{ChatArgs, ChatCommand};
 pub use config::{ConfigArgs, ConfigCommand, ConfigFormat};
+#[cfg(feature = "egui")]
+pub use egui::{EguiArgs, EguiCommand};
 pub use encode::{EncodeArgs, EncodingFormat};
 pub use env::{EnvArgs, EnvCommand, ExportFormat};
 pub use expr::{ExprArgs, ExprCommand};

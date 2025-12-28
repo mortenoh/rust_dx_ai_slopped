@@ -156,6 +156,10 @@ fn main() -> Result<()> {
         #[cfg(feature = "ui")]
         Commands::Ui(args) => commands::ui::run(args),
 
+        // Egui command: interactive GUI demos (requires --features egui)
+        #[cfg(feature = "egui")]
+        Commands::Egui(args) => commands::egui::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);
