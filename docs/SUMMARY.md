@@ -60,6 +60,7 @@
 - [watch - File Watcher](./part-3-dx-command-reference/watch.md)
 - [system - System Info](./part-3-dx-command-reference/system.md)
 - [ui - TUI Dashboard](./part-3-dx-command-reference/ui.md)
+- [egui - Native GUI Demos](./part-3-dx-command-reference/egui.md)
 
 ---
 

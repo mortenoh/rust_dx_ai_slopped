@@ -19,12 +19,13 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 | `expr` | `x` | Expression evaluator with functions and variables |
 | `net` | - | Network utilities (IP, DNS, ports) |
 | `chat` | - | gRPC-based real-time chat |
-| `fun` | - | Fun terminal effects (matrix, life, qr, clock, banner, spinners) |
+| `fun` | - | Fun terminal effects (matrix, life, qr, clock, banner, spinners, work, fortune, hacker, progress, countdown, bounce) |
 | `grep` | `g` | Regex search in files with context |
 | `http` | - | HTTP client (GET, POST, PUT, DELETE, HEAD) |
 | `watch` | `w` | Watch files and run commands on changes |
 | `system` | `sys` | System information (CPU, memory, OS, uptime) |
 | `ui` | - | Interactive TUI dashboard (requires `--features ui`) |
+| `egui` | - | Native GUI demos (requires `--features egui`) |
 | `completions` | - | Generate shell completions |
 
 ## Installation
@@ -37,6 +38,12 @@ cargo install --path .
 
 # With TUI dashboard support
 cargo install --path . --features ui
+
+# With GUI demos
+cargo install --path . --features egui
+
+# With all features
+cargo install --path . --features ui,egui
 ```
 
 ### Pre-built Binaries
@@ -97,6 +104,11 @@ dx fun spinners                             # Showcase spinner styles
 
 # TUI dashboard (requires --features ui)
 dx ui                                       # Interactive system dashboard
+
+# GUI demos (requires --features egui)
+dx egui demo                                # Hello world window
+dx egui counter                             # Counter with buttons
+dx egui clock                               # Live updating clock
 ```
 
 ## Expression Language

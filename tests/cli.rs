@@ -1035,3 +1035,241 @@ fn test_fun_fortune_list() {
         .stdout(predicate::str::contains("tux"))
         .stdout(predicate::str::contains("cat"));
 }
+
+// ============================================================================
+// Grep command tests
+// ============================================================================
+
+#[test]
+fn test_grep_no_args() {
+    dx().arg("grep")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn test_grep_help() {
+    dx().args(["grep", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("PATTERN"))
+        .stdout(predicate::str::contains("PATH"));
+}
+
+#[test]
+fn test_grep_pattern_in_file() {
+    // Search for a known pattern in our own source
+    dx().args(["grep", "fn main", "src/main.rs"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("fn main"));
+}
+
+#[test]
+fn test_grep_case_insensitive() {
+    dx().args(["grep", "-i", "FN MAIN", "src/main.rs"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("fn main"));
+}
+
+#[test]
+fn test_grep_with_context() {
+    dx().args(["grep", "-C", "1", "fn main", "src/main.rs"])
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_grep_no_match() {
+    dx().args(["grep", "NONEXISTENT_PATTERN_12345", "src/main.rs"])
+        .assert()
+        .failure(); // grep returns failure when no matches are found
+}
+
+#[test]
+fn test_grep_alias_g() {
+    dx().args(["g", "fn main", "src/main.rs"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("fn main"));
+}
+
+// ============================================================================
+// HTTP command tests
+// ============================================================================
+
+#[test]
+fn test_http_no_args() {
+    dx().arg("http")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn test_http_help() {
+    dx().args(["http", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("get"))
+        .stdout(predicate::str::contains("post"));
+}
+
+#[test]
+fn test_http_get_help() {
+    dx().args(["http", "get", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("URL"));
+}
+
+#[test]
+fn test_http_post_help() {
+    dx().args(["http", "post", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("URL"))
+        .stdout(predicate::str::contains("data"));
+}
+
+// Note: Actual HTTP requests are not tested to avoid network dependencies
+// and flaky tests. The command structure is validated via help tests.
+
+// ============================================================================
+// Watch command tests
+// ============================================================================
+
+#[test]
+fn test_watch_no_args() {
+    dx().arg("watch")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn test_watch_help() {
+    dx().args(["watch", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("PATH"))
+        .stdout(predicate::str::contains("COMMAND"));
+}
+
+#[test]
+fn test_watch_alias_w() {
+    dx().args(["w", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Watch"));
+}
+
+// Note: Actual watch functionality requires running processes and is
+// tested manually. The command structure is validated via help tests.
+
+// ============================================================================
+// System command tests
+// ============================================================================
+
+#[test]
+fn test_system_no_args() {
+    dx().arg("system")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn test_system_help() {
+    dx().args(["system", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("info"))
+        .stdout(predicate::str::contains("System information"));
+}
+
+#[test]
+fn test_system_info() {
+    dx().args(["system", "info"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OS"))
+        .stdout(predicate::str::contains("CPU"));
+}
+
+#[test]
+fn test_system_info_shows_uptime() {
+    dx().args(["system", "info"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Uptime"));
+}
+
+#[test]
+fn test_system_alias_sys() {
+    dx().args(["sys", "info"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OS"));
+}
+
+// ============================================================================
+// UI command tests (feature-gated)
+// ============================================================================
+
+#[test]
+#[cfg(feature = "ui")]
+fn test_ui_help() {
+    dx().args(["ui", "--help"]).assert().success();
+}
+
+// Note: The TUI dashboard requires an interactive terminal and cannot be
+// easily tested in CI. We only test that the command exists when the
+// feature is enabled.
+
+// ============================================================================
+// Egui command tests (feature-gated)
+// ============================================================================
+
+#[test]
+#[cfg(feature = "egui")]
+fn test_egui_no_args() {
+    dx().arg("egui")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+#[cfg(feature = "egui")]
+fn test_egui_help() {
+    dx().args(["egui", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("demo"))
+        .stdout(predicate::str::contains("counter"))
+        .stdout(predicate::str::contains("clock"));
+}
+
+#[test]
+#[cfg(feature = "egui")]
+fn test_egui_demo_help() {
+    dx().args(["egui", "demo", "--help"]).assert().success();
+}
+
+#[test]
+#[cfg(feature = "egui")]
+fn test_egui_counter_help() {
+    dx().args(["egui", "counter", "--help"]).assert().success();
+}
+
+#[test]
+#[cfg(feature = "egui")]
+fn test_egui_clock_help() {
+    dx().args(["egui", "clock", "--help"]).assert().success();
+}
+
+// Note: Actual GUI windows cannot be tested in CI without a display.
+// We only test that the commands parse correctly via help tests.

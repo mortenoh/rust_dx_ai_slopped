@@ -237,6 +237,24 @@ prost-generated types with tonic gRPC services.
 
 ---
 
+### GUI (Feature: egui)
+
+#### eframe
+**Version:** 0.30.x | [crates.io](https://crates.io/crates/eframe) | [docs.rs](https://docs.rs/eframe) | [GitHub](https://github.com/emilk/egui)
+
+Framework for building native applications with egui. Provides window management,
+event handling, and rendering backend (glow/OpenGL). Used by `dx egui` for native
+GUI demos. Requires `--features egui` to enable.
+
+#### egui
+**Version:** 0.30.x | [crates.io](https://crates.io/crates/egui) | [docs.rs](https://docs.rs/egui) | [GitHub](https://github.com/emilk/egui)
+
+Immediate mode GUI library for Rust. Provides widgets, layouts, and styling for
+building responsive user interfaces. Used by `dx egui` for counter, clock, and
+demo applications.
+
+---
+
 ## Dev Dependencies
 
 #### assert_cmd
