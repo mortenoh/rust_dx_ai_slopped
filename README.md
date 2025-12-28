@@ -20,6 +20,9 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 | `net` | - | Network utilities (IP, DNS, ports) |
 | `chat` | - | gRPC-based real-time chat |
 | `fun` | - | Fun terminal effects (spinners, progress, hacker) |
+| `grep` | `g` | Regex search in files with context |
+| `http` | - | HTTP client (GET, POST, PUT, DELETE, HEAD) |
+| `watch` | `w` | Watch files and run commands on changes |
 | `completions` | - | Generate shell completions |
 
 ## Installation
@@ -49,6 +52,18 @@ echo '{"a":1}' | dx json fmt -
 dx expr eval "2 + 3 * 4"                    # 14
 dx expr eval "sqrt(16) + pi"                # 7.14159...
 dx expr eval "def square(x) = x*x; square(5)"  # 25
+
+# Grep with regex
+dx grep "fn main" src/                      # Find all main functions
+dx grep -i "error" logs/ -C 2               # Case-insensitive with context
+
+# HTTP requests
+dx http get https://api.github.com/zen
+dx http post https://httpbin.org/post -d '{"key": "value"}'
+
+# Watch files and run commands
+dx watch src/ -- cargo test                 # Re-run tests on changes
+dx watch . -e rs -- cargo build             # Rebuild on .rs changes
 ```
 
 ## Expression Language

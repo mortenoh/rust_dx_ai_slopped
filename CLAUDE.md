@@ -105,6 +105,10 @@ src/
 | `expr`  | `x`   | Expression evaluator (math, functions, constants) |
 | `net`   | -     | Network utilities (IP, DNS, ports) |
 | `chat`  | -     | gRPC-based real-time chat (async) |
+| `fun`   | -     | Fun terminal effects (spinners, progress, hacker) |
+| `grep`  | `g`   | Regex search in files with context |
+| `http`  | -     | HTTP client (GET, POST, PUT, DELETE, HEAD) |
+| `watch` | `w`   | Watch files and run commands on changes |
 | `completions` | - | Generate shell completions |
 
 ## Adding a New Command
