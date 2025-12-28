@@ -149,6 +149,9 @@ fn main() -> Result<()> {
         // Watch command: watch files and run commands
         Commands::Watch(args) => commands::watch::run(args),
 
+        // System command: system information and utilities
+        Commands::System(args) => commands::system::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);

@@ -262,6 +262,126 @@ impl Drop for TerminalProgress {
     }
 }
 
+/// Bouncing progress bar for indeterminate operations.
+///
+/// Shows a bar segment that bounces back and forth, useful when
+/// the total amount of work is unknown. Sends OSC 9;4;3 for
+/// terminal-native indeterminate progress in supported terminals.
+///
+/// # Example
+/// ```no_run
+/// use dx_progress::BouncingBar;
+/// use std::time::Duration;
+///
+/// let mut bar = BouncingBar::new();
+/// for _ in 0..100 {
+///     bar.tick();
+///     bar.draw(Some("Loading..."));
+///     std::thread::sleep(Duration::from_millis(50));
+/// }
+/// bar.finish_with_message("Done!");
+/// ```
+pub struct BouncingBar {
+    position: usize,
+    direction: i8, // 1 = right, -1 = left
+    bar_width: usize,
+    ball_width: usize,
+}
+
+impl BouncingBar {
+    /// Create a new bouncing progress bar.
+    pub fn new() -> Self {
+        // Send indeterminate state to terminal
+        osc_progress(0, ProgressState::Indeterminate);
+        Self {
+            position: 0,
+            direction: 1,
+            bar_width: 30,
+            ball_width: 3,
+        }
+    }
+
+    /// Set the width of the progress bar (default: 30).
+    pub fn bar_width(mut self, width: usize) -> Self {
+        self.bar_width = width;
+        self
+    }
+
+    /// Set the width of the bouncing segment (default: 3).
+    pub fn ball_width(mut self, width: usize) -> Self {
+        self.ball_width = width.max(1);
+        self
+    }
+
+    /// Advance the animation by one frame.
+    pub fn tick(&mut self) {
+        let max_pos = self.bar_width.saturating_sub(self.ball_width);
+
+        if self.direction > 0 {
+            if self.position >= max_pos {
+                self.direction = -1;
+                self.position = self.position.saturating_sub(1);
+            } else {
+                self.position += 1;
+            }
+        } else {
+            if self.position == 0 {
+                self.direction = 1;
+                self.position = 1;
+            } else {
+                self.position = self.position.saturating_sub(1);
+            }
+        }
+    }
+
+    /// Draw the bouncing bar to stderr.
+    pub fn draw(&self, msg: Option<&str>) {
+        let before = self.position;
+        let after = self
+            .bar_width
+            .saturating_sub(self.position + self.ball_width);
+
+        let bar = format!(
+            "\x1b[34m{}\x1b[36m{}\x1b[34m{}\x1b[0m",
+            "░".repeat(before),
+            "█".repeat(self.ball_width),
+            "░".repeat(after)
+        );
+
+        if let Some(m) = msg {
+            eprint!("\r\x1b[K[{}] {}", bar, m);
+        } else {
+            eprint!("\r\x1b[K[{}]", bar);
+        }
+        io::stderr().flush().ok();
+    }
+
+    /// Finish and clear the progress indicator.
+    pub fn finish(&self) {
+        osc_progress_clear();
+        eprint!("\r\x1b[K");
+        io::stderr().flush().ok();
+    }
+
+    /// Finish with a completion message.
+    pub fn finish_with_message(&self, msg: &str) {
+        osc_progress_clear();
+        eprintln!("\r\x1b[K{}", msg);
+    }
+}
+
+impl Default for BouncingBar {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Drop for BouncingBar {
+    fn drop(&mut self) {
+        osc_progress_clear();
+    }
+}
+
 /// Spinner frames for terminal animation.
 ///
 /// Braille-based spinner that works well in most terminals.

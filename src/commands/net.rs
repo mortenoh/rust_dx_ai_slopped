@@ -30,27 +30,25 @@ pub fn run(args: NetArgs) -> Result<()> {
 fn cmd_ip(public: bool) -> Result<()> {
     if public {
         // Get public IP via external service
-        // We'll use a simple approach without async
         println!("{}: fetching...", "public".cyan());
         match get_public_ip() {
             Ok(ip) => println!("{}: {}", "public".cyan(), ip),
             Err(e) => println!("{}: {} ({})", "public".cyan(), "unavailable".yellow(), e),
         }
     } else {
-        // Get local IPs
-        match local_ip_address::local_ip() {
-            Ok(ip) => println!("{}: {}", "local".cyan(), ip),
-            Err(e) => println!("{}: {} ({})", "local".cyan(), "unavailable".yellow(), e),
+        // Get public IP by default (local IP requires platform-specific code)
+        println!(
+            "{}",
+            "Fetching public IP (use system tools for local IPs)".dimmed()
+        );
+        match get_public_ip() {
+            Ok(ip) => println!("{}: {}", "public".cyan(), ip),
+            Err(e) => println!("{}: {} ({})", "public".cyan(), "unavailable".yellow(), e),
         }
-
-        // Also try to get all local IPs
-        if let Ok(interfaces) = local_ip_address::list_afinet_netifas() {
-            for (name, ip) in interfaces {
-                if !ip.is_loopback() {
-                    println!("{}: {}", name.cyan(), ip);
-                }
-            }
-        }
+        println!();
+        println!("{}", "For local IPs, use:".dimmed());
+        println!("  {} (macOS/Linux)", "ifconfig | grep inet".dimmed());
+        println!("  {} (Windows)", "ipconfig".dimmed());
     }
     Ok(())
 }

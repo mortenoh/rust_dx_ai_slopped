@@ -140,7 +140,7 @@ fn search_file(path: &Path, regex: &Regex, args: &GrepArgs) -> Result<usize> {
     };
 
     let reader = BufReader::new(file);
-    let lines: Vec<String> = reader.lines().filter_map(|l| l.ok()).collect();
+    let lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
 
     let mut match_count = 0;
     let mut matched_lines: Vec<(usize, String)> = Vec::new();
@@ -199,8 +199,13 @@ fn search_file(path: &Path, regex: &Regex, args: &GrepArgs) -> Result<usize> {
 
         // Show context after
         if after > 0 {
-            for i in *line_num..(*line_num + after).min(lines.len()) {
-                print_context_line(path, i + 1, &lines[i], show_filename, args.line_number);
+            for (i, line) in lines
+                .iter()
+                .enumerate()
+                .take((*line_num + after).min(lines.len()))
+                .skip(*line_num)
+            {
+                print_context_line(path, i + 1, line, show_filename, args.line_number);
             }
         }
     }

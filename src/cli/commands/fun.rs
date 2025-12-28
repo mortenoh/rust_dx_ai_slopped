@@ -76,4 +76,13 @@ pub enum FunCommand {
         #[arg(short, long)]
         list: bool,
     },
+    /// Bouncing indeterminate progress bar (for unknown duration tasks)
+    Bounce {
+        /// Duration in seconds
+        #[arg(short, long, default_value = "5")]
+        duration: u64,
+        /// Message to display
+        #[arg(short, long)]
+        message: Option<String>,
+    },
 }

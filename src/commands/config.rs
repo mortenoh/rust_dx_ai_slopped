@@ -246,16 +246,16 @@ fn cmd_edit() -> Result<()> {
 /// All custom settings are lost.
 fn cmd_reset(force: bool) -> Result<()> {
     if !force {
-        // Use dialoguer for interactive confirmation
-        // See: https://docs.rs/dialoguer
-        use dialoguer::Confirm;
+        // Simple stdin-based confirmation
+        use std::io::{self, Write};
 
-        let confirm = Confirm::new()
-            .with_prompt("Reset configuration to defaults?")
-            .default(false) // Default to "no" for safety
-            .interact()?;
+        print!("Reset configuration to defaults? [y/N] ");
+        io::stdout().flush()?;
 
-        if !confirm {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+
+        if !input.trim().eq_ignore_ascii_case("y") {
             println!("Cancelled");
             return Ok(());
         }

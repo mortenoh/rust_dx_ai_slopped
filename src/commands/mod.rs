@@ -13,6 +13,7 @@ pub mod http;
 pub mod json;
 pub mod net;
 pub mod rand;
+pub mod system;
 pub mod text;
 pub mod time;
 pub mod uuid;

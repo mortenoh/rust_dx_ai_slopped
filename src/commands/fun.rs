@@ -4,7 +4,7 @@
 
 use crate::cli::commands::fun::{FunArgs, FunCommand};
 use crate::utils::progress::{
-    self, osc_progress, osc_progress_clear, ProgressState, SPINNER_FRAMES,
+    self, osc_progress, osc_progress_clear, BouncingBar, ProgressState, SPINNER_FRAMES,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -33,6 +33,7 @@ pub fn run(args: FunArgs) -> Result<()> {
             list_styles,
         } => cmd_work(duration, tasks, &style, list_styles),
         FunCommand::Fortune { animal, say, list } => cmd_fortune(animal, say, list),
+        FunCommand::Bounce { duration, message } => cmd_bounce(duration, message),
     }
 }
 
@@ -580,28 +581,13 @@ const WORK_TASKS: &[&str] = &[
 const BAR_STYLES: &[(&str, &str, &[&str], &[&str])] = &[
     // (name, description, filled_chars, empty_chars)
     ("block", "Solid blocks", &["█"], &["░"]),
-    (
-        "gradient",
-        "Gradient shading",
-        &["█", "▓", "▒"],
-        &["░"],
-    ),
+    ("gradient", "Gradient shading", &["█", "▓", "▒"], &["░"]),
     ("arrow", "Arrow style", &["=", "=", ">"], &["-"]),
     ("dots", "Braille dots", &["⣿"], &["⣀"]),
-    (
-        "emoji",
-        "Fun emoji",
-        &["🟩"],
-        &["⬜"],
-    ),
+    ("emoji", "Fun emoji", &["🟩"], &["⬜"]),
     ("classic", "Hash marks", &["#"], &["-"]),
     ("circles", "Filled circles", &["●"], &["○"]),
-    (
-        "fade",
-        "Fade effect",
-        &["█", "▓", "▒", "░"],
-        &[" "],
-    ),
+    ("fade", "Fade effect", &["█", "▓", "▒", "░"], &[" "]),
 ];
 
 /// Render a progress bar with the given style
@@ -628,8 +614,8 @@ fn render_bar(progress: u64, width: usize, style: &str, colored: bool) -> String
             let gradient_len = filled_chars.len().min(filled_count);
             let solid_len = filled_count - gradient_len + 1;
             let mut s = filled_chars[0].repeat(solid_len);
-            for i in 1..gradient_len {
-                s.push_str(filled_chars[i]);
+            for char in filled_chars.iter().take(gradient_len).skip(1) {
+                s.push_str(char);
             }
             s
         }
@@ -996,6 +982,25 @@ fn cmd_fortune(animal: Option<String>, say: Option<String>, list: bool) -> Resul
     for line in animal_art {
         println!("{}", line);
     }
+
+    Ok(())
+}
+
+/// Bouncing indeterminate progress bar
+fn cmd_bounce(duration: u64, message: Option<String>) -> Result<()> {
+    let msg = message.as_deref().unwrap_or("Loading...");
+    let total_ms = duration * 1000;
+    let start = Instant::now();
+
+    let mut bar = BouncingBar::new();
+
+    while start.elapsed().as_millis() < total_ms as u128 {
+        bar.tick();
+        bar.draw(Some(msg));
+        thread::sleep(Duration::from_millis(50));
+    }
+
+    bar.finish_with_message(&format!("{} Done!", "✓".green()));
 
     Ok(())
 }

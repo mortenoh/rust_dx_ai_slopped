@@ -5,7 +5,7 @@ use clap_complete::Shell;
 
 use super::commands::{
     CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs,
-    HttpArgs, JsonArgs, NetArgs, RandArgs, TextArgs, TimeArgs, UuidArgs, WatchArgs,
+    HttpArgs, JsonArgs, NetArgs, RandArgs, SystemArgs, TextArgs, TimeArgs, UuidArgs, WatchArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -115,6 +115,10 @@ pub enum Commands {
     /// Watch files for changes and run commands
     #[command(visible_alias = "w")]
     Watch(WatchArgs),
+
+    /// System information and utilities
+    #[command(visible_alias = "sys")]
+    System(SystemArgs),
 
     /// Generate shell completions
     Completions {
