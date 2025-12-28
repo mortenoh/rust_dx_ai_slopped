@@ -6,7 +6,7 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `hash` | `h` | Compute file/string hashes (SHA-256, SHA-512, MD5) |
+| `hash` | `h` | Compute hashes (MD5, SHA-256, SHA-512, Bcrypt, Argon2) |
 | `encode` | `e` | Encode/decode data (Base64, hex, URL) |
 | `uuid` | `u` | Generate UUIDs (v4, v7) |
 | `time` | `t` | Time utilities and conversions |
@@ -61,8 +61,14 @@ Available platforms: Linux (x86_64, ARM64, musl), macOS (x86_64, ARM64), Windows
 ## Quick Examples
 
 ```bash
-# Hash a string
-dx hash sha256 "hello world"
+# Hash a string (SHA-256)
+dx hash -s "hello world"
+
+# Password hashing with bcrypt
+dx hash -a bcrypt -s "mypassword"
+
+# Password hashing with argon2
+dx hash -a argon2 -s "mypassword"
 
 # Encode to base64
 dx encode base64 "hello world"

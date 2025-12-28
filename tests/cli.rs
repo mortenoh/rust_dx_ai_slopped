@@ -80,6 +80,25 @@ fn test_hash_string_sha512() {
         .stdout(predicate::str::contains("9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043"));
 }
 
+#[test]
+fn test_hash_string_bcrypt() {
+    // bcrypt hashes start with $2b$ (or $2a$, $2y$)
+    // Use low cost (4) for faster tests
+    dx().args(["hash", "-s", "password", "-a", "bcrypt", "--cost", "4"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("$2"));
+}
+
+#[test]
+fn test_hash_string_argon2() {
+    // argon2 hashes start with $argon2
+    dx().args(["hash", "-s", "password", "-a", "argon2"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("$argon2"));
+}
+
 // ============================================================================
 // Encode command tests
 // ============================================================================

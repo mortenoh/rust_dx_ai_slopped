@@ -13,6 +13,13 @@ Do not add any AI attribution to commits, PRs, or anywhere else. This means:
 ### Pre-commit Checks
 Always run `make lint` before committing. This runs `cargo fmt` and `cargo clippy --fix`.
 
+### Feature Completeness
+When adding or modifying features, always update ALL related artifacts:
+- **README.md** - Update feature descriptions and examples
+- **docs/** - Update relevant documentation in the mdbook
+- **tests/cli.rs** - Add integration tests for new functionality
+- **CLAUDE.md** - Update command descriptions if applicable
+
 ### GitHub CLI
 Use `gh` (GitHub CLI) to check PRs, build status, and other GitHub operations.
 
@@ -92,7 +99,7 @@ src/
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `hash`  | `h`   | Compute file/string hashes (MD5, SHA256, SHA512) |
+| `hash`  | `h`   | Compute hashes (MD5, SHA256, SHA512, Bcrypt, Argon2) |
 | `encode`| `e`   | Base64, hex encoding/decoding |
 | `uuid`  | `u`   | Generate UUIDs (v4, v7) |
 | `time`  | `t`   | Parse, format, convert timestamps |
