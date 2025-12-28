@@ -105,10 +105,12 @@ src/
 | `expr`  | `x`   | Expression evaluator (math, functions, constants) |
 | `net`   | -     | Network utilities (IP, DNS, ports) |
 | `chat`  | -     | gRPC-based real-time chat (async) |
-| `fun`   | -     | Fun terminal effects (spinners, progress, hacker) |
+| `fun`   | -     | Fun terminal effects (matrix, life, qr, clock, banner) |
 | `grep`  | `g`   | Regex search in files with context |
 | `http`  | -     | HTTP client (GET, POST, PUT, DELETE, HEAD) |
 | `watch` | `w`   | Watch files and run commands on changes |
+| `system`| `sys` | System information (CPU, memory, OS, uptime) |
+| `ui`    | -     | TUI dashboard (requires `--features ui`) |
 | `completions` | - | Generate shell completions |
 
 ## Adding a New Command
