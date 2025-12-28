@@ -148,3 +148,4 @@
 - [Cargo Features](./appendices/g-cargo-features.md)
 - [Terminal UI with Ratatui](./appendices/h-ratatui-guide.md)
 - [Async Rust with Tokio](./appendices/i-async-tokio.md)
+- [Cross-Platform Testing Environments](./appendices/j-cross-platform-testing-environments.md)

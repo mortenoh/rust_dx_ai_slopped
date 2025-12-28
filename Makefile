@@ -71,21 +71,21 @@ build-linux:
 	@for target in $(LINUX_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 build-macos:
 	@for target in $(MACOS_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo build --target $$target || echo "Failed: $$target"; \
+		cargo build --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 build-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 release:
@@ -97,21 +97,21 @@ release-linux:
 	@for target in $(LINUX_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --release --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 release-macos:
 	@for target in $(MACOS_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo build --release --target $$target || echo "Failed: $$target"; \
+		cargo build --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 release-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --release --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
 	done
 
 # Distribute - collect all binaries into dist/
