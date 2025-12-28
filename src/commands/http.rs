@@ -55,8 +55,12 @@ pub fn run(args: HttpArgs) -> Result<()> {
 }
 
 fn create_agent(timeout: u64) -> Agent {
+    let tls_config = ureq::tls::TlsConfig::builder()
+        .provider(ureq::tls::TlsProvider::NativeTls)
+        .build();
     Agent::config_builder()
         .timeout_global(Some(Duration::from_secs(timeout)))
+        .tls_config(tls_config)
         .build()
         .into()
 }
