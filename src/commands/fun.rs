@@ -651,12 +651,14 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
             }
         }
 
-        // Complete this task
+        // Complete this task - show filled bar with Done! on right
         println!(
-            "\r{} {}... {} Done!",
+            "\r{} {}... {} [{}] {}",
             format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
             task.cyan(),
-            "✓".green()
+            "✓".green(),
+            "█".repeat(20).green(),
+            "Done!".green()
         );
     }
 
