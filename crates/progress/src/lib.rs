@@ -324,13 +324,11 @@ impl BouncingBar {
             } else {
                 self.position += 1;
             }
+        } else if self.position == 0 {
+            self.direction = 1;
+            self.position = 1;
         } else {
-            if self.position == 0 {
-                self.direction = 1;
-                self.position = 1;
-            } else {
-                self.position = self.position.saturating_sub(1);
-            }
+            self.position = self.position.saturating_sub(1);
         }
     }
 
