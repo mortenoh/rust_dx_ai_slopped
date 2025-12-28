@@ -45,6 +45,16 @@ pub fn run(args: EguiArgs) -> Result<()> {
         EguiCommand::TextStats => cmd_text_stats(),
         EguiCommand::Markdown => cmd_markdown(),
         EguiCommand::Timer => cmd_timer(),
+        // Widget Showcase
+        EguiCommand::Table => cmd_table(),
+        EguiCommand::Modal => cmd_modal(),
+        EguiCommand::Plot => cmd_plot(),
+        EguiCommand::Image => cmd_image(),
+        EguiCommand::Menu => cmd_menu(),
+        EguiCommand::Context => cmd_context(),
+        EguiCommand::Tabs => cmd_tabs(),
+        EguiCommand::Tree => cmd_tree(),
+        EguiCommand::Code => cmd_code(),
     }
 }
 
@@ -3462,5 +3472,1366 @@ impl eframe::App for TimerApp {
         if self.running {
             ctx.request_repaint();
         }
+    }
+}
+
+// ============================================================================
+// WIDGET SHOWCASE
+// ============================================================================
+
+// --- Table Demo ---
+
+fn cmd_table() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([700.0, 500.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui table",
+        options,
+        Box::new(|_cc| Ok(Box::new(TableApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+struct TableApp {
+    data: Vec<TableRow>,
+    sort_column: usize,
+    sort_ascending: bool,
+    filter: String,
+}
+
+struct TableRow {
+    id: u32,
+    name: String,
+    email: String,
+    score: f32,
+    active: bool,
+}
+
+impl Default for TableApp {
+    fn default() -> Self {
+        Self {
+            data: vec![
+                TableRow {
+                    id: 1,
+                    name: "Alice".into(),
+                    email: "alice@example.com".into(),
+                    score: 95.5,
+                    active: true,
+                },
+                TableRow {
+                    id: 2,
+                    name: "Bob".into(),
+                    email: "bob@example.com".into(),
+                    score: 87.3,
+                    active: true,
+                },
+                TableRow {
+                    id: 3,
+                    name: "Charlie".into(),
+                    email: "charlie@example.com".into(),
+                    score: 72.1,
+                    active: false,
+                },
+                TableRow {
+                    id: 4,
+                    name: "Diana".into(),
+                    email: "diana@example.com".into(),
+                    score: 91.8,
+                    active: true,
+                },
+                TableRow {
+                    id: 5,
+                    name: "Eve".into(),
+                    email: "eve@example.com".into(),
+                    score: 68.4,
+                    active: false,
+                },
+                TableRow {
+                    id: 6,
+                    name: "Frank".into(),
+                    email: "frank@example.com".into(),
+                    score: 83.2,
+                    active: true,
+                },
+                TableRow {
+                    id: 7,
+                    name: "Grace".into(),
+                    email: "grace@example.com".into(),
+                    score: 96.7,
+                    active: true,
+                },
+                TableRow {
+                    id: 8,
+                    name: "Henry".into(),
+                    email: "henry@example.com".into(),
+                    score: 79.5,
+                    active: false,
+                },
+            ],
+            sort_column: 0,
+            sort_ascending: true,
+            filter: String::new(),
+        }
+    }
+}
+
+impl TableApp {
+    fn sort_data(&mut self) {
+        let ascending = self.sort_ascending;
+        match self.sort_column {
+            0 => self.data.sort_by(|a, b| {
+                if ascending {
+                    a.id.cmp(&b.id)
+                } else {
+                    b.id.cmp(&a.id)
+                }
+            }),
+            1 => self.data.sort_by(|a, b| {
+                if ascending {
+                    a.name.cmp(&b.name)
+                } else {
+                    b.name.cmp(&a.name)
+                }
+            }),
+            2 => self.data.sort_by(|a, b| {
+                if ascending {
+                    a.email.cmp(&b.email)
+                } else {
+                    b.email.cmp(&a.email)
+                }
+            }),
+            3 => self.data.sort_by(|a, b| {
+                if ascending {
+                    a.score.partial_cmp(&b.score).unwrap()
+                } else {
+                    b.score.partial_cmp(&a.score).unwrap()
+                }
+            }),
+            4 => self.data.sort_by(|a, b| {
+                if ascending {
+                    a.active.cmp(&b.active)
+                } else {
+                    b.active.cmp(&a.active)
+                }
+            }),
+            _ => {}
+        }
+    }
+}
+
+impl eframe::App for TableApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Data Table");
+                ui.add_space(SECTION_SPACING);
+
+                // Filter
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Filter:");
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.filter).desired_width(200.0),
+                            );
+                            if ui.button("Clear").clicked() {
+                                self.filter.clear();
+                            }
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Table
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        use egui_extras::{Column, TableBuilder};
+
+                        let available_height = ui.available_height();
+
+                        TableBuilder::new(ui)
+                            .striped(true)
+                            .resizable(true)
+                            .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                            .column(Column::auto().at_least(40.0))
+                            .column(Column::auto().at_least(100.0))
+                            .column(Column::remainder().at_least(150.0))
+                            .column(Column::auto().at_least(60.0))
+                            .column(Column::auto().at_least(60.0))
+                            .min_scrolled_height(0.0)
+                            .max_scroll_height(available_height - 50.0)
+                            .header(25.0, |mut header| {
+                                let headers = ["ID", "Name", "Email", "Score", "Active"];
+                                for (i, h) in headers.iter().enumerate() {
+                                    header.col(|ui| {
+                                        let arrow = if self.sort_column == i {
+                                            if self.sort_ascending {
+                                                " ▲"
+                                            } else {
+                                                " ▼"
+                                            }
+                                        } else {
+                                            ""
+                                        };
+                                        if ui.button(format!("{}{}", h, arrow)).clicked() {
+                                            if self.sort_column == i {
+                                                self.sort_ascending = !self.sort_ascending;
+                                            } else {
+                                                self.sort_column = i;
+                                                self.sort_ascending = true;
+                                            }
+                                            self.sort_data();
+                                        }
+                                    });
+                                }
+                            })
+                            .body(|mut body| {
+                                let filter_lower = self.filter.to_lowercase();
+                                for row in &self.data {
+                                    if !self.filter.is_empty() {
+                                        let matches =
+                                            row.name.to_lowercase().contains(&filter_lower)
+                                                || row.email.to_lowercase().contains(&filter_lower);
+                                        if !matches {
+                                            continue;
+                                        }
+                                    }
+
+                                    body.row(22.0, |mut row_ui| {
+                                        row_ui.col(|ui| {
+                                            ui.label(row.id.to_string());
+                                        });
+                                        row_ui.col(|ui| {
+                                            ui.label(&row.name);
+                                        });
+                                        row_ui.col(|ui| {
+                                            ui.label(&row.email);
+                                        });
+                                        row_ui.col(|ui| {
+                                            ui.label(format!("{:.1}", row.score));
+                                        });
+                                        row_ui.col(|ui| {
+                                            let (text, color) = if row.active {
+                                                ("Yes", Color32::GREEN)
+                                            } else {
+                                                ("No", Color32::RED)
+                                            };
+                                            ui.label(RichText::new(text).color(color));
+                                        });
+                                    });
+                                }
+                            });
+                    });
+            });
+        });
+    }
+}
+
+// --- Modal Demo ---
+
+fn cmd_modal() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([500.0, 400.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui modal",
+        options,
+        Box::new(|_cc| Ok(Box::new(ModalApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+#[derive(Default)]
+struct ModalApp {
+    show_confirm: bool,
+    show_input: bool,
+    show_info: bool,
+    input_text: String,
+    last_action: String,
+}
+
+impl eframe::App for ModalApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Modal/Window Dialogs");
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Click buttons to open different modal dialogs:");
+                        ui.add_space(ITEM_SPACING);
+
+                        ui.horizontal(|ui| {
+                            if ui.button("Confirm Dialog").clicked() {
+                                self.show_confirm = true;
+                            }
+                            if ui.button("Input Dialog").clicked() {
+                                self.show_input = true;
+                            }
+                            if ui.button("Info Dialog").clicked() {
+                                self.show_info = true;
+                            }
+                        });
+                    });
+
+                if !self.last_action.is_empty() {
+                    ui.add_space(SECTION_SPACING);
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(ui, |ui| {
+                            ui.label(RichText::new(&self.last_action).color(Color32::GREEN));
+                        });
+                }
+            });
+        });
+
+        // Confirm Dialog
+        if self.show_confirm {
+            egui::Window::new("Confirm Action")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label("Are you sure you want to proceed?");
+                    ui.add_space(ITEM_SPACING);
+                    ui.horizontal(|ui| {
+                        if ui.button("Yes").clicked() {
+                            self.last_action = "Confirmed!".to_string();
+                            self.show_confirm = false;
+                        }
+                        if ui.button("No").clicked() {
+                            self.last_action = "Cancelled.".to_string();
+                            self.show_confirm = false;
+                        }
+                    });
+                });
+        }
+
+        // Input Dialog
+        if self.show_input {
+            egui::Window::new("Enter Information")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label("Enter your name:");
+                    ui.text_edit_singleline(&mut self.input_text);
+                    ui.add_space(ITEM_SPACING);
+                    ui.horizontal(|ui| {
+                        if ui.button("Submit").clicked() {
+                            self.last_action = format!("Hello, {}!", self.input_text);
+                            self.show_input = false;
+                        }
+                        if ui.button("Cancel").clicked() {
+                            self.show_input = false;
+                        }
+                    });
+                });
+        }
+
+        // Info Dialog
+        if self.show_info {
+            egui::Window::new("Information")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label(RichText::new("i").size(32.0).color(Color32::LIGHT_BLUE));
+                    ui.label("This is an informational message.");
+                    ui.label("Modal windows can display important information.");
+                    ui.add_space(ITEM_SPACING);
+                    if ui.button("OK").clicked() {
+                        self.last_action = "Info acknowledged.".to_string();
+                        self.show_info = false;
+                    }
+                });
+        }
+    }
+}
+
+// --- Plot Demo ---
+
+fn cmd_plot() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([700.0, 500.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui plot",
+        options,
+        Box::new(|_cc| Ok(Box::new(PlotApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+#[derive(PartialEq, Clone, Copy)]
+enum PlotType {
+    Line,
+    Bar,
+    Scatter,
+}
+
+struct PlotApp {
+    plot_type: PlotType,
+    amplitude: f64,
+    frequency: f64,
+    show_legend: bool,
+}
+
+impl Default for PlotApp {
+    fn default() -> Self {
+        Self {
+            plot_type: PlotType::Line,
+            amplitude: 1.0,
+            frequency: 1.0,
+            show_legend: true,
+        }
+    }
+}
+
+impl eframe::App for PlotApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Charts & Graphs");
+                ui.add_space(SECTION_SPACING);
+
+                // Controls
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.radio_value(&mut self.plot_type, PlotType::Line, "Line");
+                            ui.radio_value(&mut self.plot_type, PlotType::Bar, "Bar");
+                            ui.radio_value(&mut self.plot_type, PlotType::Scatter, "Scatter");
+                            ui.add_space(ITEM_SPACING);
+                            ui.checkbox(&mut self.show_legend, "Legend");
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label("Amplitude:");
+                            ui.add(egui::Slider::new(&mut self.amplitude, 0.1..=3.0));
+                            ui.label("Frequency:");
+                            ui.add(egui::Slider::new(&mut self.frequency, 0.5..=5.0));
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Plot
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        use egui_plot::{Bar, BarChart, Legend, Line, Plot, PlotPoints, Points};
+
+                        let sin_data: PlotPoints = (0..100)
+                            .map(|i| {
+                                let x = i as f64 * 0.1;
+                                [x, self.amplitude * (x * self.frequency).sin()]
+                            })
+                            .collect();
+
+                        let cos_data: PlotPoints = (0..100)
+                            .map(|i| {
+                                let x = i as f64 * 0.1;
+                                [x, self.amplitude * (x * self.frequency).cos()]
+                            })
+                            .collect();
+
+                        let mut plot = Plot::new("plot")
+                            .height(300.0)
+                            .allow_zoom(true)
+                            .allow_drag(true)
+                            .allow_scroll(true);
+
+                        if self.show_legend {
+                            plot = plot.legend(Legend::default());
+                        }
+
+                        plot.show(ui, |plot_ui| match self.plot_type {
+                            PlotType::Line => {
+                                plot_ui.line(
+                                    Line::new(sin_data)
+                                        .name("sin(x)")
+                                        .color(Color32::LIGHT_BLUE),
+                                );
+                                plot_ui.line(
+                                    Line::new(cos_data).name("cos(x)").color(Color32::LIGHT_RED),
+                                );
+                            }
+                            PlotType::Bar => {
+                                let bars: Vec<Bar> = (0..10)
+                                    .map(|i| {
+                                        let x = i as f64;
+                                        Bar::new(
+                                            x,
+                                            self.amplitude
+                                                * ((x * 0.5 * self.frequency).sin().abs() + 0.2),
+                                        )
+                                    })
+                                    .collect();
+                                plot_ui.bar_chart(
+                                    BarChart::new(bars).name("Data").color(Color32::LIGHT_GREEN),
+                                );
+                            }
+                            PlotType::Scatter => {
+                                plot_ui.points(
+                                    Points::new(sin_data)
+                                        .name("sin(x)")
+                                        .color(Color32::LIGHT_BLUE)
+                                        .radius(3.0),
+                                );
+                                plot_ui.points(
+                                    Points::new(cos_data)
+                                        .name("cos(x)")
+                                        .color(Color32::LIGHT_RED)
+                                        .radius(3.0),
+                                );
+                            }
+                        });
+                    });
+            });
+        });
+    }
+}
+
+// --- Image Demo ---
+
+fn cmd_image() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([600.0, 500.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui image",
+        options,
+        Box::new(|cc| Ok(Box::new(ImageApp::new(cc)))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+struct ImageApp {
+    zoom: f32,
+    generated_texture: Option<egui::TextureHandle>,
+}
+
+impl ImageApp {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Install image loaders
+        egui_extras::install_image_loaders(&cc.egui_ctx);
+
+        Self {
+            zoom: 1.0,
+            generated_texture: None,
+        }
+    }
+
+    fn generate_texture(&mut self, ctx: &egui::Context) {
+        if self.generated_texture.is_none() {
+            // Generate a gradient image
+            let size = [128, 128];
+            let mut pixels = vec![egui::Color32::BLACK; size[0] * size[1]];
+
+            for y in 0..size[1] {
+                for x in 0..size[0] {
+                    let r = (x as f32 / size[0] as f32 * 255.0) as u8;
+                    let g = (y as f32 / size[1] as f32 * 255.0) as u8;
+                    let b = 128;
+                    pixels[y * size[0] + x] = egui::Color32::from_rgb(r, g, b);
+                }
+            }
+
+            let image = egui::ColorImage { size, pixels };
+
+            self.generated_texture =
+                Some(ctx.load_texture("gradient", image, egui::TextureOptions::LINEAR));
+        }
+    }
+}
+
+impl eframe::App for ImageApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.generate_texture(ctx);
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Image Viewer");
+                ui.add_space(SECTION_SPACING);
+
+                // Controls
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Zoom:");
+                            ui.add(egui::Slider::new(&mut self.zoom, 0.5..=4.0));
+                            if ui.button("Reset").clicked() {
+                                self.zoom = 1.0;
+                            }
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Generated texture
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Generated Gradient Texture:");
+                        if let Some(texture) = &self.generated_texture {
+                            let size = egui::vec2(128.0 * self.zoom, 128.0 * self.zoom);
+                            ui.image((texture.id(), size));
+                        }
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Procedural image
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Procedural Checkerboard (painted):");
+                        let (rect, _) = ui.allocate_exact_size(
+                            egui::vec2(128.0 * self.zoom, 128.0 * self.zoom),
+                            egui::Sense::hover(),
+                        );
+
+                        let painter = ui.painter_at(rect);
+                        let cell_size = 16.0 * self.zoom;
+                        let cols = (rect.width() / cell_size).ceil() as i32;
+                        let rows = (rect.height() / cell_size).ceil() as i32;
+
+                        for row in 0..rows {
+                            for col in 0..cols {
+                                let color = if (row + col) % 2 == 0 {
+                                    Color32::from_gray(200)
+                                } else {
+                                    Color32::from_gray(50)
+                                };
+                                let cell_rect = egui::Rect::from_min_size(
+                                    rect.min
+                                        + egui::vec2(
+                                            col as f32 * cell_size,
+                                            row as f32 * cell_size,
+                                        ),
+                                    egui::vec2(cell_size, cell_size),
+                                );
+                                painter.rect_filled(cell_rect.intersect(rect), 0.0, color);
+                            }
+                        }
+                    });
+            });
+        });
+    }
+}
+
+// --- Menu Demo ---
+
+fn cmd_menu() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([500.0, 400.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui menu",
+        options,
+        Box::new(|_cc| Ok(Box::new(MenuApp::new()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+struct MenuApp {
+    status: String,
+    dark_mode: bool,
+    show_toolbar: bool,
+    font_size: f32,
+}
+
+impl MenuApp {
+    fn new() -> Self {
+        Self {
+            status: "Ready".to_string(),
+            dark_mode: true,
+            show_toolbar: true,
+            font_size: 14.0,
+        }
+    }
+}
+
+impl eframe::App for MenuApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Menu bar
+        egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("New").clicked() {
+                        self.status = "New file created".to_string();
+                        ui.close_menu();
+                    }
+                    if ui.button("Open...").clicked() {
+                        self.status = "Open dialog (simulated)".to_string();
+                        ui.close_menu();
+                    }
+                    if ui.button("Save").clicked() {
+                        self.status = "File saved".to_string();
+                        ui.close_menu();
+                    }
+                    ui.separator();
+                    if ui.button("Exit").clicked() {
+                        self.status = "Exit requested".to_string();
+                        ui.close_menu();
+                    }
+                });
+
+                ui.menu_button("Edit", |ui| {
+                    if ui.button("Undo").clicked() {
+                        self.status = "Undo".to_string();
+                        ui.close_menu();
+                    }
+                    if ui.button("Redo").clicked() {
+                        self.status = "Redo".to_string();
+                        ui.close_menu();
+                    }
+                    ui.separator();
+                    if ui.button("Cut").clicked() {
+                        self.status = "Cut".to_string();
+                        ui.close_menu();
+                    }
+                    if ui.button("Copy").clicked() {
+                        self.status = "Copy".to_string();
+                        ui.close_menu();
+                    }
+                    if ui.button("Paste").clicked() {
+                        self.status = "Paste".to_string();
+                        ui.close_menu();
+                    }
+                });
+
+                ui.menu_button("View", |ui| {
+                    ui.checkbox(&mut self.dark_mode, "Dark Mode");
+                    ui.checkbox(&mut self.show_toolbar, "Show Toolbar");
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        ui.label("Font size:");
+                        ui.add(egui::DragValue::new(&mut self.font_size).range(8.0..=32.0));
+                    });
+                });
+
+                ui.menu_button("Help", |ui| {
+                    if ui.button("Documentation").clicked() {
+                        self.status = "Opening docs...".to_string();
+                        ui.close_menu();
+                    }
+                    ui.separator();
+                    if ui.button("About").clicked() {
+                        self.status = "dx egui - Widget Showcase".to_string();
+                        ui.close_menu();
+                    }
+                });
+            });
+        });
+
+        // Optional toolbar
+        if self.show_toolbar {
+            egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("New").on_hover_text("New").clicked() {
+                        self.status = "New".to_string();
+                    }
+                    if ui.button("Open").on_hover_text("Open").clicked() {
+                        self.status = "Open".to_string();
+                    }
+                    if ui.button("Save").on_hover_text("Save").clicked() {
+                        self.status = "Save".to_string();
+                    }
+                    ui.separator();
+                    if ui.button("Undo").on_hover_text("Undo").clicked() {
+                        self.status = "Undo".to_string();
+                    }
+                    if ui.button("Redo").on_hover_text("Redo").clicked() {
+                        self.status = "Redo".to_string();
+                    }
+                });
+            });
+        }
+
+        // Status bar
+        egui::TopBottomPanel::bottom("status_bar").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.label(&self.status);
+            });
+        });
+
+        // Main content
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Menu Bar Demo");
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("This demo showcases:");
+                        ui.label("- Menu bar with File, Edit, View, Help menus");
+                        ui.label("- Submenus with actions");
+                        ui.label("- Checkboxes and controls in menus");
+                        ui.label("- Toolbar with buttons");
+                        ui.label("- Status bar at the bottom");
+                        ui.add_space(ITEM_SPACING);
+                        ui.label("Try clicking the menus and toolbar buttons!");
+                    });
+            });
+        });
+    }
+}
+
+// --- Context Menu Demo ---
+
+fn cmd_context() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([500.0, 400.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui context",
+        options,
+        Box::new(|_cc| Ok(Box::new(ContextApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+struct ContextApp {
+    items: Vec<String>,
+    selected: Option<usize>,
+    last_action: String,
+}
+
+impl Default for ContextApp {
+    fn default() -> Self {
+        Self {
+            items: vec![
+                "Item 1".into(),
+                "Item 2".into(),
+                "Item 3".into(),
+                "Item 4".into(),
+                "Item 5".into(),
+            ],
+            selected: None,
+            last_action: String::new(),
+        }
+    }
+}
+
+impl eframe::App for ContextApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Context Menu (Right-Click)");
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Right-click on items below for context menu:");
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        let mut to_delete = None;
+
+                        for (i, item) in self.items.iter().enumerate() {
+                            let is_selected = self.selected == Some(i);
+                            let response = ui.selectable_label(is_selected, item);
+
+                            if response.clicked() {
+                                self.selected = Some(i);
+                            }
+
+                            response.context_menu(|ui| {
+                                if ui.button("Edit").clicked() {
+                                    self.last_action = format!("Editing: {}", item);
+                                    ui.close_menu();
+                                }
+                                if ui.button("Duplicate").clicked() {
+                                    self.last_action = format!("Duplicated: {}", item);
+                                    ui.close_menu();
+                                }
+                                ui.separator();
+                                if ui.button("Delete").clicked() {
+                                    to_delete = Some(i);
+                                    ui.close_menu();
+                                }
+                            });
+                        }
+
+                        if let Some(idx) = to_delete {
+                            self.last_action = format!("Deleted: {}", self.items[idx]);
+                            self.items.remove(idx);
+                            self.selected = None;
+                        }
+
+                        ui.add_space(ITEM_SPACING);
+                        if ui.button("Add Item").clicked() {
+                            self.items.push(format!("Item {}", self.items.len() + 1));
+                        }
+                    });
+
+                if !self.last_action.is_empty() {
+                    ui.add_space(SECTION_SPACING);
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(ui, |ui| {
+                            ui.label(RichText::new(&self.last_action).color(Color32::GREEN));
+                        });
+                }
+            });
+        });
+    }
+}
+
+// --- Tabs Demo ---
+
+fn cmd_tabs() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([550.0, 450.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui tabs",
+        options,
+        Box::new(|_cc| Ok(Box::new(TabsApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+struct TabsApp {
+    active_tab: usize,
+    tab1_text: String,
+    tab2_value: f32,
+    tab3_items: Vec<bool>,
+}
+
+impl Default for TabsApp {
+    fn default() -> Self {
+        Self {
+            active_tab: 0,
+            tab1_text: "Hello, tabs!".to_string(),
+            tab2_value: 50.0,
+            tab3_items: vec![true, false, true, false, true],
+        }
+    }
+}
+
+impl eframe::App for TabsApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Tabbed Interface");
+                ui.add_space(SECTION_SPACING);
+
+                // Tab bar
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            let tabs = ["Text Editor", "Settings", "Checklist"];
+                            for (i, tab) in tabs.iter().enumerate() {
+                                let selected = self.active_tab == i;
+                                if ui.selectable_label(selected, *tab).clicked() {
+                                    self.active_tab = i;
+                                }
+                            }
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Tab content
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| match self.active_tab {
+                        0 => {
+                            ui.label("Text Editor Tab:");
+                            ui.add_space(ITEM_SPACING);
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.tab1_text)
+                                    .desired_width(f32::INFINITY)
+                                    .desired_rows(10),
+                            );
+                        }
+                        1 => {
+                            ui.label("Settings Tab:");
+                            ui.add_space(ITEM_SPACING);
+                            egui::Grid::new("settings_grid")
+                                .num_columns(2)
+                                .spacing(GRID_SPACING)
+                                .show(ui, |ui| {
+                                    ui.label("Volume:");
+                                    ui.add(
+                                        egui::Slider::new(&mut self.tab2_value, 0.0..=100.0)
+                                            .suffix("%"),
+                                    );
+                                    ui.end_row();
+                                });
+                        }
+                        2 => {
+                            ui.label("Checklist Tab:");
+                            ui.add_space(ITEM_SPACING);
+                            for (i, checked) in self.tab3_items.iter_mut().enumerate() {
+                                ui.checkbox(checked, format!("Task {}", i + 1));
+                            }
+                            ui.add_space(ITEM_SPACING);
+                            let completed = self.tab3_items.iter().filter(|&&c| c).count();
+                            ui.label(format!("{}/{} completed", completed, self.tab3_items.len()));
+                        }
+                        _ => {}
+                    });
+            });
+        });
+    }
+}
+
+// --- Tree Demo ---
+
+fn cmd_tree() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([500.0, 450.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui tree",
+        options,
+        Box::new(|_cc| Ok(Box::new(TreeApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+#[derive(Default)]
+struct TreeApp {
+    selected: Option<String>,
+}
+
+impl eframe::App for TreeApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Tree View");
+                ui.add_space(SECTION_SPACING);
+
+                ui.columns(2, |columns| {
+                    // Tree view
+                    egui::Frame::group(columns[0].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[0], |ui| {
+                            ui.label("File System:");
+                            egui::ScrollArea::vertical()
+                                .max_height(300.0)
+                                .show(ui, |ui| {
+                                    egui::CollapsingHeader::new("Root").default_open(true).show(
+                                        ui,
+                                        |ui| {
+                                            egui::CollapsingHeader::new("Documents")
+                                                .default_open(false)
+                                                .show(ui, |ui| {
+                                                    for item in
+                                                        ["report.pdf", "notes.txt", "budget.xlsx"]
+                                                    {
+                                                        let is_selected = self.selected.as_ref()
+                                                            == Some(&item.to_string());
+                                                        if ui
+                                                            .selectable_label(is_selected, item)
+                                                            .clicked()
+                                                        {
+                                                            self.selected = Some(item.to_string());
+                                                        }
+                                                    }
+                                                    egui::CollapsingHeader::new("Projects")
+                                                        .default_open(false)
+                                                        .show(ui, |ui| {
+                                                            for item in
+                                                                ["project1.rs", "project2.rs"]
+                                                            {
+                                                                let is_selected =
+                                                                    self.selected.as_ref()
+                                                                        == Some(&item.to_string());
+                                                                if ui
+                                                                    .selectable_label(
+                                                                        is_selected,
+                                                                        item,
+                                                                    )
+                                                                    .clicked()
+                                                                {
+                                                                    self.selected =
+                                                                        Some(item.to_string());
+                                                                }
+                                                            }
+                                                        });
+                                                });
+                                            egui::CollapsingHeader::new("Images")
+                                                .default_open(false)
+                                                .show(ui, |ui| {
+                                                    for item in [
+                                                        "photo1.jpg",
+                                                        "photo2.png",
+                                                        "screenshot.png",
+                                                    ] {
+                                                        let is_selected = self.selected.as_ref()
+                                                            == Some(&item.to_string());
+                                                        if ui
+                                                            .selectable_label(is_selected, item)
+                                                            .clicked()
+                                                        {
+                                                            self.selected = Some(item.to_string());
+                                                        }
+                                                    }
+                                                });
+                                            egui::CollapsingHeader::new("Music")
+                                                .default_open(false)
+                                                .show(ui, |ui| {
+                                                    for item in ["song1.mp3", "song2.mp3"] {
+                                                        let is_selected = self.selected.as_ref()
+                                                            == Some(&item.to_string());
+                                                        if ui
+                                                            .selectable_label(is_selected, item)
+                                                            .clicked()
+                                                        {
+                                                            self.selected = Some(item.to_string());
+                                                        }
+                                                    }
+                                                });
+                                            let readme_selected = self.selected.as_ref()
+                                                == Some(&"README.md".to_string());
+                                            if ui
+                                                .selectable_label(readme_selected, "README.md")
+                                                .clicked()
+                                            {
+                                                self.selected = Some("README.md".to_string());
+                                            }
+                                        },
+                                    );
+                                });
+                        });
+
+                    // Details
+                    egui::Frame::group(columns[1].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[1], |ui| {
+                            ui.label("Details:");
+                            ui.add_space(ITEM_SPACING);
+                            if let Some(selected) = &self.selected {
+                                ui.label(format!("Selected: {}", selected));
+                                ui.add_space(ITEM_SPACING);
+                                // Show mock file info
+                                egui::Grid::new("file_info")
+                                    .num_columns(2)
+                                    .spacing(GRID_SPACING)
+                                    .show(ui, |ui| {
+                                        ui.label("Type:");
+                                        let ext = selected.rsplit('.').next().unwrap_or("unknown");
+                                        ui.label(ext.to_uppercase());
+                                        ui.end_row();
+                                        ui.label("Size:");
+                                        ui.label("1.2 KB");
+                                        ui.end_row();
+                                        ui.label("Modified:");
+                                        ui.label("Today");
+                                        ui.end_row();
+                                    });
+                            } else {
+                                ui.label("Click an item to select it");
+                            }
+                        });
+                });
+            });
+        });
+    }
+}
+
+// --- Code Editor Demo ---
+
+fn cmd_code() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([700.0, 550.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui code",
+        options,
+        Box::new(|_cc| Ok(Box::new(CodeApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
+}
+
+struct CodeApp {
+    code: String,
+    language: String,
+}
+
+impl Default for CodeApp {
+    fn default() -> Self {
+        Self {
+            code: r#"fn main() {
+    println!("Hello, World!");
+
+    let numbers = vec![1, 2, 3, 4, 5];
+
+    for n in &numbers {
+        if *n % 2 == 0 {
+            println!("{} is even", n);
+        } else {
+            println!("{} is odd", n);
+        }
+    }
+
+    let sum: i32 = numbers.iter().sum();
+    println!("Sum: {}", sum);
+}
+"#
+            .to_string(),
+            language: "rust".to_string(),
+        }
+    }
+}
+
+impl eframe::App for CodeApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Code Editor");
+                ui.add_space(SECTION_SPACING);
+
+                // Language selector
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Language:");
+                            egui::ComboBox::from_id_salt("lang")
+                                .selected_text(&self.language)
+                                .show_ui(ui, |ui| {
+                                    ui.selectable_value(
+                                        &mut self.language,
+                                        "rust".to_string(),
+                                        "Rust",
+                                    );
+                                    ui.selectable_value(
+                                        &mut self.language,
+                                        "py".to_string(),
+                                        "Python",
+                                    );
+                                    ui.selectable_value(
+                                        &mut self.language,
+                                        "js".to_string(),
+                                        "JavaScript",
+                                    );
+                                    ui.selectable_value(&mut self.language, "c".to_string(), "C");
+                                });
+
+                            if ui.button("Load Example").clicked() {
+                                self.code = match self.language.as_str() {
+                                    "rust" => r#"fn main() {
+    println!("Hello, Rust!");
+    let x = 42;
+    println!("x = {}", x);
+}"#
+                                    .to_string(),
+                                    "py" => r#"def main():
+    print("Hello, Python!")
+    x = 42
+    print(f"x = {x}")
+
+if __name__ == "__main__":
+    main()
+"#
+                                    .to_string(),
+                                    "js" => r#"function main() {
+    console.log("Hello, JavaScript!");
+    const x = 42;
+    console.log(`x = ${x}`);
+}
+
+main();
+"#
+                                    .to_string(),
+                                    "c" => r#"#include <stdio.h>
+
+int main() {
+    printf("Hello, C!\n");
+    int x = 42;
+    printf("x = %d\n", x);
+    return 0;
+}
+"#
+                                    .to_string(),
+                                    _ => self.code.clone(),
+                                };
+                            }
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Code editor with syntax highlighting
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Editor (with syntax highlighting):");
+                        egui::ScrollArea::vertical()
+                            .max_height(400.0)
+                            .show(ui, |ui| {
+                                let theme =
+                                    egui_extras::syntax_highlighting::CodeTheme::from_memory(
+                                        ui.ctx(),
+                                        ui.style(),
+                                    );
+                                let mut layouter = |ui: &egui::Ui, text: &str, wrap_width: f32| {
+                                    let mut layout_job =
+                                        egui_extras::syntax_highlighting::highlight(
+                                            ui.ctx(),
+                                            ui.style(),
+                                            &theme,
+                                            text,
+                                            &self.language,
+                                        );
+                                    layout_job.wrap.max_width = wrap_width;
+                                    ui.fonts(|f| f.layout_job(layout_job))
+                                };
+
+                                ui.add(
+                                    egui::TextEdit::multiline(&mut self.code)
+                                        .font(egui::TextStyle::Monospace)
+                                        .desired_width(f32::INFINITY)
+                                        .desired_rows(20)
+                                        .layouter(&mut layouter),
+                                );
+                            });
+                    });
+
+                ui.add_space(ITEM_SPACING);
+                ui.label(format!(
+                    "Lines: {}, Characters: {}",
+                    self.code.lines().count(),
+                    self.code.len()
+                ));
+            });
+        });
     }
 }

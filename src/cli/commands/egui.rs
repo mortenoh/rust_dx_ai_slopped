@@ -69,4 +69,24 @@ pub enum EguiCommand {
     Markdown,
     /// Pomodoro timer
     Timer,
+
+    // === Widget Showcase ===
+    /// Data table with sorting and resizing
+    Table,
+    /// Modal/popup window dialogs
+    Modal,
+    /// Charts and graphs with egui_plot
+    Plot,
+    /// Image viewer with loading
+    Image,
+    /// Menu bar demonstration
+    Menu,
+    /// Context menu (right-click) demo
+    Context,
+    /// Tabbed interface demo
+    Tabs,
+    /// Tree view hierarchical data
+    Tree,
+    /// Code editor with syntax highlighting
+    Code,
 }
