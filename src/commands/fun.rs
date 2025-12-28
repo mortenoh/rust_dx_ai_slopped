@@ -632,18 +632,18 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
             let target_progress = ((elapsed * 100) / time_per_task).min(100);
             progress = progress.max(target_progress);
 
-            // Draw inline progress
+            // Draw inline progress - spinner on right side
             let spinner = SPINNER_FRAMES[frame % SPINNER_FRAMES.len()];
             let filled = (progress as usize * 20) / 100;
             let empty = 20 - filled;
             let bar = format!("{}{}", "█".repeat(filled), "░".repeat(empty));
 
             print!(
-                "\r{} {}... {} [{}] {:>3}%",
+                "\r{} {}... [{}] {} {:>3}%",
                 format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
                 padded_task.cyan(),
-                spinner.green(),
                 bar.blue(),
+                spinner.green(),
                 progress
             );
             io::stdout().flush().ok();
