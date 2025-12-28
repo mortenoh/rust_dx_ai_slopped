@@ -15,6 +15,8 @@ pub enum EguiCommand {
     Counter,
     /// Live updating clock
     Clock,
+    /// Work simulator with progress bar
+    Work,
 
     // === Generators ===
     /// UUID generator with format selection and bulk generation

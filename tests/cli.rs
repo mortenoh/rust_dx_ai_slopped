@@ -1438,5 +1438,11 @@ fn test_egui_timer_help() {
     dx().args(["egui", "timer", "--help"]).assert().success();
 }
 
+#[test]
+#[cfg(feature = "egui")]
+fn test_egui_work_help() {
+    dx().args(["egui", "work", "--help"]).assert().success();
+}
+
 // Note: Actual GUI windows cannot be tested in CI without a display.
 // We only test that the commands parse correctly via help tests.

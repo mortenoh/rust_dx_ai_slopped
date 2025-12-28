@@ -2,12 +2,23 @@ use crate::cli::commands::egui::{EguiArgs, EguiCommand};
 use anyhow::Result;
 use eframe::egui::{self, Color32, RichText};
 
+// Layout constants for consistent styling
+const MARGIN: f32 = 16.0;
+const SECTION_SPACING: f32 = 16.0;
+const ITEM_SPACING: f32 = 8.0;
+const GRID_SPACING: [f32; 2] = [12.0, 8.0];
+const SCROLL_HEIGHT_SMALL: f32 = 120.0;
+const SCROLL_HEIGHT_MEDIUM: f32 = 180.0;
+#[allow(dead_code)]
+const SCROLL_HEIGHT_LARGE: f32 = 250.0;
+
 pub fn run(args: EguiArgs) -> Result<()> {
     match args.command {
         // Existing
         EguiCommand::Demo => cmd_demo(),
         EguiCommand::Counter => cmd_counter(),
         EguiCommand::Clock => cmd_clock(),
+        EguiCommand::Work => cmd_work(),
         // Generators
         EguiCommand::Uuid => cmd_uuid(),
         EguiCommand::Password => cmd_password(),
@@ -63,18 +74,36 @@ struct DemoApp {
 impl eframe::App for DemoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Hello egui!");
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("Your name:");
-                ui.text_edit_singleline(&mut self.name);
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Hello egui!");
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("demo_grid")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("Your name:");
+                                ui.text_edit_singleline(&mut self.name);
+                                ui.end_row();
+                            });
+                    });
+
+                if !self.name.is_empty() {
+                    ui.add_space(ITEM_SPACING);
+                    ui.label(
+                        RichText::new(format!("Hello, {}!", self.name))
+                            .size(18.0)
+                            .color(Color32::GREEN),
+                    );
+                }
+
+                ui.add_space(SECTION_SPACING);
+                ui.label("This is a basic egui demo from dx.");
+                ui.hyperlink_to("egui documentation", "https://docs.rs/egui");
             });
-            if !self.name.is_empty() {
-                ui.label(format!("Hello, {}!", self.name));
-            }
-            ui.separator();
-            ui.label("This is a basic egui demo from dx.");
-            ui.hyperlink_to("egui documentation", "https://docs.rs/egui");
         });
     }
 }
@@ -101,31 +130,46 @@ struct CounterApp {
 impl eframe::App for CounterApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Counter");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Counter");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                if ui.button("-").clicked() {
-                    self.counter -= 1;
-                }
-                ui.label(format!("{}", self.counter));
-                if ui.button("+").clicked() {
-                    self.counter += 1;
-                }
-            });
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(
+                                RichText::new(format!("{}", self.counter))
+                                    .size(48.0)
+                                    .monospace(),
+                            );
+                        });
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                if ui.button("-10").clicked() {
-                    self.counter -= 10;
-                }
-                if ui.button("Reset").clicked() {
-                    self.counter = 0;
-                }
-                if ui.button("+10").clicked() {
-                    self.counter += 10;
-                }
+                ui.horizontal(|ui| {
+                    if ui.button("-").clicked() {
+                        self.counter -= 1;
+                    }
+                    if ui.button("+").clicked() {
+                        self.counter += 1;
+                    }
+                });
+
+                ui.add_space(ITEM_SPACING);
+
+                ui.horizontal(|ui| {
+                    if ui.button("-10").clicked() {
+                        self.counter -= 10;
+                    }
+                    if ui.button("Reset").clicked() {
+                        self.counter = 0;
+                    }
+                    if ui.button("+10").clicked() {
+                        self.counter += 10;
+                    }
+                });
             });
         });
     }
@@ -150,19 +194,175 @@ struct ClockApp;
 impl eframe::App for ClockApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Clock");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Clock");
+                ui.add_space(SECTION_SPACING);
 
-            let now = chrono::Local::now();
-            ui.label(
-                RichText::new(now.format("%H:%M:%S").to_string())
-                    .size(48.0)
-                    .monospace(),
-            );
-            ui.label(now.format("%A, %B %d, %Y").to_string());
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        let now = chrono::Local::now();
+                        ui.vertical_centered(|ui| {
+                            ui.label(
+                                RichText::new(now.format("%H:%M:%S").to_string())
+                                    .size(48.0)
+                                    .monospace(),
+                            );
+                            ui.add_space(ITEM_SPACING);
+                            ui.label(now.format("%A, %B %d, %Y").to_string());
+                        });
+                    });
+            });
         });
 
         ctx.request_repaint();
+    }
+}
+
+fn cmd_work() -> Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([450.0, 350.0]),
+        ..Default::default()
+    };
+
+    eframe::run_native(
+        "dx egui work",
+        options,
+        Box::new(|_cc| Ok(Box::new(WorkApp::default()))),
+    )
+    .map_err(|e| anyhow::anyhow!("Failed to run egui: {}", e))
+}
+
+struct WorkApp {
+    x: f32,
+    y: f32,
+    processing: bool,
+    progress: f32,
+    start_time: Option<std::time::Instant>,
+    duration_secs: f32,
+    result: Option<f32>,
+}
+
+impl Default for WorkApp {
+    fn default() -> Self {
+        Self {
+            x: 10.0,
+            y: 5.0,
+            processing: false,
+            progress: 0.0,
+            start_time: None,
+            duration_secs: 2.0,
+            result: None,
+        }
+    }
+}
+
+impl eframe::App for WorkApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Update progress if processing
+        if self.processing {
+            if let Some(start) = self.start_time {
+                let elapsed = start.elapsed().as_secs_f32();
+                self.progress = (elapsed / self.duration_secs).min(1.0);
+
+                if self.progress >= 1.0 {
+                    self.processing = false;
+                    self.result = Some(self.x * self.y);
+                    self.start_time = None;
+                }
+            }
+        }
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Work Simulator");
+                ui.add_space(SECTION_SPACING);
+
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("work_inputs")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("X value:");
+                                ui.add_enabled(
+                                    !self.processing,
+                                    egui::DragValue::new(&mut self.x).speed(0.1),
+                                );
+                                ui.end_row();
+
+                                ui.label("Y value:");
+                                ui.add_enabled(
+                                    !self.processing,
+                                    egui::DragValue::new(&mut self.y).speed(0.1),
+                                );
+                                ui.end_row();
+
+                                ui.label("Duration (s):");
+                                ui.add_enabled(
+                                    !self.processing,
+                                    egui::DragValue::new(&mut self.duration_secs)
+                                        .speed(0.1)
+                                        .range(0.5..=10.0),
+                                );
+                                ui.end_row();
+                            });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Process button
+                ui.horizontal(|ui| {
+                    let button = ui.add_enabled(!self.processing, egui::Button::new("Process"));
+                    if button.clicked() {
+                        self.processing = true;
+                        self.progress = 0.0;
+                        self.start_time = Some(std::time::Instant::now());
+                        self.result = None;
+                    }
+
+                    if self.processing {
+                        ui.spinner();
+                        ui.label("Processing...");
+                    }
+                });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Progress section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Progress:");
+                        let progress_bar = egui::ProgressBar::new(self.progress)
+                            .text(format!("{:.0}%", self.progress * 100.0))
+                            .animate(self.processing);
+                        ui.add(progress_bar);
+
+                        ui.add_space(ITEM_SPACING);
+
+                        // Status
+                        let status = if self.processing {
+                            RichText::new(format!("Computing {} × {}...", self.x, self.y))
+                                .color(Color32::YELLOW)
+                        } else if let Some(result) = self.result {
+                            RichText::new(format!("Result: {} × {} = {}", self.x, self.y, result))
+                                .color(Color32::GREEN)
+                                .strong()
+                        } else {
+                            RichText::new("Ready to process").color(Color32::GRAY)
+                        };
+                        ui.label(status);
+                    });
+            });
+        });
+
+        // Request repaint while processing for smooth animation
+        if self.processing {
+            ctx.request_repaint();
+        }
     }
 }
 
@@ -238,63 +438,101 @@ impl UuidApp {
 impl eframe::App for UuidApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("UUID Generator");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("UUID Generator");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.label("Version:");
-                ui.radio_value(&mut self.version, UuidVersion::V4, "v4 (random)");
-                ui.radio_value(&mut self.version, UuidVersion::V7, "v7 (time-based)");
-            });
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("uuid_controls")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("Version:");
+                                ui.horizontal(|ui| {
+                                    ui.radio_value(
+                                        &mut self.version,
+                                        UuidVersion::V4,
+                                        "v4 (random)",
+                                    );
+                                    ui.radio_value(
+                                        &mut self.version,
+                                        UuidVersion::V7,
+                                        "v7 (time-based)",
+                                    );
+                                });
+                                ui.end_row();
 
-            ui.horizontal(|ui| {
-                ui.label("Format:");
-                egui::ComboBox::from_id_salt("uuid_format")
-                    .selected_text(match self.format {
-                        UuidFormat::Standard => "standard",
-                        UuidFormat::Simple => "simple",
-                        UuidFormat::Urn => "urn",
-                        UuidFormat::Braced => "braced",
-                    })
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.format, UuidFormat::Standard, "standard");
-                        ui.selectable_value(&mut self.format, UuidFormat::Simple, "simple");
-                        ui.selectable_value(&mut self.format, UuidFormat::Urn, "urn");
-                        ui.selectable_value(&mut self.format, UuidFormat::Braced, "braced");
+                                ui.label("Format:");
+                                egui::ComboBox::from_id_salt("uuid_format")
+                                    .selected_text(match self.format {
+                                        UuidFormat::Standard => "standard",
+                                        UuidFormat::Simple => "simple",
+                                        UuidFormat::Urn => "urn",
+                                        UuidFormat::Braced => "braced",
+                                    })
+                                    .show_ui(ui, |ui| {
+                                        ui.selectable_value(
+                                            &mut self.format,
+                                            UuidFormat::Standard,
+                                            "standard",
+                                        );
+                                        ui.selectable_value(
+                                            &mut self.format,
+                                            UuidFormat::Simple,
+                                            "simple",
+                                        );
+                                        ui.selectable_value(
+                                            &mut self.format,
+                                            UuidFormat::Urn,
+                                            "urn",
+                                        );
+                                        ui.selectable_value(
+                                            &mut self.format,
+                                            UuidFormat::Braced,
+                                            "braced",
+                                        );
+                                    });
+                                ui.end_row();
+
+                                ui.label("Count:");
+                                ui.add(egui::Slider::new(&mut self.count, 1..=50));
+                                ui.end_row();
+                            });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                if ui.button("Generate").clicked() {
+                    self.generate();
+                }
+
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::ScrollArea::vertical()
+                            .max_height(SCROLL_HEIGHT_MEDIUM)
+                            .show(ui, |ui| {
+                                egui::Grid::new("uuid_grid")
+                                    .num_columns(2)
+                                    .spacing(GRID_SPACING)
+                                    .show(ui, |ui| {
+                                        for (i, uuid) in self.uuids.iter().enumerate() {
+                                            ui.label(RichText::new(uuid).monospace());
+                                            if ui.small_button("Copy").clicked() {
+                                                ui.output_mut(|o| o.copied_text = uuid.clone());
+                                            }
+                                            if i < self.uuids.len() - 1 {
+                                                ui.end_row();
+                                            }
+                                        }
+                                    });
+                            });
                     });
             });
-
-            ui.horizontal(|ui| {
-                ui.label("Count:");
-                ui.add(egui::Slider::new(&mut self.count, 1..=50));
-            });
-
-            ui.separator();
-
-            if ui.button("Generate").clicked() {
-                self.generate();
-            }
-
-            ui.separator();
-
-            egui::ScrollArea::vertical()
-                .max_height(200.0)
-                .show(ui, |ui| {
-                    egui::Grid::new("uuid_grid")
-                        .num_columns(2)
-                        .spacing([10.0, 4.0])
-                        .show(ui, |ui| {
-                            for (i, uuid) in self.uuids.iter().enumerate() {
-                                ui.label(RichText::new(uuid).monospace());
-                                if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = uuid.clone());
-                                }
-                                if i < self.uuids.len() - 1 {
-                                    ui.end_row();
-                                }
-                            }
-                        });
-                });
         });
     }
 }
@@ -407,55 +645,69 @@ impl PasswordApp {
 impl eframe::App for PasswordApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Password Generator");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Password Generator");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.label("Length:");
-                ui.add(egui::Slider::new(&mut self.length, 8..=128));
-            });
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("password_controls")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("Length:");
+                                ui.add(egui::Slider::new(&mut self.length, 8..=128));
+                                ui.end_row();
 
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut self.use_upper, "Uppercase (A-Z)");
-                ui.checkbox(&mut self.use_lower, "Lowercase (a-z)");
-            });
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut self.use_digits, "Digits (0-9)");
-                ui.checkbox(&mut self.use_symbols, "Symbols (!@#...)");
-            });
+                                ui.label("Characters:");
+                                ui.horizontal(|ui| {
+                                    ui.checkbox(&mut self.use_upper, "A-Z");
+                                    ui.checkbox(&mut self.use_lower, "a-z");
+                                    ui.checkbox(&mut self.use_digits, "0-9");
+                                    ui.checkbox(&mut self.use_symbols, "!@#");
+                                });
+                                ui.end_row();
 
-            let (strength, label, color) = self.strength();
-            ui.horizontal(|ui| {
-                ui.label("Strength:");
-                ui.add(egui::ProgressBar::new(strength).text(label).fill(color));
-            });
+                                ui.label("Count:");
+                                ui.add(egui::DragValue::new(&mut self.count).range(1..=20));
+                                ui.end_row();
+                            });
 
-            ui.horizontal(|ui| {
-                ui.label("Generate:");
-                ui.add(egui::DragValue::new(&mut self.count).range(1..=20));
-                ui.label("passwords");
-            });
+                        ui.add_space(ITEM_SPACING);
 
-            ui.separator();
-
-            if ui.button("Generate").clicked() {
-                self.generate();
-            }
-
-            ui.separator();
-
-            egui::ScrollArea::vertical()
-                .max_height(150.0)
-                .show(ui, |ui| {
-                    for password in &self.passwords {
+                        let (strength, label, color) = self.strength();
                         ui.horizontal(|ui| {
-                            ui.label(RichText::new(password).monospace());
-                            if ui.small_button("Copy").clicked() {
-                                ui.output_mut(|o| o.copied_text = password.clone());
-                            }
+                            ui.label("Strength:");
+                            ui.add(egui::ProgressBar::new(strength).text(label).fill(color));
                         });
-                    }
-                });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                if ui.button("Generate").clicked() {
+                    self.generate();
+                }
+
+                ui.add_space(SECTION_SPACING);
+
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::ScrollArea::vertical()
+                            .max_height(SCROLL_HEIGHT_SMALL)
+                            .show(ui, |ui| {
+                                for password in &self.passwords {
+                                    ui.horizontal(|ui| {
+                                        ui.label(RichText::new(password).monospace());
+                                        if ui.small_button("Copy").clicked() {
+                                            ui.output_mut(|o| o.copied_text = password.clone());
+                                        }
+                                    });
+                                }
+                            });
+                    });
+            });
         });
     }
 }
@@ -493,66 +745,78 @@ impl Default for QrcodeApp {
 impl eframe::App for QrcodeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("QR Code Generator");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("QR Code Generator");
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("Text/URL:");
-            ui.add(
-                egui::TextEdit::multiline(&mut self.input)
-                    .desired_width(f32::INFINITY)
-                    .desired_rows(3),
-            );
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Text/URL:");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.input)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(3),
+                        );
 
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut self.invert, "Invert colors");
-                ui.label("Scale:");
-                ui.add(egui::Slider::new(&mut self.scale, 2..=8));
-            });
+                        ui.add_space(ITEM_SPACING);
 
-            ui.separator();
-
-            if !self.input.is_empty() {
-                if let Ok(code) = qrcode::QrCode::new(self.input.as_bytes()) {
-                    let colors = code.to_colors();
-                    let width = code.width();
-
-                    let (fg, bg) = if self.invert {
-                        (Color32::WHITE, Color32::BLACK)
-                    } else {
-                        (Color32::BLACK, Color32::WHITE)
-                    };
-
-                    let size = egui::vec2((width * self.scale) as f32, (width * self.scale) as f32);
-
-                    egui::Frame::none()
-                        .fill(bg)
-                        .inner_margin(8.0)
-                        .show(ui, |ui| {
-                            let (rect, _response) =
-                                ui.allocate_exact_size(size, egui::Sense::hover());
-                            let painter = ui.painter_at(rect);
-
-                            for (i, color) in colors.iter().enumerate() {
-                                let x = i % width;
-                                let y = i / width;
-                                let c = match color {
-                                    qrcode::Color::Dark => fg,
-                                    qrcode::Color::Light => bg,
-                                };
-                                let pos = rect.min
-                                    + egui::vec2((x * self.scale) as f32, (y * self.scale) as f32);
-                                painter.rect_filled(
-                                    egui::Rect::from_min_size(
-                                        pos,
-                                        egui::vec2(self.scale as f32, self.scale as f32),
-                                    ),
-                                    0.0,
-                                    c,
-                                );
-                            }
+                        ui.horizontal(|ui| {
+                            ui.checkbox(&mut self.invert, "Invert colors");
+                            ui.label("Scale:");
+                            ui.add(egui::Slider::new(&mut self.scale, 2..=8));
                         });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                if !self.input.is_empty() {
+                    if let Ok(code) = qrcode::QrCode::new(self.input.as_bytes()) {
+                        let colors = code.to_colors();
+                        let width = code.width();
+
+                        let (fg, bg) = if self.invert {
+                            (Color32::WHITE, Color32::BLACK)
+                        } else {
+                            (Color32::BLACK, Color32::WHITE)
+                        };
+
+                        let size =
+                            egui::vec2((width * self.scale) as f32, (width * self.scale) as f32);
+
+                        egui::Frame::none()
+                            .fill(bg)
+                            .inner_margin(ITEM_SPACING)
+                            .show(ui, |ui| {
+                                let (rect, _response) =
+                                    ui.allocate_exact_size(size, egui::Sense::hover());
+                                let painter = ui.painter_at(rect);
+
+                                for (i, color) in colors.iter().enumerate() {
+                                    let x = i % width;
+                                    let y = i / width;
+                                    let c = match color {
+                                        qrcode::Color::Dark => fg,
+                                        qrcode::Color::Light => bg,
+                                    };
+                                    let pos = rect.min
+                                        + egui::vec2(
+                                            (x * self.scale) as f32,
+                                            (y * self.scale) as f32,
+                                        );
+                                    painter.rect_filled(
+                                        egui::Rect::from_min_size(
+                                            pos,
+                                            egui::vec2(self.scale as f32, self.scale as f32),
+                                        ),
+                                        0.0,
+                                        c,
+                                    );
+                                }
+                            });
+                    }
                 }
-            }
+            });
         });
     }
 }
@@ -616,38 +880,64 @@ impl LoremApp {
 impl eframe::App for LoremApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Lorem Ipsum Generator");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Lorem Ipsum Generator");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.label("Unit:");
-                ui.radio_value(&mut self.unit, LoremUnit::Words, "Words");
-                ui.radio_value(&mut self.unit, LoremUnit::Sentences, "Sentences");
-                ui.radio_value(&mut self.unit, LoremUnit::Paragraphs, "Paragraphs");
-            });
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("lorem_controls")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("Unit:");
+                                ui.horizontal(|ui| {
+                                    ui.radio_value(&mut self.unit, LoremUnit::Words, "Words");
+                                    ui.radio_value(
+                                        &mut self.unit,
+                                        LoremUnit::Sentences,
+                                        "Sentences",
+                                    );
+                                    ui.radio_value(
+                                        &mut self.unit,
+                                        LoremUnit::Paragraphs,
+                                        "Paragraphs",
+                                    );
+                                });
+                                ui.end_row();
 
-            ui.horizontal(|ui| {
-                ui.label("Count:");
-                ui.add(egui::DragValue::new(&mut self.count).range(1..=100));
-            });
+                                ui.label("Count:");
+                                ui.add(egui::DragValue::new(&mut self.count).range(1..=100));
+                                ui.end_row();
+                            });
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                if ui.button("Generate").clicked() {
-                    self.generate();
-                }
-                if ui.button("Copy").clicked() {
-                    ui.output_mut(|o| o.copied_text = self.text.clone());
-                }
-            });
+                ui.horizontal(|ui| {
+                    if ui.button("Generate").clicked() {
+                        self.generate();
+                    }
+                    if ui.button("Copy").clicked() {
+                        ui.output_mut(|o| o.copied_text = self.text.clone());
+                    }
+                });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.add(
-                    egui::TextEdit::multiline(&mut self.text.as_str()).desired_width(f32::INFINITY),
-                );
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::ScrollArea::vertical()
+                            .max_height(SCROLL_HEIGHT_MEDIUM)
+                            .show(ui, |ui| {
+                                ui.add(
+                                    egui::TextEdit::multiline(&mut self.text.as_str())
+                                        .desired_width(f32::INFINITY),
+                                );
+                            });
+                    });
             });
         });
     }
@@ -739,69 +1029,84 @@ impl ColorApp {
 impl eframe::App for ColorApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Color Picker");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Color Picker");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.color_edit_button_rgb(&mut self.color);
-                let color = Color32::from_rgb(
-                    (self.color[0] * 255.0) as u8,
-                    (self.color[1] * 255.0) as u8,
-                    (self.color[2] * 255.0) as u8,
-                );
-                let size = egui::vec2(100.0, 50.0);
-                let (rect, _) = ui.allocate_exact_size(size, egui::Sense::hover());
-                ui.painter().rect_filled(rect, 4.0, color);
-            });
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.color_edit_button_rgb(&mut self.color);
+                            let color = Color32::from_rgb(
+                                (self.color[0] * 255.0) as u8,
+                                (self.color[1] * 255.0) as u8,
+                                (self.color[2] * 255.0) as u8,
+                            );
+                            let size = egui::vec2(100.0, 50.0);
+                            let (rect, _) = ui.allocate_exact_size(size, egui::Sense::hover());
+                            ui.painter().rect_filled(rect, 4.0, color);
+                        });
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            egui::Grid::new("color_grid")
-                .num_columns(3)
-                .spacing([10.0, 8.0])
-                .show(ui, |ui| {
-                    let hex = self.to_hex();
-                    ui.label("HEX:");
-                    ui.label(RichText::new(&hex).monospace());
-                    if ui.small_button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = hex);
-                    }
-                    ui.end_row();
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("color_grid")
+                            .num_columns(3)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                let hex = self.to_hex();
+                                ui.label("HEX:");
+                                ui.label(RichText::new(&hex).monospace());
+                                if ui.small_button("Copy").clicked() {
+                                    ui.output_mut(|o| o.copied_text = hex);
+                                }
+                                ui.end_row();
 
-                    let rgb = self.to_rgb();
-                    ui.label("RGB:");
-                    ui.label(RichText::new(&rgb).monospace());
-                    if ui.small_button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = rgb);
-                    }
-                    ui.end_row();
+                                let rgb = self.to_rgb();
+                                ui.label("RGB:");
+                                ui.label(RichText::new(&rgb).monospace());
+                                if ui.small_button("Copy").clicked() {
+                                    ui.output_mut(|o| o.copied_text = rgb);
+                                }
+                                ui.end_row();
 
-                    let hsl = self.to_hsl();
-                    ui.label("HSL:");
-                    ui.label(RichText::new(&hsl).monospace());
-                    if ui.small_button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = hsl);
-                    }
-                    ui.end_row();
-                });
+                                let hsl = self.to_hsl();
+                                ui.label("HSL:");
+                                ui.label(RichText::new(&hsl).monospace());
+                                if ui.small_button("Copy").clicked() {
+                                    ui.output_mut(|o| o.copied_text = hsl);
+                                }
+                                ui.end_row();
+                            });
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.label("Enter HEX:");
-                ui.text_edit_singleline(&mut self.hex_input);
-                if ui.button("Apply").clicked() {
-                    let hex = self.hex_input.trim_start_matches('#');
-                    if hex.len() == 6 {
-                        if let (Ok(r), Ok(g), Ok(b)) = (
-                            u8::from_str_radix(&hex[0..2], 16),
-                            u8::from_str_radix(&hex[2..4], 16),
-                            u8::from_str_radix(&hex[4..6], 16),
-                        ) {
-                            self.color = [r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0];
-                        }
-                    }
-                }
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Enter HEX:");
+                            ui.text_edit_singleline(&mut self.hex_input);
+                            if ui.button("Apply").clicked() {
+                                let hex = self.hex_input.trim_start_matches('#');
+                                if hex.len() == 6 {
+                                    if let (Ok(r), Ok(g), Ok(b)) = (
+                                        u8::from_str_radix(&hex[0..2], 16),
+                                        u8::from_str_radix(&hex[2..4], 16),
+                                        u8::from_str_radix(&hex[4..6], 16),
+                                    ) {
+                                        self.color =
+                                            [r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0];
+                                    }
+                                }
+                            }
+                        });
+                    });
             });
         });
     }
@@ -865,77 +1170,87 @@ impl HashApp {
 impl eframe::App for HashApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Hash Calculator");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Hash Calculator");
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("Input text:");
-            ui.add(
-                egui::TextEdit::multiline(&mut self.input)
-                    .desired_width(f32::INFINITY)
-                    .desired_rows(4),
-            );
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Input text:");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.input)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(4),
+                        );
 
-            ui.separator();
+                        ui.add_space(ITEM_SPACING);
 
-            ui.checkbox(&mut self.compare_mode, "Compare mode");
-            if self.compare_mode {
-                ui.horizontal(|ui| {
-                    ui.label("Expected hash:");
-                    ui.text_edit_singleline(&mut self.expected_hash);
-                });
-            }
+                        ui.checkbox(&mut self.compare_mode, "Compare mode");
+                        if self.compare_mode {
+                            ui.horizontal(|ui| {
+                                ui.label("Expected hash:");
+                                ui.text_edit_singleline(&mut self.expected_hash);
+                            });
+                        }
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            egui::Grid::new("hash_grid")
-                .num_columns(3)
-                .spacing([10.0, 8.0])
-                .show(ui, |ui| {
-                    let md5 = self.md5();
-                    let md5_match = self.matches(&md5);
-                    ui.label("MD5:");
-                    let text = RichText::new(&md5).monospace();
-                    let text = match md5_match {
-                        Some(true) => text.color(Color32::GREEN),
-                        Some(false) => text.color(Color32::RED),
-                        None => text,
-                    };
-                    ui.label(text);
-                    if ui.small_button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = md5);
-                    }
-                    ui.end_row();
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("hash_grid")
+                            .num_columns(3)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                let md5 = self.md5();
+                                let md5_match = self.matches(&md5);
+                                ui.label("MD5:");
+                                let text = RichText::new(&md5).monospace();
+                                let text = match md5_match {
+                                    Some(true) => text.color(Color32::GREEN),
+                                    Some(false) => text.color(Color32::RED),
+                                    None => text,
+                                };
+                                ui.label(text);
+                                if ui.small_button("Copy").clicked() {
+                                    ui.output_mut(|o| o.copied_text = md5);
+                                }
+                                ui.end_row();
 
-                    let sha256 = self.sha256();
-                    let sha256_match = self.matches(&sha256);
-                    ui.label("SHA-256:");
-                    let text = RichText::new(&sha256).monospace().size(11.0);
-                    let text = match sha256_match {
-                        Some(true) => text.color(Color32::GREEN),
-                        Some(false) => text.color(Color32::RED),
-                        None => text,
-                    };
-                    ui.label(text);
-                    if ui.small_button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = sha256);
-                    }
-                    ui.end_row();
+                                let sha256 = self.sha256();
+                                let sha256_match = self.matches(&sha256);
+                                ui.label("SHA-256:");
+                                let text = RichText::new(&sha256).monospace().size(11.0);
+                                let text = match sha256_match {
+                                    Some(true) => text.color(Color32::GREEN),
+                                    Some(false) => text.color(Color32::RED),
+                                    None => text,
+                                };
+                                ui.label(text);
+                                if ui.small_button("Copy").clicked() {
+                                    ui.output_mut(|o| o.copied_text = sha256);
+                                }
+                                ui.end_row();
 
-                    let sha512 = self.sha512();
-                    let sha512_match = self.matches(&sha512);
-                    ui.label("SHA-512:");
-                    let text = RichText::new(&sha512[..32]).monospace().size(10.0);
-                    let text = match sha512_match {
-                        Some(true) => text.color(Color32::GREEN),
-                        Some(false) => text.color(Color32::RED),
-                        None => text,
-                    };
-                    ui.label(text);
-                    if ui.small_button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = sha512);
-                    }
-                    ui.end_row();
-                });
+                                let sha512 = self.sha512();
+                                let sha512_match = self.matches(&sha512);
+                                ui.label("SHA-512:");
+                                let text = RichText::new(&sha512[..32]).monospace().size(10.0);
+                                let text = match sha512_match {
+                                    Some(true) => text.color(Color32::GREEN),
+                                    Some(false) => text.color(Color32::RED),
+                                    None => text,
+                                };
+                                ui.label(text);
+                                if ui.small_button("Copy").clicked() {
+                                    ui.output_mut(|o| o.copied_text = sha512);
+                                }
+                                ui.end_row();
+                            });
+                    });
+            });
         });
     }
 }
