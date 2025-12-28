@@ -317,4 +317,3 @@ See **[DEPENDENCIES.md](./DEPENDENCIES.md)** for complete documentation of all d
 - CLI args: `src/cli/commands/<command>.rs`
 - Implementation: `src/commands/<command>.rs`
 - Tests: `tests/cli.rs` (all CLI tests in one file)
-- Examples: `examples/PPNN_topic_name.rs` (PP = phase, NN = number)

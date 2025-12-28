@@ -219,15 +219,6 @@ install-mdbook:
 	fi
 	@echo "Installed: $$(mdbook --version)"
 
-# Run examples
-examples:
-	@for ex in examples/*.rs; do \
-		name=$$(basename $$ex .rs); \
-		echo "=== Running $$name ==="; \
-		cargo run --example $$name || true; \
-		echo ""; \
-	done
-
 # Check everything (CI)
 ci: fmt-check lint test
 	cargo build --release
