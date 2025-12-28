@@ -19,19 +19,37 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 | `expr` | `x` | Expression evaluator with functions and variables |
 | `net` | - | Network utilities (IP, DNS, ports) |
 | `chat` | - | gRPC-based real-time chat |
-| `fun` | - | Fun terminal effects (spinners, progress, hacker) |
+| `fun` | - | Fun terminal effects (matrix, life, qr, clock, banner, spinners) |
 | `grep` | `g` | Regex search in files with context |
 | `http` | - | HTTP client (GET, POST, PUT, DELETE, HEAD) |
 | `watch` | `w` | Watch files and run commands on changes |
+| `system` | `sys` | System information (CPU, memory, OS, uptime) |
+| `ui` | - | Interactive TUI dashboard (requires `--features ui`) |
 | `completions` | - | Generate shell completions |
 
 ## Installation
 
+### From Source
+
 ```bash
+# Standard build
 cargo install --path .
+
+# With TUI dashboard support
+cargo install --path . --features ui
 ```
 
-Or download pre-built binaries from the [Releases](https://github.com/mortenoh/rust_dx_ai_slopped/releases) page.
+### Pre-built Binaries
+
+Download from the [Releases](https://github.com/mortenoh/rust_dx_ai_slopped/releases/latest) page:
+
+```bash
+# Linux/macOS quick install
+curl -L https://github.com/mortenoh/rust_dx_ai_slopped/releases/download/latest/dx-linux-x86_64.tar.gz | tar xz
+sudo mv dx /usr/local/bin/
+```
+
+Available platforms: Linux (x86_64, ARM64, musl), macOS (x86_64, ARM64), Windows (x86_64).
 
 ## Quick Examples
 
@@ -64,6 +82,21 @@ dx http post https://httpbin.org/post -d '{"key": "value"}'
 # Watch files and run commands
 dx watch src/ -- cargo test                 # Re-run tests on changes
 dx watch . -e rs -- cargo build             # Rebuild on .rs changes
+
+# System information
+dx system info                              # CPU, memory, OS details
+dx system uptime                            # System uptime
+
+# Fun terminal effects
+dx fun matrix                               # Matrix-style falling code
+dx fun life                                 # Conway's Game of Life
+dx fun qr "https://github.com"              # Generate QR code
+dx fun clock                                # Big ASCII clock
+dx fun banner "HELLO"                       # ASCII text banner
+dx fun spinners                             # Showcase spinner styles
+
+# TUI dashboard (requires --features ui)
+dx ui                                       # Interactive system dashboard
 ```
 
 ## Expression Language
