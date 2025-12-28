@@ -3,6 +3,8 @@
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 
+#[cfg(feature = "ui")]
+use super::commands::UiArgs;
 use super::commands::{
     CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs,
     HttpArgs, JsonArgs, NetArgs, RandArgs, SystemArgs, TextArgs, TimeArgs, UuidArgs, WatchArgs,
@@ -119,6 +121,10 @@ pub enum Commands {
     /// System information and utilities
     #[command(visible_alias = "sys")]
     System(SystemArgs),
+
+    /// Interactive TUI dashboard (requires --features ui)
+    #[cfg(feature = "ui")]
+    Ui(UiArgs),
 
     /// Generate shell completions
     Completions {

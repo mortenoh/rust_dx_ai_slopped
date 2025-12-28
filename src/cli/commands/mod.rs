@@ -16,6 +16,8 @@ pub mod rand;
 pub mod system;
 pub mod text;
 pub mod time;
+#[cfg(feature = "ui")]
+pub mod ui;
 pub mod uuid;
 pub mod watch;
 
@@ -35,5 +37,7 @@ pub use rand::{RandArgs, RandCommand};
 pub use system::{SystemArgs, SystemCommand};
 pub use text::{TextArgs, TextCommand};
 pub use time::{TimeArgs, TimeCommand, TimeFormat};
+#[cfg(feature = "ui")]
+pub use ui::UiArgs;
 pub use uuid::{UuidArgs, UuidFormat, UuidVersion};
 pub use watch::WatchArgs;

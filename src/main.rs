@@ -152,6 +152,10 @@ fn main() -> Result<()> {
         // System command: system information and utilities
         Commands::System(args) => commands::system::run(args),
 
+        // UI command: interactive TUI dashboard (requires --features ui)
+        #[cfg(feature = "ui")]
+        Commands::Ui(args) => commands::ui::run(args),
+
         // Completions command: generate shell completions
         Commands::Completions { shell } => {
             Cli::print_completions(shell);

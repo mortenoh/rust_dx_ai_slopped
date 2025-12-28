@@ -16,5 +16,7 @@ pub mod rand;
 pub mod system;
 pub mod text;
 pub mod time;
+#[cfg(feature = "ui")]
+pub mod ui;
 pub mod uuid;
 pub mod watch;
