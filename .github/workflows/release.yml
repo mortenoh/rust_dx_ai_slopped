@@ -19,21 +19,27 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             name: dx-linux-x86_64
+            features: ui
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
             name: dx-linux-x86_64-musl
+            features: ui
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             name: dx-linux-aarch64
+            features: ""
           - target: x86_64-apple-darwin
             os: macos-latest
             name: dx-macos-x86_64
+            features: ui
           - target: aarch64-apple-darwin
             os: macos-latest
             name: dx-macos-aarch64
+            features: ui
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             name: dx-windows-x86_64.exe
+            features: ui
 
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +67,13 @@ jobs:
           sudo apt-get install -y musl-tools
 
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        run: |
+          if [ -n "${{ matrix.features }}" ]; then
+            cargo build --release --target ${{ matrix.target }} --features ${{ matrix.features }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+        shell: bash
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
