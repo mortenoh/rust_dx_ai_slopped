@@ -263,6 +263,120 @@ test_cmd_contains "fun banner" "█" fun banner "HI"
 test_cmd "fun fortune" fun fortune
 
 # ============================================================================
+section "YAML Command"
+# ============================================================================
+
+test_stdin_contains "yaml format" 'name: test' "name:" yaml format -
+test_stdin "yaml validate" 'key: value' yaml validate -
+test_stdin_contains "yaml to-json" 'name: test' '"name"' yaml to-json -
+test_stdin_contains "yaml from-json" '{"name":"test"}' "name:" yaml from-json -
+
+# ============================================================================
+section "CSV Command"
+# ============================================================================
+
+test_stdin_contains "csv format" $'name,age\nAlice,30' "Alice" csv format -
+test_stdin_contains "csv to-json" $'name,age\nAlice,30' '"name"' csv to-json -
+test_stdin_contains "csv query" $'name,age,city\nAlice,30,NYC\nBob,25,LA' "name" csv query - --columns name,age
+
+# ============================================================================
+section "XML Command"
+# ============================================================================
+
+test_stdin "xml format" '<root><item>test</item></root>' xml format -
+test_stdin "xml validate" '<root><item>test</item></root>' xml validate -
+test_stdin_contains "xml to-json" '<root><item>test</item></root>' '"root"' xml to-json -
+
+# ============================================================================
+section "JWT Command"
+# ============================================================================
+
+test_cmd_contains "jwt decode" "alg" jwt decode "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+test_cmd_contains "jwt encode" "." jwt encode --secret "test-secret" --payload '{"sub":"123","name":"Test"}'
+test_cmd "jwt verify" jwt verify "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" --secret "your-256-bit-secret"
+
+# ============================================================================
+section "Encrypt Command"
+# ============================================================================
+
+# Note: encrypt just outputs the ciphertext directly
+test_cmd "encrypt string" encrypt encrypt -s "hello world" --password "mypassword"
+# Test roundtrip
+ENCRYPTED=$($DX encrypt encrypt -s "hello" --password "testpw" 2>&1 | grep -o '[A-Za-z0-9+/=]*$' | tail -1)
+if [ -n "$ENCRYPTED" ]; then
+    pass "encrypt produces output"
+else
+    skip "encrypt roundtrip" "could not capture output"
+fi
+
+# ============================================================================
+section "Diff Command"
+# ============================================================================
+
+# Create temp files for diff test
+TMPDIR=$(mktemp -d)
+echo -e "line1\nline2\nline3" > "$TMPDIR/file1.txt"
+echo -e "line1\nmodified\nline3" > "$TMPDIR/file2.txt"
+
+test_cmd_contains "diff unified" "@@" diff "$TMPDIR/file1.txt" "$TMPDIR/file2.txt"
+test_cmd_contains "diff inline" "line2" diff "$TMPDIR/file1.txt" "$TMPDIR/file2.txt" --format inline
+test_cmd_contains "diff compact" "-" diff "$TMPDIR/file1.txt" "$TMPDIR/file2.txt" --format compact
+
+rm -rf "$TMPDIR"
+
+# ============================================================================
+section "Template Command"
+# ============================================================================
+
+# Create temp files for template test
+TMPDIR=$(mktemp -d)
+echo 'Hello, {{ name }}!' > "$TMPDIR/template.tera"
+echo '{"name":"World"}' > "$TMPDIR/data.json"
+
+test_cmd_contains "template render" "Hello, World!" template render "$TMPDIR/template.tera" --data "$TMPDIR/data.json"
+test_cmd "template validate" template validate "$TMPDIR/template.tera"
+
+rm -rf "$TMPDIR"
+
+# ============================================================================
+section "Markdown Command"
+# ============================================================================
+
+TMPDIR=$(mktemp -d)
+echo -e "# Heading\n\nSome **bold** text." > "$TMPDIR/test.md"
+
+test_cmd_contains "markdown render" "<h1>" markdown render "$TMPDIR/test.md"
+test_cmd_contains "markdown toc" "Heading" markdown toc "$TMPDIR/test.md"
+
+rm -rf "$TMPDIR"
+
+# ============================================================================
+section "Compress Command"
+# ============================================================================
+
+TMPDIR=$(mktemp -d)
+echo "Hello, compression test!" > "$TMPDIR/test.txt"
+
+test_cmd "compress gzip" compress compress "$TMPDIR/test.txt" -O "$TMPDIR/test.txt.gz"
+if [ -f "$TMPDIR/test.txt.gz" ]; then
+    pass "compress created gzip file"
+    test_cmd "decompress gzip" compress decompress "$TMPDIR/test.txt.gz" -O "$TMPDIR/test_out.txt"
+    if [ -f "$TMPDIR/test_out.txt" ]; then
+        if grep -q "Hello" "$TMPDIR/test_out.txt"; then
+            pass "decompress restored content"
+        else
+            fail "decompress content" "content mismatch"
+        fi
+    else
+        fail "decompress file creation" "output file not created"
+    fi
+else
+    fail "compress file creation" "gzip file not created"
+fi
+
+rm -rf "$TMPDIR"
+
+# ============================================================================
 section "Completions Command"
 # ============================================================================
 

@@ -1,0 +1,19 @@
+[package]
+name = "dx-expr"
+version = "0.1.0"
+edition.workspace = true
+description = "A full-featured arithmetic expression evaluator with variables, user-defined functions, lambdas, and closures"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = ["expression", "parser", "calculator", "math", "evaluator"]
+categories = ["mathematics", "parser-implementations"]
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }

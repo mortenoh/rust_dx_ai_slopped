@@ -86,10 +86,8 @@ src/
 ├── config/                 # Configuration system
 │   ├── mod.rs
 │   └── settings.rs
-├── expr/                   # Expression evaluator library
-│   ├── mod.rs              # Public API: parse(), parse_to_ast()
-│   ├── ast.rs              # Expr, BinOp, UnaryOp enums
-│   └── parser.rs           # Recursive descent parser
+├── expr/                   # Re-exports dx-expr crate
+│   └── mod.rs              # pub use dx_expr::*
 └── utils/
     ├── mod.rs
     └── output.rs
@@ -104,6 +102,15 @@ src/
 | `uuid`  | `u`   | Generate UUIDs (v4, v7) |
 | `time`  | `t`   | Parse, format, convert timestamps |
 | `json`  | `j`   | Format, validate, query JSON |
+| `yaml`  | `y`   | Format, validate, convert YAML |
+| `csv`   | -     | Format, query, convert CSV |
+| `xml`   | -     | Format, validate, convert XML |
+| `jwt`   | -     | Decode, encode, verify JWT tokens |
+| `encrypt` | -   | Encrypt/decrypt with AES-GCM or ChaCha20-Poly1305 |
+| `diff`  | -     | Text diffing (unified, inline, compact) |
+| `template` | -  | Jinja2-style template rendering with Tera |
+| `markdown` | `md` | Markdown to HTML and TOC extraction |
+| `compress` | -  | Gzip/Zstd compression and decompression |
 | `env`   | -     | Inspect/export environment variables |
 | `config`| `cfg` | Manage application configuration |
 | `rand`  | `r`   | Generate random data (numbers, strings, passwords) |
@@ -118,6 +125,7 @@ src/
 | `watch` | `w`   | Watch files and run commands on changes |
 | `system`| `sys` | System information (CPU, memory, OS, uptime) |
 | `ui`    | -     | TUI dashboard (requires `--features ui`) |
+| `egui`  | -     | GUI demos (requires `--features egui`) |
 | `completions` | - | Generate shell completions |
 
 ## Adding a New Command

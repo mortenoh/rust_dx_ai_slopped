@@ -52,7 +52,7 @@
 
 use anyhow::{bail, Context, Result};
 
-use super::ast::{is_keyword, BinOp, Expr, Program, Statement, UnaryOp};
+use crate::ast::{is_keyword, BinOp, Expr, Program, Statement, UnaryOp};
 
 /// Expression parser using recursive descent.
 ///

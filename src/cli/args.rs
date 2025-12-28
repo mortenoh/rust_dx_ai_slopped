@@ -8,8 +8,10 @@ use super::commands::EguiArgs;
 #[cfg(feature = "ui")]
 use super::commands::UiArgs;
 use super::commands::{
-    CalcArgs, ChatArgs, ConfigArgs, EncodeArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs,
-    HttpArgs, JsonArgs, NetArgs, RandArgs, SystemArgs, TextArgs, TimeArgs, UuidArgs, WatchArgs,
+    CalcArgs, ChatArgs, CompressArgs, ConfigArgs, CsvArgs, Dhis2Args, DiffArgs, EncodeArgs,
+    EncryptArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs, HttpArgs, JsonArgs, JwtArgs,
+    MarkdownArgs, NetArgs, RandArgs, SystemArgs, TemplateArgs, TextArgs, TimeArgs, UuidArgs,
+    WatchArgs, XmlArgs, YamlArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -78,6 +80,35 @@ pub enum Commands {
     #[command(visible_alias = "j")]
     Json(JsonArgs),
 
+    /// YAML utilities (format, convert, validate)
+    #[command(visible_alias = "y")]
+    Yaml(YamlArgs),
+
+    /// CSV utilities (format, convert, query)
+    Csv(CsvArgs),
+
+    /// XML utilities (format, validate, convert)
+    Xml(XmlArgs),
+
+    /// JWT utilities (decode, encode, verify)
+    Jwt(JwtArgs),
+
+    /// Encryption utilities (encrypt, decrypt)
+    Encrypt(EncryptArgs),
+
+    /// Text diffing
+    Diff(DiffArgs),
+
+    /// Compression utilities (gzip, zstd)
+    Compress(CompressArgs),
+
+    /// Template rendering (Jinja2-style)
+    Template(TemplateArgs),
+
+    /// Markdown utilities
+    #[command(visible_alias = "md")]
+    Markdown(MarkdownArgs),
+
     /// Manage environment variables
     Env(EnvArgs),
 
@@ -123,6 +154,9 @@ pub enum Commands {
     /// System information and utilities
     #[command(visible_alias = "sys")]
     System(SystemArgs),
+
+    /// DHIS2 utilities - interact with DHIS2 instances
+    Dhis2(Dhis2Args),
 
     /// Interactive TUI dashboard (requires --features ui)
     #[cfg(feature = "ui")]

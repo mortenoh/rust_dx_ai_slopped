@@ -110,6 +110,33 @@ fn main() -> Result<()> {
         // JSON command: format, validate, query JSON data
         Commands::Json(args) => commands::json::run(args),
 
+        // YAML command: format, validate, convert YAML data
+        Commands::Yaml(args) => commands::yaml::run(args),
+
+        // CSV command: format, convert, query CSV data
+        Commands::Csv(args) => commands::csv::run(args),
+
+        // XML command: format, validate, convert XML data
+        Commands::Xml(args) => commands::xml::run(args),
+
+        // JWT command: decode, encode, verify JWT tokens
+        Commands::Jwt(args) => commands::jwt::run(args),
+
+        // Encrypt command: encrypt and decrypt data
+        Commands::Encrypt(args) => commands::encrypt::run(args),
+
+        // Diff command: text diffing
+        Commands::Diff(args) => commands::diff::run(args),
+
+        // Compress command: compression utilities
+        Commands::Compress(args) => commands::compress::run(args),
+
+        // Template command: Jinja2-style templating
+        Commands::Template(args) => commands::template::run(args),
+
+        // Markdown command: markdown utilities
+        Commands::Markdown(args) => commands::markdown::run(args),
+
         // Env command: inspect and export environment variables
         Commands::Env(args) => commands::env::run(args),
 
@@ -151,6 +178,9 @@ fn main() -> Result<()> {
 
         // System command: system information and utilities
         Commands::System(args) => commands::system::run(args),
+
+        // DHIS2 command: interact with DHIS2 instances
+        Commands::Dhis2(args) => commands::dhis2::run(args),
 
         // UI command: interactive TUI dashboard (requires --features ui)
         #[cfg(feature = "ui")]

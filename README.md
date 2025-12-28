@@ -11,6 +11,15 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 | `uuid` | `u` | Generate UUIDs (v4, v7) |
 | `time` | `t` | Time utilities and conversions |
 | `json` | `j` | JSON formatting, validation, and querying |
+| `yaml` | `y` | YAML formatting, validation, and conversion |
+| `csv` | - | CSV formatting, querying, and conversion |
+| `xml` | - | XML formatting, validation, and conversion |
+| `jwt` | - | JWT decoding, encoding, and verification |
+| `encrypt` | - | Encrypt/decrypt with AES-GCM or ChaCha20-Poly1305 |
+| `diff` | - | Text diffing (unified, inline, compact) |
+| `template` | - | Jinja2-style template rendering with Tera |
+| `markdown` | `md` | Markdown to HTML and TOC extraction |
+| `compress` | - | Gzip/Zstd compression and decompression |
 | `env` | - | Environment variable utilities |
 | `config` | `cfg` | Configuration management |
 | `rand` | `r` | Random generation (numbers, strings, passwords) |
@@ -107,6 +116,37 @@ dx fun qr "https://github.com"              # Generate QR code
 dx fun clock                                # Big ASCII clock
 dx fun banner "HELLO"                       # ASCII text banner
 dx fun spinners                             # Showcase spinner styles
+
+# Data format conversions
+dx yaml format config.yaml                  # Pretty-print YAML
+dx yaml to-json config.yaml                 # Convert YAML to JSON
+dx csv format data.csv                      # Pretty-print CSV as table
+dx csv to-json data.csv                     # Convert CSV to JSON
+dx xml format doc.xml                       # Pretty-print XML
+dx xml to-json doc.xml                      # Convert XML to JSON
+
+# JWT handling
+dx jwt decode "eyJhbG..."                   # Decode and display JWT
+dx jwt encode --secret "key" --payload '{}' # Create a JWT
+
+# Encryption (ChaCha20-Poly1305 by default)
+dx encrypt encrypt -s "secret" --password "pw"   # Encrypt string
+dx encrypt decrypt -s "..." --password "pw"      # Decrypt string
+
+# Text diffing
+dx diff file1.txt file2.txt                 # Unified diff
+dx diff file1.txt file2.txt --format inline # Inline diff
+
+# Template rendering (Jinja2-style)
+dx template render template.tera --data data.json
+
+# Markdown utilities
+dx markdown render README.md                # Convert to HTML
+dx markdown toc README.md                   # Extract TOC
+
+# Compression
+dx compress compress file.txt               # Compress to file.txt.gz
+dx compress decompress file.txt.gz          # Decompress
 
 # TUI dashboard (requires --features ui)
 dx ui                                       # Interactive system dashboard

@@ -2,10 +2,15 @@
 
 pub mod calc;
 pub mod chat;
+pub mod compress;
 pub mod config;
+pub mod csv;
+pub mod dhis2;
+pub mod diff;
 #[cfg(feature = "egui")]
 pub mod egui;
 pub mod encode;
+pub mod encrypt;
 pub mod env;
 pub mod expr;
 pub mod fun;
@@ -13,12 +18,17 @@ pub mod grep;
 pub mod hash;
 pub mod http;
 pub mod json;
+pub mod jwt;
+pub mod markdown;
 pub mod net;
 pub mod rand;
 pub mod system;
+pub mod template;
 pub mod text;
 pub mod time;
 #[cfg(feature = "ui")]
 pub mod ui;
 pub mod uuid;
 pub mod watch;
+pub mod xml;
+pub mod yaml;

@@ -79,6 +79,126 @@ MD5 hash function implementation. Part of RustCrypto, provided for legacy compat
 Note: MD5 is cryptographically broken and should not be used for security purposes.
 Used by `dx hash md5` for checksums and legacy system compatibility.
 
+#### bcrypt
+**Version:** 0.16.x | [crates.io](https://crates.io/crates/bcrypt) | [docs.rs](https://docs.rs/bcrypt) | [GitHub](https://github.com/Keats/rust-bcrypt)
+
+Bcrypt password hashing with configurable cost factor. Industry-standard password
+hashing algorithm with built-in salt generation. Used by `dx hash -a bcrypt` for
+secure password hashing.
+
+#### argon2
+**Version:** 0.5.x | [crates.io](https://crates.io/crates/argon2) | [docs.rs](https://docs.rs/argon2) | [GitHub](https://github.com/RustCrypto/password-hashes)
+
+Argon2 password hashing (winner of Password Hashing Competition). Modern, memory-hard
+hashing algorithm recommended for password storage. Used by `dx hash -a argon2`.
+
+---
+
+### Data Formats
+
+#### serde_yml
+**Version:** 0.0.12 | [crates.io](https://crates.io/crates/serde_yml) | [docs.rs](https://docs.rs/serde_yml) | [GitHub](https://github.com/sebastienrousseau/serde_yml)
+
+YAML serialization/deserialization using serde. Modern replacement for serde_yaml
+with active maintenance. Used by `dx yaml` for formatting, validation, and JSON
+conversion.
+
+#### csv
+**Version:** 1.3.x | [crates.io](https://crates.io/crates/csv) | [docs.rs](https://docs.rs/csv) | [GitHub](https://github.com/BurntSushi/rust-csv)
+
+Fast CSV parsing and writing with serde integration. Handles quoted fields, custom
+delimiters, and headers. Used by `dx csv` for formatting, querying, and JSON
+conversion.
+
+#### quick-xml
+**Version:** 0.37.x | [crates.io](https://crates.io/crates/quick-xml) | [docs.rs](https://docs.rs/quick-xml) | [GitHub](https://github.com/tafia/quick-xml)
+
+High-performance XML parser using zero-copy parsing. Supports both pull and
+event-based parsing. Used by `dx xml` for formatting, validation, and JSON
+conversion. Features: serialize.
+
+---
+
+### Crypto/Security
+
+#### jsonwebtoken
+**Version:** 10.x | [crates.io](https://crates.io/crates/jsonwebtoken) | [docs.rs](https://docs.rs/jsonwebtoken) | [GitHub](https://github.com/Keats/jsonwebtoken)
+
+JWT encoding and decoding with multiple algorithm support. Pure Rust implementation
+available with rust_crypto feature. Used by `dx jwt` for token decoding, encoding,
+and verification. Features: rust_crypto (no OpenSSL).
+
+#### aes-gcm
+**Version:** 0.10.x | [crates.io](https://crates.io/crates/aes-gcm) | [docs.rs](https://docs.rs/aes-gcm) | [GitHub](https://github.com/RustCrypto/AEADs)
+
+AES-GCM authenticated encryption. Part of RustCrypto, provides AEAD encryption
+with authentication tags. Used by `dx encrypt --algorithm aes-gcm` for symmetric
+encryption.
+
+#### chacha20poly1305
+**Version:** 0.10.x | [crates.io](https://crates.io/crates/chacha20poly1305) | [docs.rs](https://docs.rs/chacha20poly1305) | [GitHub](https://github.com/RustCrypto/AEADs)
+
+ChaCha20-Poly1305 authenticated encryption. Pure Rust, timing-safe implementation.
+Default algorithm for `dx encrypt` command. Preferred over AES-GCM for its
+resistance to timing attacks without hardware acceleration.
+
+#### ed25519-dalek
+**Version:** 2.1.x | [crates.io](https://crates.io/crates/ed25519-dalek) | [docs.rs](https://docs.rs/ed25519-dalek) | [GitHub](https://github.com/dalek-cryptography/curve25519-dalek)
+
+Ed25519 digital signatures. Fast, pure Rust implementation for signing and
+verification. Available for future signature commands. Features: rand_core.
+
+---
+
+### Compression
+
+#### flate2
+**Version:** 1.1.x | [crates.io](https://crates.io/crates/flate2) | [docs.rs](https://docs.rs/flate2) | [GitHub](https://github.com/rust-lang/flate2-rs)
+
+DEFLATE/gzip compression using pure Rust miniz_oxide backend. Cross-platform with
+no C dependencies. Used by `dx compress` for gzip compression and decompression.
+
+#### ruzstd
+**Version:** 0.7.x | [crates.io](https://crates.io/crates/ruzstd) | [docs.rs](https://docs.rs/ruzstd) | [GitHub](https://github.com/KillingSpark/zstd-rs)
+
+Zstandard decompression in pure Rust. Decode-only implementation without C bindings.
+Used by `dx compress decompress` for .zst files. Note: Compression requires the
+`zstd` crate with vendored feature.
+
+#### tar
+**Version:** 0.4.x | [crates.io](https://crates.io/crates/tar) | [docs.rs](https://docs.rs/tar) | [GitHub](https://github.com/alexcrichton/tar-rs)
+
+Tar archive reading and writing. Pure Rust implementation supporting POSIX and
+GNU extensions. Available for future archive commands.
+
+#### zip
+**Version:** 2.2.x | [crates.io](https://crates.io/crates/zip) | [docs.rs](https://docs.rs/zip) | [GitHub](https://github.com/zip-rs/zip2)
+
+ZIP archive reading and writing. Supports DEFLATE compression and encrypted
+archives. Available for future archive commands. Features: deflate.
+
+---
+
+### Dev Tools
+
+#### similar
+**Version:** 2.6.x | [crates.io](https://crates.io/crates/similar) | [docs.rs](https://docs.rs/similar) | [GitHub](https://github.com/mitsuhiko/similar)
+
+Text diffing library using Myers diff algorithm. Provides unified diff output,
+inline diffs, and change detection. Used by `dx diff` for comparing files.
+
+#### tera
+**Version:** 1.20.x | [crates.io](https://crates.io/crates/tera) | [docs.rs](https://docs.rs/tera) | [GitHub](https://github.com/Keats/tera)
+
+Jinja2-style template engine. Supports template inheritance, macros, filters,
+and includes. Used by `dx template` for rendering templates with JSON data.
+
+#### comrak
+**Version:** 0.33.x | [crates.io](https://crates.io/crates/comrak) | [docs.rs](https://docs.rs/comrak) | [GitHub](https://github.com/kivikakk/comrak)
+
+GitHub Flavored Markdown parser. Compliant with CommonMark and GFM specs.
+Used by `dx markdown` for rendering to HTML and TOC extraction.
+
 ---
 
 ### Utilities
@@ -142,6 +262,13 @@ scenarios in various commands.
 Our custom terminal progress library with OSC 9;4 support. Zero dependencies,
 integrates with Ghostty, Windows Terminal, and ConEmu native progress bars.
 Provides spinners, progress bars, and terminal-native progress reporting.
+
+#### dx-expr
+**Version:** 0.1.x | [local crate](./crates/expr)
+
+Our expression evaluation library. Full-featured arithmetic evaluator with
+variables, user-defined functions, lambdas, closures, conditionals, and 30+
+built-in functions. Used by `dx expr` command and available as a standalone crate.
 
 #### comfy-table
 **Version:** 7.x | [crates.io](https://crates.io/crates/comfy-table) | [docs.rs](https://docs.rs/comfy-table) | [GitHub](https://github.com/nukesor/comfy-table)
