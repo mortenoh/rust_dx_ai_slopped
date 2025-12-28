@@ -85,7 +85,7 @@ build-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --target $$target || echo "Failed: $$target"; \
 	done
 
 release:
@@ -111,7 +111,7 @@ release-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --release --target $$target || echo "Failed: $$target"; \
 	done
 
 # Distribute - collect all binaries into dist/
