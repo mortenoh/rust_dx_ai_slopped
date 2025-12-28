@@ -3,9 +3,6 @@
 # Binary name
 BINARY := dx
 
-# Features to enable by default
-FEATURES := ui,egui
-
 # Tool versions (keep in sync with CI)
 MDBOOK_VERSION := 0.5.2
 
@@ -50,10 +47,6 @@ help:
 	@echo "  all           - Run lint, test, build"
 	@echo "  ci            - Run CI checks"
 	@echo ""
-	@echo "Features enabled by default: $(FEATURES)"
-	@echo "  ui   - TUI dashboard (ratatui/crossterm)"
-	@echo "  egui - GUI demos (eframe/egui)"
-	@echo ""
 	@echo "Cross-compilation targets:"
 	@echo "  Linux:   $(LINUX_TARGETS)"
 	@echo "  macOS:   $(MACOS_TARGETS)"
@@ -63,7 +56,7 @@ all: lint test build
 
 # Build
 build:
-	cargo build --features $(FEATURES)
+	cargo build
 
 build-all: build-linux build-macos build-windows
 
@@ -71,25 +64,25 @@ build-linux:
 	@for target in $(LINUX_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --target $$target || echo "Failed: $$target"; \
 	done
 
 build-macos:
 	@for target in $(MACOS_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo build --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo build --target $$target || echo "Failed: $$target"; \
 	done
 
 build-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo xwin build --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo xwin build --target $$target || echo "Failed: $$target"; \
 	done
 
 release:
-	cargo build --release --features $(FEATURES)
+	cargo build --release
 
 release-all: release-linux release-macos release-windows
 
@@ -97,21 +90,21 @@ release-linux:
 	@for target in $(LINUX_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo zigbuild --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo zigbuild --release --target $$target || echo "Failed: $$target"; \
 	done
 
 release-macos:
 	@for target in $(MACOS_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo build --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo build --release --target $$target || echo "Failed: $$target"; \
 	done
 
 release-windows:
 	@for target in $(WINDOWS_TARGETS); do \
 		echo "=== Building release for $$target ==="; \
 		rustup target add $$target 2>/dev/null || true; \
-		cargo xwin build --release --features $(FEATURES) --target $$target || echo "Failed: $$target"; \
+		cargo xwin build --release --target $$target || echo "Failed: $$target"; \
 	done
 
 # Distribute - collect all binaries into dist/
@@ -161,10 +154,10 @@ dist-compressed: dist
 
 # Test
 test:
-	cargo test --features $(FEATURES)
+	cargo test
 
 test-verbose:
-	cargo test --features $(FEATURES) -- --nocapture
+	cargo test -- --nocapture
 
 # Benchmark
 bench:
@@ -173,7 +166,7 @@ bench:
 # Lint and format
 lint:
 	cargo fmt
-	cargo clippy --features $(FEATURES) --fix --allow-dirty --allow-staged -- -D warnings
+	cargo clippy --fix --allow-dirty --allow-staged -- -D warnings
 
 fmt:
 	cargo fmt
@@ -183,7 +176,7 @@ fmt-check:
 
 # Documentation
 doc:
-	cargo doc --features $(FEATURES) --no-deps --open
+	cargo doc --no-deps --open
 
 doc-book:
 	mdbook build
@@ -210,7 +203,7 @@ clean:
 
 # Install
 install:
-	cargo install --path . --features $(FEATURES)
+	cargo install --path .
 
 # Install mdbook (same version as CI)
 install-mdbook:
@@ -228,5 +221,5 @@ install-mdbook:
 
 # Check everything (CI)
 ci: fmt-check lint test
-	cargo build --release --features $(FEATURES)
+	cargo build --release
 

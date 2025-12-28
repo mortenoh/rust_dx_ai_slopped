@@ -24,7 +24,7 @@ name = "dx"
 path = "src/main.rs"
 
 [features]
-default = []
+default = ["ui", "egui"]
 ui = ["dep:ratatui", "dep:crossterm"]
 egui = ["dep:eframe", "dep:egui_extras", "dep:egui_plot", "dep:image", "dep:syntect"]
 
