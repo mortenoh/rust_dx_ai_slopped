@@ -57,6 +57,12 @@ pub enum FunCommand {
         /// Number of fake tasks to complete
         #[arg(short, long, default_value = "8")]
         tasks: usize,
+        /// Progress bar style (block, gradient, arrow, dots, emoji, classic)
+        #[arg(short, long, default_value = "gradient")]
+        style: String,
+        /// List available progress bar styles
+        #[arg(long)]
+        list_styles: bool,
     },
     /// Show random programming wisdom with ASCII art
     Fortune {

@@ -26,7 +26,12 @@ pub fn run(args: FunArgs) -> Result<()> {
             simple,
         } => cmd_countdown(seconds, message, simple),
         FunCommand::Spinners { duration, name } => cmd_spinners(duration, name),
-        FunCommand::Work { duration, tasks } => cmd_work(duration, tasks),
+        FunCommand::Work {
+            duration,
+            tasks,
+            style,
+            list_styles,
+        } => cmd_work(duration, tasks, &style, list_styles),
         FunCommand::Fortune { animal, say, list } => cmd_fortune(animal, say, list),
     }
 }
@@ -571,8 +576,122 @@ const WORK_TASKS: &[&str] = &[
     "Analyzing dependencies",
 ];
 
+/// Progress bar style definitions
+const BAR_STYLES: &[(&str, &str, &[&str], &[&str])] = &[
+    // (name, description, filled_chars, empty_chars)
+    ("block", "Solid blocks", &["█"], &["░"]),
+    (
+        "gradient",
+        "Gradient shading",
+        &["█", "▓", "▒"],
+        &["░"],
+    ),
+    ("arrow", "Arrow style", &["=", "=", ">"], &["-"]),
+    ("dots", "Braille dots", &["⣿"], &["⣀"]),
+    (
+        "emoji",
+        "Fun emoji",
+        &["🟩"],
+        &["⬜"],
+    ),
+    ("classic", "Hash marks", &["#"], &["-"]),
+    ("circles", "Filled circles", &["●"], &["○"]),
+    (
+        "fade",
+        "Fade effect",
+        &["█", "▓", "▒", "░"],
+        &[" "],
+    ),
+];
+
+/// Render a progress bar with the given style
+fn render_bar(progress: u64, width: usize, style: &str, colored: bool) -> String {
+    let (filled_chars, empty_chars) = BAR_STYLES
+        .iter()
+        .find(|(name, _, _, _)| *name == style)
+        .map(|(_, _, f, e)| (*f, *e))
+        .unwrap_or((&["█"], &["░"]));
+
+    let filled_count = (progress as usize * width) / 100;
+    let empty_count = width - filled_count;
+
+    let filled_part: String = if filled_chars.len() == 1 {
+        // Simple repeat
+        filled_chars[0].repeat(filled_count)
+    } else if style == "gradient" || style == "fade" {
+        // Gradient: mostly solid, with trailing gradient
+        if filled_count == 0 {
+            String::new()
+        } else if filled_count <= 2 {
+            filled_chars[0].repeat(filled_count)
+        } else {
+            let gradient_len = filled_chars.len().min(filled_count);
+            let solid_len = filled_count - gradient_len + 1;
+            let mut s = filled_chars[0].repeat(solid_len);
+            for i in 1..gradient_len {
+                s.push_str(filled_chars[i]);
+            }
+            s
+        }
+    } else if style == "arrow" {
+        // Arrow: ====>
+        if filled_count == 0 {
+            String::new()
+        } else if filled_count == 1 {
+            ">".to_string()
+        } else {
+            format!("{}>", "=".repeat(filled_count - 1))
+        }
+    } else {
+        filled_chars[0].repeat(filled_count)
+    };
+
+    let empty_part = empty_chars[0].repeat(empty_count);
+
+    if colored {
+        format!("{}{}", filled_part.green(), empty_part.dimmed())
+    } else {
+        format!("{}{}", filled_part, empty_part)
+    }
+}
+
+/// Render a completed progress bar
+fn render_bar_complete(width: usize, style: &str) -> String {
+    let filled_char = BAR_STYLES
+        .iter()
+        .find(|(name, _, _, _)| *name == style)
+        .map(|(_, _, f, _)| f[0])
+        .unwrap_or("█");
+
+    let bar = if style == "arrow" {
+        format!("{}=", "=".repeat(width - 1))
+    } else {
+        filled_char.repeat(width)
+    };
+
+    bar.green().to_string()
+}
+
 /// Simulate doing fake work with progress bars
-fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
+fn cmd_work(duration: u64, num_tasks: usize, style: &str, list_styles: bool) -> Result<()> {
+    // Handle --list-styles flag
+    if list_styles {
+        println!("{}", "Available progress bar styles:".cyan().bold());
+        println!();
+        for (name, desc, _, _) in BAR_STYLES {
+            let preview = render_bar(60, 20, name, false);
+            println!("  {:10} [{}] {}", name.yellow(), preview, desc.dimmed());
+        }
+        return Ok(());
+    }
+
+    // Validate style
+    if !BAR_STYLES.iter().any(|(name, _, _, _)| *name == style) {
+        println!("Unknown style: {}", style.red());
+        println!("Use --list-styles to see available styles.");
+        return Ok(());
+    }
+
     let mut rng = rand::rng();
     let total_ms = duration * 1000;
     let time_per_task = total_ms / num_tasks as u64;
@@ -634,15 +753,13 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
 
             // Draw inline progress - spinner on right side
             let spinner = SPINNER_FRAMES[frame % SPINNER_FRAMES.len()];
-            let filled = (progress as usize * 20) / 100;
-            let empty = 20 - filled;
-            let bar = format!("{}{}", "█".repeat(filled), "░".repeat(empty));
+            let bar = render_bar(progress, 20, style, true);
 
             print!(
                 "\r{} {}... [{}] {} {:>3}%",
                 format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
                 padded_task.cyan(),
-                bar.blue(),
+                bar,
                 spinner.green(),
                 progress
             );
@@ -662,7 +779,7 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
             "\r{} {}... [{}] {} {}",
             format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
             padded_task.cyan(),
-            "█".repeat(20).green(),
+            render_bar_complete(20, style),
             "✓".green(),
             "Done!".green()
         );

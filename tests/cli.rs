@@ -1002,7 +1002,18 @@ fn test_fun_work_help() {
         .assert()
         .success()
         .stdout(predicate::str::contains("duration"))
-        .stdout(predicate::str::contains("tasks"));
+        .stdout(predicate::str::contains("tasks"))
+        .stdout(predicate::str::contains("style"));
+}
+
+#[test]
+fn test_fun_work_list_styles() {
+    dx().args(["fun", "work", "--list-styles"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("block"))
+        .stdout(predicate::str::contains("gradient"))
+        .stdout(predicate::str::contains("arrow"));
 }
 
 #[test]
