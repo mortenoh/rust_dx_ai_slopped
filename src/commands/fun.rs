@@ -589,6 +589,9 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
         .map(|i| WORK_TASKS[i])
         .collect();
 
+    // Find max task name length for alignment
+    let max_task_len = selected_tasks.iter().map(|t| t.len()).max().unwrap_or(0);
+
     println!("{}", "Starting build process...".cyan().bold());
     println!();
 
@@ -596,11 +599,14 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
         let overall_progress = (task_idx * 100) / num_tasks;
         osc_progress(overall_progress as u64, ProgressState::Normal);
 
+        // Pad task name for alignment
+        let padded_task = format!("{:width$}", task, width = max_task_len);
+
         // Print task header
         print!(
             "{} {}{}",
             format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
-            task.cyan(),
+            padded_task.cyan(),
             "...".dimmed()
         );
         io::stdout().flush().ok();
@@ -633,9 +639,9 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
             let bar = format!("{}{}", "█".repeat(filled), "░".repeat(empty));
 
             print!(
-                "\r{} {}... {} [{}] {}%",
+                "\r{} {}... {} [{}] {:>3}%",
                 format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
-                task.cyan(),
+                padded_task.cyan(),
                 spinner.green(),
                 bar.blue(),
                 progress
@@ -651,13 +657,13 @@ fn cmd_work(duration: u64, num_tasks: usize) -> Result<()> {
             }
         }
 
-        // Complete this task - show filled bar with Done! on right
+        // Complete this task - show filled bar with checkmark on right
         println!(
-            "\r{} {}... {} [{}] {}",
+            "\r{} {}... [{}] {} {}",
             format!("[{}/{}]", task_idx + 1, num_tasks).dimmed(),
-            task.cyan(),
-            "✓".green(),
+            padded_task.cyan(),
             "█".repeat(20).green(),
+            "✓".green(),
             "Done!".green()
         );
     }
