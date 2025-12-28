@@ -41,6 +41,7 @@
 
 mod client;
 pub mod data_sets;
+pub mod data_values;
 pub mod elements;
 pub mod info;
 pub mod org_unit_group_sets;

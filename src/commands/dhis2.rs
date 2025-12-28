@@ -39,6 +39,18 @@ pub fn run(args: Dhis2Args) -> Result<()> {
             dx_dhis2::org_unit_group_sets::run(&client, limit, json)
         }
 
+        Dhis2Command::DataValues {
+            data_set,
+            org_unit,
+            period,
+            start_date,
+            end_date,
+            limit,
+            json,
+        } => dx_dhis2::data_values::run(
+            &client, data_set, org_unit, period, start_date, end_date, limit, json,
+        ),
+
         #[cfg(feature = "ui")]
         Dhis2Command::Tui => dx_dhis2::tui::run(client),
     }

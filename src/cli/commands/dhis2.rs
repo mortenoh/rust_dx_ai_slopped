@@ -127,6 +127,38 @@ pub enum Dhis2Command {
         json: bool,
     },
 
+    /// Fetch data values from a data set
+    #[command(visible_alias = "dv")]
+    DataValues {
+        /// Data set ID (required)
+        #[arg(long)]
+        data_set: String,
+
+        /// Organisation unit ID (required)
+        #[arg(long)]
+        org_unit: String,
+
+        /// Period (e.g., 202401, 2024Q1, 2024)
+        #[arg(long)]
+        period: Option<String>,
+
+        /// Start date (YYYY-MM-DD) - use with --end-date
+        #[arg(long)]
+        start_date: Option<String>,
+
+        /// End date (YYYY-MM-DD) - use with --start-date
+        #[arg(long)]
+        end_date: Option<String>,
+
+        /// Maximum number of results
+        #[arg(long, default_value = "100")]
+        limit: usize,
+
+        /// Output as JSON
+        #[arg(short, long)]
+        json: bool,
+    },
+
     /// Interactive TUI browser for organisation units
     #[cfg(feature = "ui")]
     Tui,
