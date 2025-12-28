@@ -35,8 +35,11 @@
 
 use crate::cli::commands::hash::{Algorithm, HashArgs};
 use anyhow::{Context, Result};
+use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::Argon2;
 use colored::Colorize;
 use md5::Md5;
+use rand::Rng;
 use sha2::{Digest, Sha256, Sha512};
 use std::fs::File;
 use std::io::{self, BufReader, Read};
@@ -59,20 +62,22 @@ pub fn run(args: HashArgs) -> Result<()> {
     // Step 1: Get input data and its source description (for display)
     let (data, source) = get_input(&args)?;
 
-    // Step 2: Compute the hash using the selected algorithm
-    let hash = compute_hash(&data, args.algorithm);
-
-    // Step 3: Either verify or display the hash
+    // Step 2: Either verify or compute and display the hash
     if let Some(expected) = &args.verify {
-        // Verification mode: compare computed hash with expected
-        verify_hash(&hash, expected, args.algorithm)?;
-    } else if args.quiet {
-        // Quiet mode: just print the hash (useful for scripts)
-        println!("{}", hash);
+        // Verification mode: use algorithm-specific verification
+        verify_hash(&data, expected, args.algorithm)?;
     } else {
-        // Normal mode: print with colors and source info
-        // Format: "source (algorithm) = hash"
-        println!("{} ({}) = {}", source.cyan(), args.algorithm, hash.green());
+        // Compute the hash using the selected algorithm
+        let hash = compute_hash(&data, args.algorithm, args.cost)?;
+
+        if args.quiet {
+            // Quiet mode: just print the hash (useful for scripts)
+            println!("{}", hash);
+        } else {
+            // Normal mode: print with colors and source info
+            // Format: "source (algorithm) = hash"
+            println!("{} ({}) = {}", source.cyan(), args.algorithm, hash.green());
+        }
     }
 
     Ok(())
@@ -174,20 +179,25 @@ fn read_file(path: &Path) -> Result<Vec<u8>> {
 /// | MD5       | 128 bits    | Fastest  | Broken (collisions found) |
 /// | SHA-256   | 256 bits    | Fast     | Secure            |
 /// | SHA-512   | 512 bits    | Slower   | Most secure       |
+/// | Bcrypt    | Variable    | Slow     | Password hashing  |
+/// | Argon2    | Variable    | Slow     | Modern password hash |
 ///
 /// # When to Use Each
 ///
 /// - **MD5**: Only for non-security checksums (file integrity, cache keys)
 /// - **SHA-256**: General purpose, file verification, most applications
 /// - **SHA-512**: When you need extra security margin
+/// - **Bcrypt**: Password hashing with configurable cost
+/// - **Argon2**: Modern password hashing, memory-hard
 ///
 /// # Arguments
 /// * `data` - The bytes to hash
 /// * `algorithm` - Which hash algorithm to use
+/// * `cost` - Cost factor for bcrypt/argon2 (ignored for other algorithms)
 ///
 /// # Returns
-/// The hash as a lowercase hexadecimal string
-pub fn compute_hash(data: &[u8], algorithm: Algorithm) -> String {
+/// The hash as a string (hex for MD5/SHA, PHC format for bcrypt/argon2)
+pub fn compute_hash(data: &[u8], algorithm: Algorithm, cost: u32) -> Result<String> {
     match algorithm {
         Algorithm::Md5 => {
             // MD5 produces a 128-bit (16 byte) hash
@@ -196,7 +206,7 @@ pub fn compute_hash(data: &[u8], algorithm: Algorithm) -> String {
             let mut hasher = Md5::new();
             hasher.update(data);
             // finalize() consumes the hasher and returns the digest
-            hex::encode(hasher.finalize())
+            Ok(hex::encode(hasher.finalize()))
         }
         Algorithm::Sha256 => {
             // SHA-256 produces a 256-bit (32 byte) hash
@@ -204,23 +214,43 @@ pub fn compute_hash(data: &[u8], algorithm: Algorithm) -> String {
             // See: https://en.wikipedia.org/wiki/SHA-2
             let mut hasher = Sha256::new();
             hasher.update(data);
-            hex::encode(hasher.finalize())
+            Ok(hex::encode(hasher.finalize()))
         }
         Algorithm::Sha512 => {
             // SHA-512 produces a 512-bit (64 byte) hash
             // Slower but provides larger security margin
             let mut hasher = Sha512::new();
             hasher.update(data);
-            hex::encode(hasher.finalize())
+            Ok(hex::encode(hasher.finalize()))
+        }
+        Algorithm::Bcrypt => {
+            // Bcrypt password hash with configurable cost (4-31)
+            // Note: bcrypt has a 72 byte password limit
+            let hash = bcrypt::hash(data, cost).context("Failed to compute bcrypt hash")?;
+            Ok(hash)
+        }
+        Algorithm::Argon2 => {
+            // Argon2id password hash (memory-hard, recommended for passwords)
+            // Generate 16 random bytes for salt
+            let mut salt_bytes = [0u8; 16];
+            rand::rng().fill(&mut salt_bytes);
+            let salt = SaltString::encode_b64(&salt_bytes)
+                .map_err(|e| anyhow::anyhow!("Failed to encode salt: {}", e))?;
+            let argon2 = Argon2::default();
+            let hash = argon2
+                .hash_password(data, &salt)
+                .map_err(|e| anyhow::anyhow!("Failed to compute argon2 hash: {}", e))?
+                .to_string();
+            Ok(hash)
         }
     }
 }
 
-/// Verify that a computed hash matches an expected value.
+/// Verify that input data matches an expected hash value.
 ///
-/// # Case Insensitivity
-/// Hash comparison is case-insensitive because hex digits can be uppercase
-/// or lowercase (e.g., "ABC123" == "abc123"). We normalize to lowercase.
+/// # Algorithm-Specific Verification
+/// - MD5/SHA: Compute hash and compare (case-insensitive hex comparison)
+/// - Bcrypt/Argon2: Use built-in verification (hash contains salt)
 ///
 /// # Exit Behavior
 /// On mismatch, this function calls `std::process::exit(1)` rather than
@@ -228,19 +258,65 @@ pub fn compute_hash(data: &[u8], algorithm: Algorithm) -> String {
 /// that scripts can check.
 ///
 /// # Arguments
-/// * `computed` - The hash we calculated
+/// * `data` - The original input data
 /// * `expected` - The hash we're comparing against
-/// * `algorithm` - The algorithm used (for display purposes)
+/// * `algorithm` - The algorithm used
 ///
 /// # Returns
-/// * `Ok(())` if hashes match
-/// * Exits with code 1 if hashes don't match
-fn verify_hash(computed: &str, expected: &str, algorithm: Algorithm) -> Result<()> {
-    // Normalize to lowercase for case-insensitive comparison
-    let expected_lower = expected.to_lowercase();
+/// * `Ok(())` if verification passes
+/// * Exits with code 1 if verification fails
+fn verify_hash(data: &[u8], expected: &str, algorithm: Algorithm) -> Result<()> {
+    let verified = match algorithm {
+        Algorithm::Md5 | Algorithm::Sha256 | Algorithm::Sha512 => {
+            // For standard hash algorithms, compute and compare
+            let computed = compute_hash(data, algorithm, 0)?;
+            let expected_lower = expected.to_lowercase();
+            if computed == expected_lower {
+                true
+            } else {
+                eprintln!("{} Hash mismatch!", "✗".red().bold());
+                eprintln!("  Expected: {}", expected_lower.yellow());
+                eprintln!("  Got:      {}", computed.red());
+                false
+            }
+        }
+        Algorithm::Bcrypt => {
+            // Bcrypt has built-in verification
+            match bcrypt::verify(data, expected) {
+                Ok(true) => true,
+                Ok(false) => {
+                    eprintln!("{} Bcrypt verification failed!", "✗".red().bold());
+                    false
+                }
+                Err(e) => {
+                    eprintln!("{} Bcrypt verification error: {}", "✗".red().bold(), e);
+                    false
+                }
+            }
+        }
+        Algorithm::Argon2 => {
+            // Argon2 has built-in verification
+            match PasswordHash::new(expected) {
+                Ok(parsed_hash) => {
+                    if Argon2::default()
+                        .verify_password(data, &parsed_hash)
+                        .is_ok()
+                    {
+                        true
+                    } else {
+                        eprintln!("{} Argon2 verification failed!", "✗".red().bold());
+                        false
+                    }
+                }
+                Err(e) => {
+                    eprintln!("{} Invalid Argon2 hash format: {}", "✗".red().bold(), e);
+                    false
+                }
+            }
+        }
+    };
 
-    if computed == expected_lower {
-        // Success: print confirmation with green checkmark
+    if verified {
         println!(
             "{} {} hash verified",
             "✓".green().bold(),
@@ -248,12 +324,6 @@ fn verify_hash(computed: &str, expected: &str, algorithm: Algorithm) -> Result<(
         );
         Ok(())
     } else {
-        // Failure: print detailed mismatch info and exit
-        eprintln!("{} Hash mismatch!", "✗".red().bold());
-        eprintln!("  Expected: {}", expected_lower.yellow());
-        eprintln!("  Got:      {}", computed.red());
-        // Exit with non-zero code so scripts can detect failure
-        // This is intentional: verification failure is a "hard" error
         std::process::exit(1);
     }
 }
@@ -271,7 +341,7 @@ mod tests {
     #[test]
     fn test_md5_hash() {
         let data = b"hello world";
-        let hash = compute_hash(data, Algorithm::Md5);
+        let hash = compute_hash(data, Algorithm::Md5, 0).unwrap();
         assert_eq!(hash, "5eb63bbbe01eeed093cb22bb8f5acdc3");
     }
 
@@ -280,7 +350,7 @@ mod tests {
     #[test]
     fn test_sha256_hash() {
         let data = b"hello world";
-        let hash = compute_hash(data, Algorithm::Sha256);
+        let hash = compute_hash(data, Algorithm::Sha256, 0).unwrap();
         assert_eq!(
             hash,
             "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
@@ -291,8 +361,32 @@ mod tests {
     #[test]
     fn test_sha512_hash() {
         let data = b"hello world";
-        let hash = compute_hash(data, Algorithm::Sha512);
+        let hash = compute_hash(data, Algorithm::Sha512, 0).unwrap();
         // SHA-512 produces 128 hex characters, just check the start
         assert!(hash.starts_with("309ecc489c12d6eb"));
+    }
+
+    /// Test bcrypt hash generation and verification.
+    #[test]
+    fn test_bcrypt_hash() {
+        let data = b"password123";
+        // Use low cost for fast tests
+        let hash = compute_hash(data, Algorithm::Bcrypt, 4).unwrap();
+        // Bcrypt hashes start with $2b$ (or $2a$, $2y$)
+        assert!(hash.starts_with("$2"));
+        // Verify the hash works
+        assert!(bcrypt::verify(data, &hash).unwrap());
+    }
+
+    /// Test argon2 hash generation and verification.
+    #[test]
+    fn test_argon2_hash() {
+        let data = b"password123";
+        let hash = compute_hash(data, Algorithm::Argon2, 0).unwrap();
+        // Argon2 hashes start with $argon2
+        assert!(hash.starts_with("$argon2"));
+        // Verify the hash works
+        let parsed = PasswordHash::new(&hash).unwrap();
+        assert!(Argon2::default().verify_password(data, &parsed).is_ok());
     }
 }

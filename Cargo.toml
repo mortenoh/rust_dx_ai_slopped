@@ -43,6 +43,8 @@ base64 = "0.22"
 hex = "0.4"
 sha2 = "0.10"
 md-5 = "0.10"
+bcrypt = "0.16"
+argon2 = "0.5"
 
 # Utilities
 uuid = { version = "1", features = ["v4", "v7"] }

@@ -25,10 +25,14 @@ pub struct HashArgs {
     /// Verify hash against expected value
     #[arg(long, value_name = "HASH")]
     pub verify: Option<String>,
+
+    /// Cost factor for bcrypt (4-31) or Argon2 iterations
+    #[arg(long, default_value = "12")]
+    pub cost: u32,
 }
 
 /// Supported hash algorithms
-#[derive(Debug, Clone, Copy, Default, ValueEnum)]
+#[derive(Debug, Clone, Copy, Default, ValueEnum, PartialEq, Eq)]
 pub enum Algorithm {
     /// MD5 (128-bit, fast but not secure)
     Md5,
@@ -37,6 +41,10 @@ pub enum Algorithm {
     Sha256,
     /// SHA-512 (512-bit, more secure)
     Sha512,
+    /// Bcrypt password hash (includes salt, configurable cost)
+    Bcrypt,
+    /// Argon2id password hash (includes salt, memory-hard)
+    Argon2,
 }
 
 impl std::fmt::Display for Algorithm {
@@ -45,6 +53,8 @@ impl std::fmt::Display for Algorithm {
             Algorithm::Md5 => write!(f, "MD5"),
             Algorithm::Sha256 => write!(f, "SHA256"),
             Algorithm::Sha512 => write!(f, "SHA512"),
+            Algorithm::Bcrypt => write!(f, "BCRYPT"),
+            Algorithm::Argon2 => write!(f, "ARGON2"),
         }
     }
 }

@@ -1201,7 +1201,7 @@ impl eframe::App for ColorApp {
 
 fn cmd_hash() -> Result<()> {
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([500.0, 450.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([550.0, 580.0]),
         ..Default::default()
     };
 
@@ -1213,11 +1213,28 @@ fn cmd_hash() -> Result<()> {
     .map_err(|e| anyhow::anyhow!("Failed to run: {}", e))
 }
 
-#[derive(Default)]
 struct HashApp {
     input: String,
     compare_mode: bool,
     expected_hash: String,
+    bcrypt_cost: u32,
+    bcrypt_hash: Option<String>,
+    argon2_hash: Option<String>,
+    last_input: String,
+}
+
+impl Default for HashApp {
+    fn default() -> Self {
+        Self {
+            input: String::new(),
+            compare_mode: false,
+            expected_hash: String::new(),
+            bcrypt_cost: 10,
+            bcrypt_hash: None,
+            argon2_hash: None,
+            last_input: String::new(),
+        }
+    }
 }
 
 impl HashApp {
@@ -1240,6 +1257,33 @@ impl HashApp {
         let mut hasher = Sha512::new();
         hasher.update(self.input.as_bytes());
         hex::encode(hasher.finalize())
+    }
+
+    fn generate_bcrypt(&mut self) {
+        if !self.input.is_empty() {
+            self.bcrypt_hash = bcrypt::hash(self.input.as_bytes(), self.bcrypt_cost).ok();
+            self.last_input = self.input.clone();
+        }
+    }
+
+    fn generate_argon2(&mut self) {
+        use argon2::password_hash::{PasswordHasher, SaltString};
+        use argon2::Argon2;
+        use rand::Rng;
+
+        if !self.input.is_empty() {
+            // Generate 16 random bytes for salt
+            let mut salt_bytes = [0u8; 16];
+            rand::rng().fill(&mut salt_bytes);
+            if let Ok(salt) = SaltString::encode_b64(&salt_bytes) {
+                let argon2 = Argon2::default();
+                self.argon2_hash = argon2
+                    .hash_password(self.input.as_bytes(), &salt)
+                    .ok()
+                    .map(|h| h.to_string());
+            }
+            self.last_input = self.input.clone();
+        }
     }
 
     fn matches(&self, hash: &str) -> Option<bool> {
@@ -1332,6 +1376,90 @@ impl eframe::App for HashApp {
                                 }
                                 ui.end_row();
                             });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Password hashing section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label(
+                            RichText::new("Password Hashing (click Generate)")
+                                .strong()
+                                .size(13.0),
+                        );
+                        ui.add_space(ITEM_SPACING);
+
+                        ui.horizontal(|ui| {
+                            ui.label("Bcrypt cost:");
+                            ui.add(egui::Slider::new(&mut self.bcrypt_cost, 4..=14));
+                        });
+
+                        ui.add_space(ITEM_SPACING);
+
+                        egui::Grid::new("password_hash_grid")
+                            .num_columns(3)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                // Bcrypt row
+                                ui.label("Bcrypt:");
+                                if let Some(ref hash) = self.bcrypt_hash {
+                                    let display = if hash.len() > 40 {
+                                        format!("{}...", &hash[..40])
+                                    } else {
+                                        hash.clone()
+                                    };
+                                    ui.label(RichText::new(display).monospace().size(10.0));
+                                } else {
+                                    ui.label(RichText::new("(not generated)").weak());
+                                }
+                                ui.horizontal(|ui| {
+                                    if ui.small_button("Generate").clicked() {
+                                        self.generate_bcrypt();
+                                    }
+                                    if self.bcrypt_hash.is_some()
+                                        && ui.small_button("Copy").clicked()
+                                    {
+                                        if let Some(ref h) = self.bcrypt_hash {
+                                            ui.output_mut(|o| o.copied_text = h.clone());
+                                        }
+                                    }
+                                });
+                                ui.end_row();
+
+                                // Argon2 row
+                                ui.label("Argon2:");
+                                if let Some(ref hash) = self.argon2_hash {
+                                    let display = if hash.len() > 40 {
+                                        format!("{}...", &hash[..40])
+                                    } else {
+                                        hash.clone()
+                                    };
+                                    ui.label(RichText::new(display).monospace().size(10.0));
+                                } else {
+                                    ui.label(RichText::new("(not generated)").weak());
+                                }
+                                ui.horizontal(|ui| {
+                                    if ui.small_button("Generate").clicked() {
+                                        self.generate_argon2();
+                                    }
+                                    if self.argon2_hash.is_some()
+                                        && ui.small_button("Copy").clicked()
+                                    {
+                                        if let Some(ref h) = self.argon2_hash {
+                                            ui.output_mut(|o| o.copied_text = h.clone());
+                                        }
+                                    }
+                                });
+                                ui.end_row();
+                            });
+
+                        // Clear cached hashes if input changed
+                        if self.input != self.last_input {
+                            self.bcrypt_hash = None;
+                            self.argon2_hash = None;
+                        }
                     });
             });
         });
