@@ -1311,39 +1311,51 @@ impl Base64App {
 impl eframe::App for Base64App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Base64 Encoder/Decoder");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Base64 Encoder/Decoder");
+                ui.add_space(SECTION_SPACING);
 
-            ui.checkbox(&mut self.url_safe, "URL-safe encoding");
+                ui.checkbox(&mut self.url_safe, "URL-safe encoding");
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            ui.columns(2, |columns| {
-                columns[0].label("Plain text:");
-                columns[0].add(
-                    egui::TextEdit::multiline(&mut self.plain)
-                        .desired_width(f32::INFINITY)
-                        .desired_rows(10),
-                );
-                if columns[0].button("Encode ->").clicked() {
-                    self.encode();
-                }
+                ui.columns(2, |columns| {
+                    egui::Frame::group(columns[0].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[0], |ui| {
+                            ui.label("Plain text:");
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.plain)
+                                    .desired_width(f32::INFINITY)
+                                    .desired_rows(10),
+                            );
+                            ui.add_space(ITEM_SPACING);
+                            if ui.button("Encode →").clicked() {
+                                self.encode();
+                            }
+                        });
 
-                columns[1].label("Base64 encoded:");
-                columns[1].add(
-                    egui::TextEdit::multiline(&mut self.encoded)
-                        .desired_width(f32::INFINITY)
-                        .desired_rows(10),
-                );
-                if columns[1].button("<- Decode").clicked() {
-                    self.decode();
+                    egui::Frame::group(columns[1].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[1], |ui| {
+                            ui.label("Base64 encoded:");
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.encoded)
+                                    .desired_width(f32::INFINITY)
+                                    .desired_rows(10),
+                            );
+                            ui.add_space(ITEM_SPACING);
+                            if ui.button("← Decode").clicked() {
+                                self.decode();
+                            }
+                        });
+                });
+
+                if let Some(err) = &self.error {
+                    ui.add_space(ITEM_SPACING);
+                    ui.label(RichText::new(err).color(Color32::RED));
                 }
             });
-
-            if let Some(err) = &self.error {
-                ui.separator();
-                ui.label(RichText::new(err).color(Color32::RED));
-            }
         });
     }
 }
@@ -1379,74 +1391,104 @@ impl Default for HexApp {
 impl eframe::App for HexApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Hex Encoder/Decoder");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Hex Encoder/Decoder");
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("Text input:");
-            ui.add(
-                egui::TextEdit::multiline(&mut self.input)
-                    .desired_width(f32::INFINITY)
-                    .desired_rows(3),
-            );
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Text input:");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.input)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(3),
+                        );
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            let hex = hex::encode(self.input.as_bytes());
-            ui.horizontal(|ui| {
-                ui.label("Hex output:");
-                if ui.small_button("Copy").clicked() {
-                    ui.output_mut(|o| o.copied_text = hex.clone());
-                }
-            });
-            ui.label(RichText::new(&hex).monospace());
-
-            ui.separator();
-
-            ui.label("Byte view:");
-            egui::ScrollArea::vertical()
-                .max_height(100.0)
-                .show(ui, |ui| {
-                    egui::Grid::new("hex_grid")
-                        .num_columns(17)
-                        .spacing([4.0, 2.0])
-                        .show(ui, |ui| {
-                            let bytes = self.input.as_bytes();
-                            for (i, chunk) in bytes.chunks(16).enumerate() {
-                                ui.label(
-                                    RichText::new(format!("{:04X}:", i * 16)).monospace().weak(),
-                                );
-                                for byte in chunk {
-                                    ui.label(RichText::new(format!("{:02X}", byte)).monospace());
-                                }
-                                for _ in chunk.len()..16 {
-                                    ui.label("  ");
-                                }
-                                let ascii: String = chunk
-                                    .iter()
-                                    .map(|&b| {
-                                        if b.is_ascii_graphic() || b == b' ' {
-                                            b as char
-                                        } else {
-                                            '.'
-                                        }
-                                    })
-                                    .collect();
-                                ui.label(RichText::new(ascii).monospace());
-                                ui.end_row();
+                // Hex output section
+                let hex = hex::encode(self.input.as_bytes());
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Hex output:");
+                            if ui.small_button("Copy").clicked() {
+                                ui.output_mut(|o| o.copied_text = hex.clone());
                             }
                         });
-                });
+                        ui.label(RichText::new(&hex).monospace());
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("Hex to decode:");
-            ui.horizontal(|ui| {
-                ui.text_edit_singleline(&mut self.hex_input);
-                if ui.button("Decode").clicked() {
-                    if let Ok(bytes) = hex::decode(self.hex_input.replace(' ', "")) {
-                        self.input = String::from_utf8_lossy(&bytes).to_string();
-                    }
-                }
+                // Byte view section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Byte view:");
+                        egui::ScrollArea::vertical()
+                            .max_height(SCROLL_HEIGHT_SMALL)
+                            .show(ui, |ui| {
+                                egui::Grid::new("hex_grid")
+                                    .num_columns(17)
+                                    .spacing([4.0, 2.0])
+                                    .show(ui, |ui| {
+                                        let bytes = self.input.as_bytes();
+                                        for (i, chunk) in bytes.chunks(16).enumerate() {
+                                            ui.label(
+                                                RichText::new(format!("{:04X}:", i * 16))
+                                                    .monospace()
+                                                    .weak(),
+                                            );
+                                            for byte in chunk {
+                                                ui.label(
+                                                    RichText::new(format!("{:02X}", byte))
+                                                        .monospace(),
+                                                );
+                                            }
+                                            for _ in chunk.len()..16 {
+                                                ui.label("  ");
+                                            }
+                                            let ascii: String = chunk
+                                                .iter()
+                                                .map(|&b| {
+                                                    if b.is_ascii_graphic() || b == b' ' {
+                                                        b as char
+                                                    } else {
+                                                        '.'
+                                                    }
+                                                })
+                                                .collect();
+                                            ui.label(RichText::new(ascii).monospace());
+                                            ui.end_row();
+                                        }
+                                    });
+                            });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Decode section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Hex to decode:");
+                        ui.horizontal(|ui| {
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.hex_input)
+                                    .desired_width(300.0),
+                            );
+                            if ui.button("Decode").clicked() {
+                                if let Ok(bytes) = hex::decode(self.hex_input.replace(' ', "")) {
+                                    self.input = String::from_utf8_lossy(&bytes).to_string();
+                                }
+                            }
+                        });
+                    });
             });
         });
     }
@@ -1483,83 +1525,105 @@ impl Default for UrlApp {
 impl eframe::App for UrlApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("URL Encoder/Decoder");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("URL Encoder/Decoder");
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("URL:");
-            ui.add(egui::TextEdit::singleline(&mut self.input).desired_width(f32::INFINITY));
-
-            ui.horizontal(|ui| {
-                if ui.button("Encode").clicked() {
-                    // Only encode query parameters
-                    if let Ok(url) = url::Url::parse(&self.input) {
-                        self.encoded = url.to_string();
-                    } else {
-                        // Fallback: encode the whole string
-                        self.encoded = urlencoding::encode(&self.input).to_string();
-                    }
-                }
-                if ui.button("Decode").clicked() {
-                    self.input = urlencoding::decode(&self.input)
-                        .unwrap_or_else(|_| self.input.clone().into())
-                        .to_string();
-                }
-                if !self.input.is_empty() {
-                    if let Ok(url) = url::Url::parse(&self.input) {
-                        ui.hyperlink_to("Open", url.to_string());
-                    }
-                }
-            });
-
-            ui.separator();
-
-            if let Ok(url) = url::Url::parse(&self.input) {
-                egui::CollapsingHeader::new("URL Breakdown")
-                    .default_open(true)
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
                     .show(ui, |ui| {
-                        egui::Grid::new("url_breakdown")
-                            .num_columns(2)
-                            .spacing([10.0, 4.0])
-                            .show(ui, |ui| {
-                                ui.label("Scheme:");
-                                ui.label(RichText::new(url.scheme()).monospace());
-                                ui.end_row();
+                        ui.label("URL:");
+                        ui.add(
+                            egui::TextEdit::singleline(&mut self.input)
+                                .desired_width(f32::INFINITY),
+                        );
 
-                                if let Some(host) = url.host_str() {
-                                    ui.label("Host:");
-                                    ui.label(RichText::new(host).monospace());
-                                    ui.end_row();
+                        ui.add_space(ITEM_SPACING);
+
+                        ui.horizontal(|ui| {
+                            if ui.button("Encode").clicked() {
+                                // Only encode query parameters
+                                if let Ok(url) = url::Url::parse(&self.input) {
+                                    self.encoded = url.to_string();
+                                } else {
+                                    // Fallback: encode the whole string
+                                    self.encoded = urlencoding::encode(&self.input).to_string();
                                 }
-
-                                if let Some(port) = url.port() {
-                                    ui.label("Port:");
-                                    ui.label(RichText::new(port.to_string()).monospace());
-                                    ui.end_row();
+                            }
+                            if ui.button("Decode").clicked() {
+                                self.input = urlencoding::decode(&self.input)
+                                    .unwrap_or_else(|_| self.input.clone().into())
+                                    .to_string();
+                            }
+                            if !self.input.is_empty() {
+                                if let Ok(url) = url::Url::parse(&self.input) {
+                                    ui.hyperlink_to("Open", url.to_string());
                                 }
-
-                                ui.label("Path:");
-                                ui.label(RichText::new(url.path()).monospace());
-                                ui.end_row();
-                            });
+                            }
+                        });
                     });
 
-                if url.query().is_some() {
-                    egui::CollapsingHeader::new("Query Parameters")
-                        .default_open(true)
+                ui.add_space(SECTION_SPACING);
+
+                // URL Breakdown section
+                if let Ok(url) = url::Url::parse(&self.input) {
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
                         .show(ui, |ui| {
-                            egui::Grid::new("query_params")
-                                .num_columns(2)
-                                .spacing([10.0, 4.0])
+                            egui::CollapsingHeader::new("URL Breakdown")
+                                .default_open(true)
                                 .show(ui, |ui| {
-                                    for (key, value) in url.query_pairs() {
-                                        ui.label(RichText::new(key.as_ref()).strong());
-                                        ui.label(RichText::new(value.as_ref()).monospace());
-                                        ui.end_row();
-                                    }
+                                    egui::Grid::new("url_breakdown")
+                                        .num_columns(2)
+                                        .spacing(GRID_SPACING)
+                                        .show(ui, |ui| {
+                                            ui.label("Scheme:");
+                                            ui.label(RichText::new(url.scheme()).monospace());
+                                            ui.end_row();
+
+                                            if let Some(host) = url.host_str() {
+                                                ui.label("Host:");
+                                                ui.label(RichText::new(host).monospace());
+                                                ui.end_row();
+                                            }
+
+                                            if let Some(port) = url.port() {
+                                                ui.label("Port:");
+                                                ui.label(
+                                                    RichText::new(port.to_string()).monospace(),
+                                                );
+                                                ui.end_row();
+                                            }
+
+                                            ui.label("Path:");
+                                            ui.label(RichText::new(url.path()).monospace());
+                                            ui.end_row();
+                                        });
                                 });
+
+                            if url.query().is_some() {
+                                ui.add_space(ITEM_SPACING);
+                                egui::CollapsingHeader::new("Query Parameters")
+                                    .default_open(true)
+                                    .show(ui, |ui| {
+                                        egui::Grid::new("query_params")
+                                            .num_columns(2)
+                                            .spacing(GRID_SPACING)
+                                            .show(ui, |ui| {
+                                                for (key, value) in url.query_pairs() {
+                                                    ui.label(RichText::new(key.as_ref()).strong());
+                                                    ui.label(
+                                                        RichText::new(value.as_ref()).monospace(),
+                                                    );
+                                                    ui.end_row();
+                                                }
+                                            });
+                                    });
+                            }
                         });
                 }
-            }
+            });
         });
     }
 }
@@ -1599,87 +1663,107 @@ impl Default for TimestampApp {
 impl eframe::App for TimestampApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Timestamp Converter");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Timestamp Converter");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.label("Unix timestamp:");
-                ui.add(egui::DragValue::new(&mut self.timestamp));
-                if ui.button("Now").clicked() {
-                    self.timestamp = if self.use_millis {
-                        chrono::Utc::now().timestamp_millis()
-                    } else {
-                        chrono::Utc::now().timestamp()
-                    };
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Unix timestamp:");
+                            ui.add(egui::DragValue::new(&mut self.timestamp));
+                            if ui.button("Now").clicked() {
+                                self.timestamp = if self.use_millis {
+                                    chrono::Utc::now().timestamp_millis()
+                                } else {
+                                    chrono::Utc::now().timestamp()
+                                };
+                            }
+                        });
+                        ui.checkbox(&mut self.use_millis, "Milliseconds");
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Output section
+                let ts = if self.use_millis {
+                    chrono::DateTime::from_timestamp_millis(self.timestamp)
+                } else {
+                    chrono::DateTime::from_timestamp(self.timestamp, 0)
+                };
+
+                if let Some(dt) = ts {
+                    let local = dt.with_timezone(&chrono::Local);
+
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(ui, |ui| {
+                            egui::Grid::new("timestamp_grid")
+                                .num_columns(2)
+                                .spacing(GRID_SPACING)
+                                .show(ui, |ui| {
+                                    ui.label("UTC:");
+                                    ui.label(RichText::new(dt.to_rfc3339()).monospace());
+                                    ui.end_row();
+
+                                    ui.label("Local:");
+                                    ui.label(RichText::new(local.to_rfc3339()).monospace());
+                                    ui.end_row();
+
+                                    ui.label("ISO 8601:");
+                                    ui.label(
+                                        RichText::new(dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("RFC 2822:");
+                                    ui.label(RichText::new(dt.to_rfc2822()).monospace());
+                                    ui.end_row();
+
+                                    ui.label("Date:");
+                                    ui.label(
+                                        RichText::new(dt.format("%B %d, %Y").to_string())
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Time:");
+                                    ui.label(
+                                        RichText::new(dt.format("%H:%M:%S").to_string())
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Day of week:");
+                                    ui.label(
+                                        RichText::new(dt.format("%A").to_string()).monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    // Relative time
+                                    let now = chrono::Utc::now();
+                                    let duration = now.signed_duration_since(dt);
+                                    let relative = if duration.num_seconds().abs() < 60 {
+                                        format!("{} seconds ago", duration.num_seconds())
+                                    } else if duration.num_minutes().abs() < 60 {
+                                        format!("{} minutes ago", duration.num_minutes())
+                                    } else if duration.num_hours().abs() < 24 {
+                                        format!("{} hours ago", duration.num_hours())
+                                    } else {
+                                        format!("{} days ago", duration.num_days())
+                                    };
+                                    ui.label("Relative:");
+                                    ui.label(RichText::new(relative).monospace());
+                                    ui.end_row();
+                                });
+                        });
+                } else {
+                    ui.label(RichText::new("Invalid timestamp").color(Color32::RED));
                 }
             });
-
-            ui.checkbox(&mut self.use_millis, "Milliseconds");
-
-            ui.separator();
-
-            let ts = if self.use_millis {
-                chrono::DateTime::from_timestamp_millis(self.timestamp)
-            } else {
-                chrono::DateTime::from_timestamp(self.timestamp, 0)
-            };
-
-            if let Some(dt) = ts {
-                let local = dt.with_timezone(&chrono::Local);
-
-                egui::Grid::new("timestamp_grid")
-                    .num_columns(2)
-                    .spacing([20.0, 8.0])
-                    .show(ui, |ui| {
-                        ui.label("UTC:");
-                        ui.label(RichText::new(dt.to_rfc3339()).monospace());
-                        ui.end_row();
-
-                        ui.label("Local:");
-                        ui.label(RichText::new(local.to_rfc3339()).monospace());
-                        ui.end_row();
-
-                        ui.label("ISO 8601:");
-                        ui.label(
-                            RichText::new(dt.format("%Y-%m-%dT%H:%M:%SZ").to_string()).monospace(),
-                        );
-                        ui.end_row();
-
-                        ui.label("RFC 2822:");
-                        ui.label(RichText::new(dt.to_rfc2822()).monospace());
-                        ui.end_row();
-
-                        ui.label("Date:");
-                        ui.label(RichText::new(dt.format("%B %d, %Y").to_string()).monospace());
-                        ui.end_row();
-
-                        ui.label("Time:");
-                        ui.label(RichText::new(dt.format("%H:%M:%S").to_string()).monospace());
-                        ui.end_row();
-
-                        ui.label("Day of week:");
-                        ui.label(RichText::new(dt.format("%A").to_string()).monospace());
-                        ui.end_row();
-
-                        // Relative time
-                        let now = chrono::Utc::now();
-                        let duration = now.signed_duration_since(dt);
-                        let relative = if duration.num_seconds().abs() < 60 {
-                            format!("{} seconds ago", duration.num_seconds())
-                        } else if duration.num_minutes().abs() < 60 {
-                            format!("{} minutes ago", duration.num_minutes())
-                        } else if duration.num_hours().abs() < 24 {
-                            format!("{} hours ago", duration.num_hours())
-                        } else {
-                            format!("{} days ago", duration.num_days())
-                        };
-                        ui.label("Relative:");
-                        ui.label(RichText::new(relative).monospace());
-                        ui.end_row();
-                    });
-            } else {
-                ui.label(RichText::new("Invalid timestamp").color(Color32::RED));
-            }
         });
     }
 }
@@ -1721,111 +1805,143 @@ impl Default for UnitsApp {
 impl eframe::App for UnitsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Unit Converter");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Unit Converter");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.radio_value(&mut self.category, UnitCategory::Bytes, "Bytes");
-                ui.radio_value(&mut self.category, UnitCategory::Time, "Time");
-            });
-
-            ui.separator();
-
-            ui.horizontal(|ui| {
-                ui.label("Value:");
-                ui.add(egui::DragValue::new(&mut self.value).speed(1.0));
-            });
-
-            ui.separator();
-
-            match self.category {
-                UnitCategory::Bytes => {
-                    let bytes = self.value;
-                    egui::Grid::new("bytes_grid")
-                        .num_columns(2)
-                        .spacing([20.0, 4.0])
-                        .show(ui, |ui| {
-                            ui.label("Bytes:");
-                            ui.label(RichText::new(format!("{:.0} B", bytes)).monospace());
-                            ui.end_row();
-
-                            ui.label("Kilobytes:");
-                            ui.label(
-                                RichText::new(format!("{:.2} KB", bytes / 1024.0)).monospace(),
-                            );
-                            ui.end_row();
-
-                            ui.label("Megabytes:");
-                            ui.label(
-                                RichText::new(format!("{:.2} MB", bytes / 1024.0_f64.powi(2)))
-                                    .monospace(),
-                            );
-                            ui.end_row();
-
-                            ui.label("Gigabytes:");
-                            ui.label(
-                                RichText::new(format!("{:.2} GB", bytes / 1024.0_f64.powi(3)))
-                                    .monospace(),
-                            );
-                            ui.end_row();
-
-                            ui.label("Terabytes:");
-                            ui.label(
-                                RichText::new(format!("{:.4} TB", bytes / 1024.0_f64.powi(4)))
-                                    .monospace(),
-                            );
-                            ui.end_row();
-
-                            ui.label("Human:");
-                            ui.label(
-                                RichText::new(bytesize::ByteSize::b(bytes as u64).to_string())
-                                    .monospace(),
-                            );
-                            ui.end_row();
+                // Controls section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.radio_value(&mut self.category, UnitCategory::Bytes, "Bytes");
+                            ui.radio_value(&mut self.category, UnitCategory::Time, "Time");
                         });
-                }
-                UnitCategory::Time => {
-                    let secs = self.value;
-                    egui::Grid::new("time_grid")
-                        .num_columns(2)
-                        .spacing([20.0, 4.0])
-                        .show(ui, |ui| {
-                            ui.label("Seconds:");
-                            ui.label(RichText::new(format!("{:.2} s", secs)).monospace());
-                            ui.end_row();
 
-                            ui.label("Minutes:");
-                            ui.label(RichText::new(format!("{:.2} min", secs / 60.0)).monospace());
-                            ui.end_row();
+                        ui.add_space(ITEM_SPACING);
 
-                            ui.label("Hours:");
-                            ui.label(RichText::new(format!("{:.2} h", secs / 3600.0)).monospace());
-                            ui.end_row();
-
-                            ui.label("Days:");
-                            ui.label(RichText::new(format!("{:.4} d", secs / 86400.0)).monospace());
-                            ui.end_row();
-
-                            ui.label("Weeks:");
-                            ui.label(
-                                RichText::new(format!("{:.4} w", secs / 604800.0)).monospace(),
-                            );
-                            ui.end_row();
-
-                            ui.label("Human:");
-                            ui.label(
-                                RichText::new(
-                                    humantime::format_duration(std::time::Duration::from_secs_f64(
-                                        secs,
-                                    ))
-                                    .to_string(),
-                                )
-                                .monospace(),
-                            );
-                            ui.end_row();
+                        ui.horizontal(|ui| {
+                            ui.label("Value:");
+                            ui.add(egui::DragValue::new(&mut self.value).speed(1.0));
                         });
-                }
-            }
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Results section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| match self.category {
+                        UnitCategory::Bytes => {
+                            let bytes = self.value;
+                            egui::Grid::new("bytes_grid")
+                                .num_columns(2)
+                                .spacing(GRID_SPACING)
+                                .show(ui, |ui| {
+                                    ui.label("Bytes:");
+                                    ui.label(RichText::new(format!("{:.0} B", bytes)).monospace());
+                                    ui.end_row();
+
+                                    ui.label("Kilobytes:");
+                                    ui.label(
+                                        RichText::new(format!("{:.2} KB", bytes / 1024.0))
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Megabytes:");
+                                    ui.label(
+                                        RichText::new(format!(
+                                            "{:.2} MB",
+                                            bytes / 1024.0_f64.powi(2)
+                                        ))
+                                        .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Gigabytes:");
+                                    ui.label(
+                                        RichText::new(format!(
+                                            "{:.2} GB",
+                                            bytes / 1024.0_f64.powi(3)
+                                        ))
+                                        .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Terabytes:");
+                                    ui.label(
+                                        RichText::new(format!(
+                                            "{:.4} TB",
+                                            bytes / 1024.0_f64.powi(4)
+                                        ))
+                                        .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Human:");
+                                    ui.label(
+                                        RichText::new(
+                                            bytesize::ByteSize::b(bytes as u64).to_string(),
+                                        )
+                                        .monospace(),
+                                    );
+                                    ui.end_row();
+                                });
+                        }
+                        UnitCategory::Time => {
+                            let secs = self.value;
+                            egui::Grid::new("time_grid")
+                                .num_columns(2)
+                                .spacing(GRID_SPACING)
+                                .show(ui, |ui| {
+                                    ui.label("Seconds:");
+                                    ui.label(RichText::new(format!("{:.2} s", secs)).monospace());
+                                    ui.end_row();
+
+                                    ui.label("Minutes:");
+                                    ui.label(
+                                        RichText::new(format!("{:.2} min", secs / 60.0))
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Hours:");
+                                    ui.label(
+                                        RichText::new(format!("{:.2} h", secs / 3600.0))
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Days:");
+                                    ui.label(
+                                        RichText::new(format!("{:.4} d", secs / 86400.0))
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Weeks:");
+                                    ui.label(
+                                        RichText::new(format!("{:.4} w", secs / 604800.0))
+                                            .monospace(),
+                                    );
+                                    ui.end_row();
+
+                                    ui.label("Human:");
+                                    ui.label(
+                                        RichText::new(
+                                            humantime::format_duration(
+                                                std::time::Duration::from_secs_f64(secs),
+                                            )
+                                            .to_string(),
+                                        )
+                                        .monospace(),
+                                    );
+                                    ui.end_row();
+                                });
+                        }
+                    });
+            });
         });
     }
 }
@@ -1901,79 +2017,91 @@ impl BaseApp {
 impl eframe::App for BaseApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Number Base Converter");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Number Base Converter");
+                ui.add_space(SECTION_SPACING);
 
-            egui::Grid::new("base_grid")
-                .num_columns(2)
-                .spacing([20.0, 10.0])
-                .show(ui, |ui| {
-                    ui.label("Decimal (base 10):");
-                    let resp = ui.add(
-                        egui::TextEdit::singleline(&mut self.decimal)
-                            .font(egui::TextStyle::Monospace),
-                    );
-                    if resp.changed() {
-                        self.last_edited = 0;
-                        self.update_from_decimal();
-                    }
-                    ui.end_row();
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("base_grid")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("Decimal (base 10):");
+                                let resp = ui.add(
+                                    egui::TextEdit::singleline(&mut self.decimal)
+                                        .font(egui::TextStyle::Monospace),
+                                );
+                                if resp.changed() {
+                                    self.last_edited = 0;
+                                    self.update_from_decimal();
+                                }
+                                ui.end_row();
 
-                    ui.label("Binary (base 2):");
-                    let resp = ui.add(
-                        egui::TextEdit::singleline(&mut self.binary)
-                            .font(egui::TextStyle::Monospace),
-                    );
-                    if resp.changed() {
-                        self.last_edited = 1;
-                        self.update_from_binary();
-                    }
-                    ui.end_row();
+                                ui.label("Binary (base 2):");
+                                let resp = ui.add(
+                                    egui::TextEdit::singleline(&mut self.binary)
+                                        .font(egui::TextStyle::Monospace),
+                                );
+                                if resp.changed() {
+                                    self.last_edited = 1;
+                                    self.update_from_binary();
+                                }
+                                ui.end_row();
 
-                    ui.label("Octal (base 8):");
-                    let resp = ui.add(
-                        egui::TextEdit::singleline(&mut self.octal)
-                            .font(egui::TextStyle::Monospace),
-                    );
-                    if resp.changed() {
-                        self.last_edited = 2;
-                        self.update_from_octal();
-                    }
-                    ui.end_row();
+                                ui.label("Octal (base 8):");
+                                let resp = ui.add(
+                                    egui::TextEdit::singleline(&mut self.octal)
+                                        .font(egui::TextStyle::Monospace),
+                                );
+                                if resp.changed() {
+                                    self.last_edited = 2;
+                                    self.update_from_octal();
+                                }
+                                ui.end_row();
 
-                    ui.label("Hexadecimal (base 16):");
-                    let resp = ui.add(
-                        egui::TextEdit::singleline(&mut self.hex).font(egui::TextStyle::Monospace),
-                    );
-                    if resp.changed() {
-                        self.last_edited = 3;
-                        self.update_from_hex();
-                    }
-                    ui.end_row();
-                });
+                                ui.label("Hexadecimal (base 16):");
+                                let resp = ui.add(
+                                    egui::TextEdit::singleline(&mut self.hex)
+                                        .font(egui::TextStyle::Monospace),
+                                );
+                                if resp.changed() {
+                                    self.last_edited = 3;
+                                    self.update_from_hex();
+                                }
+                                ui.end_row();
+                            });
+                    });
 
-            ui.separator();
+                ui.add_space(SECTION_SPACING);
 
-            // Bit visualization
-            if let Ok(n) = self.decimal.parse::<u64>() {
-                ui.label("Bit visualization:");
-                ui.horizontal_wrapped(|ui| {
-                    let bits = format!("{:064b}", n);
-                    let bits = bits.trim_start_matches('0');
-                    let bits = if bits.is_empty() { "0" } else { bits };
-                    for (i, c) in bits.chars().enumerate() {
-                        let color = if c == '1' {
-                            Color32::GREEN
-                        } else {
-                            Color32::GRAY
-                        };
-                        ui.label(RichText::new(c.to_string()).monospace().color(color));
-                        if (bits.len() - i - 1) % 4 == 0 && i < bits.len() - 1 {
-                            ui.label(" ");
-                        }
-                    }
-                });
-            }
+                // Bit visualization
+                if let Ok(n) = self.decimal.parse::<u64>() {
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(ui, |ui| {
+                            ui.label("Bit visualization:");
+                            ui.horizontal_wrapped(|ui| {
+                                let bits = format!("{:064b}", n);
+                                let bits = bits.trim_start_matches('0');
+                                let bits = if bits.is_empty() { "0" } else { bits };
+                                for (i, c) in bits.chars().enumerate() {
+                                    let color = if c == '1' {
+                                        Color32::GREEN
+                                    } else {
+                                        Color32::GRAY
+                                    };
+                                    ui.label(RichText::new(c.to_string()).monospace().color(color));
+                                    if (bits.len() - i - 1) % 4 == 0 && i < bits.len() - 1 {
+                                        ui.label(" ");
+                                    }
+                                }
+                            });
+                        });
+                }
+            });
         });
     }
 }
@@ -2078,48 +2206,64 @@ fn sort_json_keys(value: serde_json::Value) -> serde_json::Value {
 impl eframe::App for JsonApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("json_toolbar").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                if ui.button("Format").clicked() {
-                    self.format();
-                }
-                if ui.button("Minify").clicked() {
-                    self.minify();
-                }
-                ui.separator();
-                ui.label("Indent:");
-                ui.add(egui::Slider::new(&mut self.indent, 1..=8));
-                ui.checkbox(&mut self.sort_keys, "Sort keys");
-            });
+            egui::Frame::none()
+                .inner_margin(ITEM_SPACING)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        if ui.button("Format").clicked() {
+                            self.format();
+                        }
+                        if ui.button("Minify").clicked() {
+                            self.minify();
+                        }
+                        ui.add_space(ITEM_SPACING);
+                        ui.label("Indent:");
+                        ui.add(egui::Slider::new(&mut self.indent, 1..=8));
+                        ui.checkbox(&mut self.sort_keys, "Sort keys");
+                    });
+                });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            if let Some(err) = &self.error {
-                ui.label(RichText::new(err).color(Color32::RED));
-                ui.separator();
-            }
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                if let Some(err) = &self.error {
+                    ui.label(RichText::new(err).color(Color32::RED));
+                    ui.add_space(ITEM_SPACING);
+                }
 
-            ui.columns(2, |columns| {
-                columns[0].label("Input:");
-                egui::ScrollArea::vertical()
-                    .id_salt("json_input")
-                    .show(&mut columns[0], |ui| {
-                        ui.add(
-                            egui::TextEdit::multiline(&mut self.input)
-                                .font(egui::TextStyle::Monospace)
-                                .desired_width(f32::INFINITY),
-                        );
-                    });
+                ui.columns(2, |columns| {
+                    // Input column
+                    egui::Frame::group(columns[0].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[0], |ui| {
+                            ui.label("Input:");
+                            egui::ScrollArea::vertical()
+                                .id_salt("json_input")
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        egui::TextEdit::multiline(&mut self.input)
+                                            .font(egui::TextStyle::Monospace)
+                                            .desired_width(f32::INFINITY),
+                                    );
+                                });
+                        });
 
-                columns[1].label("Output:");
-                egui::ScrollArea::vertical()
-                    .id_salt("json_output")
-                    .show(&mut columns[1], |ui| {
-                        ui.add(
-                            egui::TextEdit::multiline(&mut self.output.as_str())
-                                .font(egui::TextStyle::Monospace)
-                                .desired_width(f32::INFINITY),
-                        );
-                    });
+                    // Output column
+                    egui::Frame::group(columns[1].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[1], |ui| {
+                            ui.label("Output:");
+                            egui::ScrollArea::vertical()
+                                .id_salt("json_output")
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        egui::TextEdit::multiline(&mut self.output.as_str())
+                                            .font(egui::TextStyle::Monospace)
+                                            .desired_width(f32::INFINITY),
+                                    );
+                                });
+                        });
+                });
             });
         });
     }
@@ -2178,108 +2322,135 @@ const REGEX_PRESETS: &[(&str, &str)] = &[
 impl eframe::App for RegexApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Regex Tester");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Regex Tester");
+                ui.add_space(SECTION_SPACING);
 
-            ui.horizontal(|ui| {
-                ui.label("Preset:");
-                egui::ComboBox::from_id_salt("regex_preset")
-                    .selected_text(REGEX_PRESETS[self.selected_preset].0)
-                    .show_ui(ui, |ui| {
-                        for (i, (name, _)) in REGEX_PRESETS.iter().enumerate() {
-                            if ui
-                                .selectable_value(&mut self.selected_preset, i, *name)
-                                .clicked()
-                            {
-                                self.pattern = REGEX_PRESETS[i].1.to_string();
-                            }
-                        }
-                    });
-            });
-
-            ui.horizontal(|ui| {
-                ui.label("Pattern:");
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.pattern)
-                        .font(egui::TextStyle::Monospace)
-                        .desired_width(f32::INFINITY),
-                );
-            });
-
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut self.case_insensitive, "Case insensitive");
-                ui.checkbox(&mut self.multiline, "Multiline");
-            });
-
-            ui.separator();
-
-            ui.label("Test string:");
-            ui.add(
-                egui::TextEdit::multiline(&mut self.test_string)
-                    .font(egui::TextStyle::Monospace)
-                    .desired_width(f32::INFINITY)
-                    .desired_rows(5),
-            );
-
-            ui.separator();
-
-            // Compile and run regex
-            let pattern = if self.case_insensitive {
-                format!("(?i){}", self.pattern)
-            } else {
-                self.pattern.clone()
-            };
-
-            match regex::Regex::new(&pattern) {
-                Ok(re) => {
-                    let matches: Vec<_> = re.find_iter(&self.test_string).collect();
-                    ui.label(format!("Matches found: {}", matches.len()));
-
-                    if !matches.is_empty() {
-                        ui.separator();
-                        egui::ScrollArea::vertical()
-                            .max_height(150.0)
-                            .show(ui, |ui| {
-                                egui::Grid::new("regex_matches")
-                                    .num_columns(3)
-                                    .spacing([10.0, 4.0])
-                                    .show(ui, |ui| {
-                                        ui.label(RichText::new("#").strong());
-                                        ui.label(RichText::new("Match").strong());
-                                        ui.label(RichText::new("Position").strong());
-                                        ui.end_row();
-
-                                        for (i, m) in matches.iter().enumerate() {
-                                            ui.label(format!("{}", i + 1));
-                                            ui.label(
-                                                RichText::new(m.as_str())
-                                                    .monospace()
-                                                    .color(Color32::GREEN),
-                                            );
-                                            ui.label(format!("{}..{}", m.start(), m.end()));
-                                            ui.end_row();
+                // Pattern section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Preset:");
+                            egui::ComboBox::from_id_salt("regex_preset")
+                                .selected_text(REGEX_PRESETS[self.selected_preset].0)
+                                .show_ui(ui, |ui| {
+                                    for (i, (name, _)) in REGEX_PRESETS.iter().enumerate() {
+                                        if ui
+                                            .selectable_value(&mut self.selected_preset, i, *name)
+                                            .clicked()
+                                        {
+                                            self.pattern = REGEX_PRESETS[i].1.to_string();
                                         }
-                                    });
+                                    }
+                                });
+                        });
+
+                        ui.add_space(ITEM_SPACING);
+
+                        ui.horizontal(|ui| {
+                            ui.label("Pattern:");
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.pattern)
+                                    .font(egui::TextStyle::Monospace)
+                                    .desired_width(f32::INFINITY),
+                            );
+                        });
+
+                        ui.add_space(ITEM_SPACING);
+
+                        ui.horizontal(|ui| {
+                            ui.checkbox(&mut self.case_insensitive, "Case insensitive");
+                            ui.checkbox(&mut self.multiline, "Multiline");
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Test string section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Test string:");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.test_string)
+                                .font(egui::TextStyle::Monospace)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(5),
+                        );
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Results section
+                let pattern = if self.case_insensitive {
+                    format!("(?i){}", self.pattern)
+                } else {
+                    self.pattern.clone()
+                };
+
+                match regex::Regex::new(&pattern) {
+                    Ok(re) => {
+                        let matches: Vec<_> = re.find_iter(&self.test_string).collect();
+
+                        egui::Frame::group(ui.style())
+                            .inner_margin(ITEM_SPACING)
+                            .show(ui, |ui| {
+                                ui.label(format!("Matches found: {}", matches.len()));
+
+                                if !matches.is_empty() {
+                                    ui.add_space(ITEM_SPACING);
+                                    egui::ScrollArea::vertical()
+                                        .max_height(SCROLL_HEIGHT_SMALL)
+                                        .show(ui, |ui| {
+                                            egui::Grid::new("regex_matches")
+                                                .num_columns(3)
+                                                .spacing(GRID_SPACING)
+                                                .show(ui, |ui| {
+                                                    ui.label(RichText::new("#").strong());
+                                                    ui.label(RichText::new("Match").strong());
+                                                    ui.label(RichText::new("Position").strong());
+                                                    ui.end_row();
+
+                                                    for (i, m) in matches.iter().enumerate() {
+                                                        ui.label(format!("{}", i + 1));
+                                                        ui.label(
+                                                            RichText::new(m.as_str())
+                                                                .monospace()
+                                                                .color(Color32::GREEN),
+                                                        );
+                                                        ui.label(format!(
+                                                            "{}..{}",
+                                                            m.start(),
+                                                            m.end()
+                                                        ));
+                                                        ui.end_row();
+                                                    }
+                                                });
+                                        });
+                                }
+
+                                // Capture groups
+                                if let Some(caps) = re.captures(&self.test_string) {
+                                    if caps.len() > 1 {
+                                        ui.add_space(ITEM_SPACING);
+                                        ui.label("Capture groups:");
+                                        for (i, cap) in caps.iter().enumerate().skip(1) {
+                                            if let Some(c) = cap {
+                                                ui.label(format!("  Group {}: {}", i, c.as_str()));
+                                            }
+                                        }
+                                    }
+                                }
                             });
                     }
-
-                    // Capture groups
-                    if let Some(caps) = re.captures(&self.test_string) {
-                        if caps.len() > 1 {
-                            ui.separator();
-                            ui.label("Capture groups:");
-                            for (i, cap) in caps.iter().enumerate().skip(1) {
-                                if let Some(c) = cap {
-                                    ui.label(format!("  Group {}: {}", i, c.as_str()));
-                                }
-                            }
-                        }
+                    Err(e) => {
+                        ui.label(
+                            RichText::new(format!("Invalid regex: {}", e)).color(Color32::RED),
+                        );
                     }
                 }
-                Err(e) => {
-                    ui.label(RichText::new(format!("Invalid regex: {}", e)).color(Color32::RED));
-                }
-            }
+            });
         });
     }
 }
@@ -2315,76 +2486,94 @@ impl Default for DiffApp {
 impl eframe::App for DiffApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Text Diff Viewer");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Text Diff Viewer");
+                ui.add_space(SECTION_SPACING);
 
-            ui.columns(2, |columns| {
-                columns[0].label("Original:");
-                columns[0].add(
-                    egui::TextEdit::multiline(&mut self.left)
-                        .font(egui::TextStyle::Monospace)
-                        .desired_width(f32::INFINITY)
-                        .desired_rows(8),
-                );
+                // Input columns
+                ui.columns(2, |columns| {
+                    egui::Frame::group(columns[0].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[0], |ui| {
+                            ui.label("Original:");
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.left)
+                                    .font(egui::TextStyle::Monospace)
+                                    .desired_width(f32::INFINITY)
+                                    .desired_rows(8),
+                            );
+                        });
 
-                columns[1].label("Modified:");
-                columns[1].add(
-                    egui::TextEdit::multiline(&mut self.right)
-                        .font(egui::TextStyle::Monospace)
-                        .desired_width(f32::INFINITY)
-                        .desired_rows(8),
-                );
-            });
-
-            ui.separator();
-            ui.label("Diff output:");
-
-            egui::ScrollArea::vertical()
-                .max_height(200.0)
-                .show(ui, |ui| {
-                    let left_lines: Vec<&str> = self.left.lines().collect();
-                    let right_lines: Vec<&str> = self.right.lines().collect();
-
-                    let max_len = left_lines.len().max(right_lines.len());
-
-                    for i in 0..max_len {
-                        let l = left_lines.get(i).copied();
-                        let r = right_lines.get(i).copied();
-
-                        match (l, r) {
-                            (Some(left), Some(right)) if left == right => {
-                                ui.label(RichText::new(format!("  {}", left)).monospace());
-                            }
-                            (Some(left), Some(right)) => {
-                                ui.label(
-                                    RichText::new(format!("- {}", left))
-                                        .monospace()
-                                        .color(Color32::RED),
-                                );
-                                ui.label(
-                                    RichText::new(format!("+ {}", right))
-                                        .monospace()
-                                        .color(Color32::GREEN),
-                                );
-                            }
-                            (Some(left), None) => {
-                                ui.label(
-                                    RichText::new(format!("- {}", left))
-                                        .monospace()
-                                        .color(Color32::RED),
-                                );
-                            }
-                            (None, Some(right)) => {
-                                ui.label(
-                                    RichText::new(format!("+ {}", right))
-                                        .monospace()
-                                        .color(Color32::GREEN),
-                                );
-                            }
-                            (None, None) => {}
-                        }
-                    }
+                    egui::Frame::group(columns[1].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[1], |ui| {
+                            ui.label("Modified:");
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.right)
+                                    .font(egui::TextStyle::Monospace)
+                                    .desired_width(f32::INFINITY)
+                                    .desired_rows(8),
+                            );
+                        });
                 });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Diff output section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.label("Diff output:");
+                        egui::ScrollArea::vertical()
+                            .max_height(SCROLL_HEIGHT_MEDIUM)
+                            .show(ui, |ui| {
+                                let left_lines: Vec<&str> = self.left.lines().collect();
+                                let right_lines: Vec<&str> = self.right.lines().collect();
+
+                                let max_len = left_lines.len().max(right_lines.len());
+
+                                for i in 0..max_len {
+                                    let l = left_lines.get(i).copied();
+                                    let r = right_lines.get(i).copied();
+
+                                    match (l, r) {
+                                        (Some(left), Some(right)) if left == right => {
+                                            ui.label(
+                                                RichText::new(format!("  {}", left)).monospace(),
+                                            );
+                                        }
+                                        (Some(left), Some(right)) => {
+                                            ui.label(
+                                                RichText::new(format!("- {}", left))
+                                                    .monospace()
+                                                    .color(Color32::RED),
+                                            );
+                                            ui.label(
+                                                RichText::new(format!("+ {}", right))
+                                                    .monospace()
+                                                    .color(Color32::GREEN),
+                                            );
+                                        }
+                                        (Some(left), None) => {
+                                            ui.label(
+                                                RichText::new(format!("- {}", left))
+                                                    .monospace()
+                                                    .color(Color32::RED),
+                                            );
+                                        }
+                                        (None, Some(right)) => {
+                                            ui.label(
+                                                RichText::new(format!("+ {}", right))
+                                                    .monospace()
+                                                    .color(Color32::GREEN),
+                                            );
+                                        }
+                                        (None, None) => {}
+                                    }
+                                }
+                            });
+                    });
+            });
         });
     }
 }
@@ -2443,58 +2632,74 @@ impl StopwatchApp {
 impl eframe::App for StopwatchApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Stopwatch");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Stopwatch");
+                ui.add_space(SECTION_SPACING);
 
-            let elapsed = self.current_elapsed();
-            ui.vertical_centered(|ui| {
-                ui.label(
-                    RichText::new(Self::format_duration(elapsed))
-                        .size(48.0)
-                        .monospace(),
-                );
-            });
-
-            ui.separator();
-
-            ui.horizontal(|ui| {
-                if self.running {
-                    if ui.button("Stop").clicked() {
-                        self.elapsed = self.current_elapsed();
-                        self.start_time = None;
-                        self.running = false;
-                    }
-                } else if ui.button("Start").clicked() {
-                    self.start_time = Some(std::time::Instant::now());
-                    self.running = true;
-                }
-
-                if ui.button("Lap").clicked() && self.running {
-                    self.laps.push(self.current_elapsed());
-                }
-
-                if ui.button("Reset").clicked() {
-                    self.running = false;
-                    self.start_time = None;
-                    self.elapsed = std::time::Duration::ZERO;
-                    self.laps.clear();
-                }
-            });
-
-            if !self.laps.is_empty() {
-                ui.separator();
-                ui.label("Laps:");
-                egui::ScrollArea::vertical()
-                    .max_height(150.0)
+                // Timer display
+                let elapsed = self.current_elapsed();
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
                     .show(ui, |ui| {
-                        for (i, lap) in self.laps.iter().enumerate() {
-                            ui.horizontal(|ui| {
-                                ui.label(format!("Lap {}:", i + 1));
-                                ui.label(RichText::new(Self::format_duration(*lap)).monospace());
-                            });
-                        }
+                        ui.vertical_centered(|ui| {
+                            ui.label(
+                                RichText::new(Self::format_duration(elapsed))
+                                    .size(48.0)
+                                    .monospace(),
+                            );
+                        });
                     });
-            }
+
+                ui.add_space(SECTION_SPACING);
+
+                // Controls
+                ui.horizontal(|ui| {
+                    if self.running {
+                        if ui.button("Stop").clicked() {
+                            self.elapsed = self.current_elapsed();
+                            self.start_time = None;
+                            self.running = false;
+                        }
+                    } else if ui.button("Start").clicked() {
+                        self.start_time = Some(std::time::Instant::now());
+                        self.running = true;
+                    }
+
+                    if ui.button("Lap").clicked() && self.running {
+                        self.laps.push(self.current_elapsed());
+                    }
+
+                    if ui.button("Reset").clicked() {
+                        self.running = false;
+                        self.start_time = None;
+                        self.elapsed = std::time::Duration::ZERO;
+                        self.laps.clear();
+                    }
+                });
+
+                if !self.laps.is_empty() {
+                    ui.add_space(SECTION_SPACING);
+
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(ui, |ui| {
+                            ui.label("Laps:");
+                            egui::ScrollArea::vertical()
+                                .max_height(SCROLL_HEIGHT_SMALL)
+                                .show(ui, |ui| {
+                                    for (i, lap) in self.laps.iter().enumerate() {
+                                        ui.horizontal(|ui| {
+                                            ui.label(format!("Lap {}:", i + 1));
+                                            ui.label(
+                                                RichText::new(Self::format_duration(*lap))
+                                                    .monospace(),
+                                            );
+                                        });
+                                    }
+                                });
+                        });
+                }
+            });
         });
 
         if self.running {
@@ -2549,98 +2754,111 @@ impl CalculatorApp {
 impl eframe::App for CalculatorApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Expression Calculator");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Expression Calculator");
+                ui.add_space(SECTION_SPACING);
 
-            // Expression input
-            ui.horizontal(|ui| {
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.expression)
-                        .font(egui::TextStyle::Monospace)
-                        .desired_width(f32::INFINITY),
-                );
-                if ui.button("=").clicked() {
-                    self.evaluate();
-                }
-            });
-
-            // Result display
-            if !self.result.is_empty() {
-                ui.label(
-                    RichText::new(format!("= {}", self.result))
-                        .size(24.0)
-                        .monospace(),
-                );
-            }
-
-            if let Some(err) = &self.error {
-                ui.label(RichText::new(err).color(Color32::RED));
-            }
-
-            ui.separator();
-
-            // Calculator buttons
-            egui::Grid::new("calc_buttons")
-                .num_columns(4)
-                .spacing([8.0, 8.0])
-                .show(ui, |ui| {
-                    let buttons = [
-                        ["C", "(", ")", "/"],
-                        ["7", "8", "9", "*"],
-                        ["4", "5", "6", "-"],
-                        ["1", "2", "3", "+"],
-                        ["0", ".", "^", "="],
-                    ];
-
-                    for row in buttons {
-                        for btn in row {
-                            let button = egui::Button::new(RichText::new(btn).size(20.0))
-                                .min_size(egui::vec2(50.0, 40.0));
-                            if ui.add(button).clicked() {
-                                match btn {
-                                    "C" => {
-                                        self.expression.clear();
-                                        self.result.clear();
-                                        self.error = None;
-                                    }
-                                    "=" => self.evaluate(),
-                                    _ => self.append(btn),
-                                }
-                            }
-                        }
-                        ui.end_row();
-                    }
-                });
-
-            // Functions reference
-            egui::CollapsingHeader::new("Functions")
-                .default_open(false)
-                .show(ui, |ui| {
-                    ui.label("sin, cos, tan, asin, acos, atan");
-                    ui.label("sqrt, cbrt, abs, floor, ceil, round");
-                    ui.label("ln, log10, log2, exp");
-                    ui.label("min, max, pow");
-                    ui.label("Constants: pi, e, tau");
-                });
-
-            // History
-            if !self.history.is_empty() {
-                egui::CollapsingHeader::new("History")
-                    .default_open(true)
+                // Expression input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
                     .show(ui, |ui| {
-                        egui::ScrollArea::vertical()
-                            .max_height(100.0)
+                        ui.horizontal(|ui| {
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.expression)
+                                    .font(egui::TextStyle::Monospace)
+                                    .desired_width(f32::INFINITY),
+                            );
+                            if ui.button("=").clicked() {
+                                self.evaluate();
+                            }
+                        });
+
+                        // Result display
+                        if !self.result.is_empty() {
+                            ui.label(
+                                RichText::new(format!("= {}", self.result))
+                                    .size(24.0)
+                                    .monospace(),
+                            );
+                        }
+
+                        if let Some(err) = &self.error {
+                            ui.label(RichText::new(err).color(Color32::RED));
+                        }
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Calculator buttons
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("calc_buttons")
+                            .num_columns(4)
+                            .spacing(GRID_SPACING)
                             .show(ui, |ui| {
-                                for (expr, res) in self.history.iter().rev().take(10) {
-                                    ui.horizontal(|ui| {
-                                        ui.label(RichText::new(expr).monospace().weak());
-                                        ui.label("=");
-                                        ui.label(RichText::new(res).monospace());
-                                    });
+                                let buttons = [
+                                    ["C", "(", ")", "/"],
+                                    ["7", "8", "9", "*"],
+                                    ["4", "5", "6", "-"],
+                                    ["1", "2", "3", "+"],
+                                    ["0", ".", "^", "="],
+                                ];
+
+                                for row in buttons {
+                                    for btn in row {
+                                        let button =
+                                            egui::Button::new(RichText::new(btn).size(20.0))
+                                                .min_size(egui::vec2(50.0, 40.0));
+                                        if ui.add(button).clicked() {
+                                            match btn {
+                                                "C" => {
+                                                    self.expression.clear();
+                                                    self.result.clear();
+                                                    self.error = None;
+                                                }
+                                                "=" => self.evaluate(),
+                                                _ => self.append(btn),
+                                            }
+                                        }
+                                    }
+                                    ui.end_row();
                                 }
                             });
                     });
-            }
+
+                ui.add_space(SECTION_SPACING);
+
+                // Functions reference
+                egui::CollapsingHeader::new("Functions")
+                    .default_open(false)
+                    .show(ui, |ui| {
+                        ui.label("sin, cos, tan, asin, acos, atan");
+                        ui.label("sqrt, cbrt, abs, floor, ceil, round");
+                        ui.label("ln, log10, log2, exp");
+                        ui.label("min, max, pow");
+                        ui.label("Constants: pi, e, tau");
+                    });
+
+                // History
+                if !self.history.is_empty() {
+                    egui::CollapsingHeader::new("History")
+                        .default_open(true)
+                        .show(ui, |ui| {
+                            egui::ScrollArea::vertical()
+                                .max_height(SCROLL_HEIGHT_SMALL)
+                                .show(ui, |ui| {
+                                    for (expr, res) in self.history.iter().rev().take(10) {
+                                        ui.horizontal(|ui| {
+                                            ui.label(RichText::new(expr).monospace().weak());
+                                            ui.label("=");
+                                            ui.label(RichText::new(res).monospace());
+                                        });
+                                    }
+                                });
+                        });
+                }
+            });
         });
     }
 }
@@ -2680,40 +2898,55 @@ impl eframe::App for CaseApp {
         use heck::*;
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Case Converter");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Case Converter");
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("Input text:");
-            ui.add(egui::TextEdit::singleline(&mut self.input).desired_width(f32::INFINITY));
-
-            ui.separator();
-
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                egui::Grid::new("case_grid")
-                    .num_columns(3)
-                    .spacing([10.0, 8.0])
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
                     .show(ui, |ui| {
-                        let cases: Vec<(&str, String)> = vec![
-                            ("UPPERCASE", self.input.to_uppercase()),
-                            ("lowercase", self.input.to_lowercase()),
-                            ("Title Case", self.input.to_title_case()),
-                            ("camelCase", self.input.to_lower_camel_case()),
-                            ("PascalCase", self.input.to_upper_camel_case()),
-                            ("snake_case", self.input.to_snake_case()),
-                            ("SCREAMING_SNAKE", self.input.to_shouty_snake_case()),
-                            ("kebab-case", self.input.to_kebab_case()),
-                            ("SCREAMING-KEBAB", self.input.to_shouty_kebab_case()),
-                            ("Train-Case", self.input.to_train_case()),
-                        ];
+                        ui.label("Input text:");
+                        ui.add(
+                            egui::TextEdit::singleline(&mut self.input)
+                                .desired_width(f32::INFINITY),
+                        );
+                    });
 
-                        for (name, value) in cases {
-                            ui.label(RichText::new(name).strong());
-                            ui.label(RichText::new(&value).monospace());
-                            if ui.small_button("Copy").clicked() {
-                                ui.output_mut(|o| o.copied_text = value);
-                            }
-                            ui.end_row();
-                        }
+                ui.add_space(SECTION_SPACING);
+
+                // Results section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            egui::Grid::new("case_grid")
+                                .num_columns(3)
+                                .spacing(GRID_SPACING)
+                                .show(ui, |ui| {
+                                    let cases: Vec<(&str, String)> = vec![
+                                        ("UPPERCASE", self.input.to_uppercase()),
+                                        ("lowercase", self.input.to_lowercase()),
+                                        ("Title Case", self.input.to_title_case()),
+                                        ("camelCase", self.input.to_lower_camel_case()),
+                                        ("PascalCase", self.input.to_upper_camel_case()),
+                                        ("snake_case", self.input.to_snake_case()),
+                                        ("SCREAMING_SNAKE", self.input.to_shouty_snake_case()),
+                                        ("kebab-case", self.input.to_kebab_case()),
+                                        ("SCREAMING-KEBAB", self.input.to_shouty_kebab_case()),
+                                        ("Train-Case", self.input.to_train_case()),
+                                    ];
+
+                                    for (name, value) in cases {
+                                        ui.label(RichText::new(name).strong());
+                                        ui.label(RichText::new(&value).monospace());
+                                        if ui.small_button("Copy").clicked() {
+                                            ui.output_mut(|o| o.copied_text = value);
+                                        }
+                                        ui.end_row();
+                                    }
+                                });
+                        });
                     });
             });
         });
@@ -2749,91 +2982,109 @@ impl Default for TextStatsApp {
 impl eframe::App for TextStatsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Text Statistics");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Text Statistics");
+                ui.add_space(SECTION_SPACING);
 
-            ui.label("Input text:");
-            ui.add(
-                egui::TextEdit::multiline(&mut self.input)
-                    .desired_width(f32::INFINITY)
-                    .desired_rows(8),
-            );
-
-            ui.separator();
-
-            let chars = self.input.chars().count();
-            let chars_no_spaces = self.input.chars().filter(|c| !c.is_whitespace()).count();
-            let words = self.input.split_whitespace().count();
-            let lines = self.input.lines().count();
-            let paragraphs = self.input.split("\n\n").filter(|s| !s.is_empty()).count();
-            let sentences = self.input.matches(['.', '!', '?']).count();
-
-            // Reading time (average 200 words per minute)
-            let reading_mins = words as f32 / 200.0;
-
-            egui::Grid::new("stats_grid")
-                .num_columns(2)
-                .spacing([20.0, 8.0])
-                .show(ui, |ui| {
-                    ui.label("Characters:");
-                    ui.label(RichText::new(format!("{}", chars)).monospace());
-                    ui.end_row();
-
-                    ui.label("Characters (no spaces):");
-                    ui.label(RichText::new(format!("{}", chars_no_spaces)).monospace());
-                    ui.end_row();
-
-                    ui.label("Words:");
-                    ui.label(RichText::new(format!("{}", words)).monospace());
-                    ui.end_row();
-
-                    ui.label("Sentences:");
-                    ui.label(RichText::new(format!("{}", sentences)).monospace());
-                    ui.end_row();
-
-                    ui.label("Lines:");
-                    ui.label(RichText::new(format!("{}", lines)).monospace());
-                    ui.end_row();
-
-                    ui.label("Paragraphs:");
-                    ui.label(RichText::new(format!("{}", paragraphs)).monospace());
-                    ui.end_row();
-
-                    ui.label("Reading time:");
-                    ui.label(RichText::new(format!("{:.1} min", reading_mins)).monospace());
-                    ui.end_row();
-                });
-
-            ui.separator();
-
-            // Word frequency
-            if words > 0 {
-                ui.label("Top words:");
-                let mut word_freq: std::collections::HashMap<String, usize> =
-                    std::collections::HashMap::new();
-                for word in self.input.split_whitespace() {
-                    let word = word
-                        .to_lowercase()
-                        .trim_matches(|c: char| !c.is_alphabetic())
-                        .to_string();
-                    if !word.is_empty() && word.len() > 2 {
-                        *word_freq.entry(word).or_insert(0) += 1;
-                    }
-                }
-                let mut freq_vec: Vec<_> = word_freq.into_iter().collect();
-                freq_vec.sort_by(|a, b| b.1.cmp(&a.1));
-
-                egui::ScrollArea::vertical()
-                    .max_height(100.0)
+                // Input section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
                     .show(ui, |ui| {
-                        for (word, count) in freq_vec.iter().take(10) {
-                            ui.horizontal(|ui| {
-                                ui.label(RichText::new(word).monospace());
-                                ui.label(format!("({})", count));
-                            });
-                        }
+                        ui.label("Input text:");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.input)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(8),
+                        );
                     });
-            }
+
+                ui.add_space(SECTION_SPACING);
+
+                let chars = self.input.chars().count();
+                let chars_no_spaces = self.input.chars().filter(|c| !c.is_whitespace()).count();
+                let words = self.input.split_whitespace().count();
+                let lines = self.input.lines().count();
+                let paragraphs = self.input.split("\n\n").filter(|s| !s.is_empty()).count();
+                let sentences = self.input.matches(['.', '!', '?']).count();
+
+                // Reading time (average 200 words per minute)
+                let reading_mins = words as f32 / 200.0;
+
+                // Statistics section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        egui::Grid::new("stats_grid")
+                            .num_columns(2)
+                            .spacing(GRID_SPACING)
+                            .show(ui, |ui| {
+                                ui.label("Characters:");
+                                ui.label(RichText::new(format!("{}", chars)).monospace());
+                                ui.end_row();
+
+                                ui.label("Characters (no spaces):");
+                                ui.label(RichText::new(format!("{}", chars_no_spaces)).monospace());
+                                ui.end_row();
+
+                                ui.label("Words:");
+                                ui.label(RichText::new(format!("{}", words)).monospace());
+                                ui.end_row();
+
+                                ui.label("Sentences:");
+                                ui.label(RichText::new(format!("{}", sentences)).monospace());
+                                ui.end_row();
+
+                                ui.label("Lines:");
+                                ui.label(RichText::new(format!("{}", lines)).monospace());
+                                ui.end_row();
+
+                                ui.label("Paragraphs:");
+                                ui.label(RichText::new(format!("{}", paragraphs)).monospace());
+                                ui.end_row();
+
+                                ui.label("Reading time:");
+                                ui.label(
+                                    RichText::new(format!("{:.1} min", reading_mins)).monospace(),
+                                );
+                                ui.end_row();
+                            });
+                    });
+
+                // Word frequency section
+                if words > 0 {
+                    ui.add_space(SECTION_SPACING);
+
+                    egui::Frame::group(ui.style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(ui, |ui| {
+                            ui.label("Top words:");
+                            let mut word_freq: std::collections::HashMap<String, usize> =
+                                std::collections::HashMap::new();
+                            for word in self.input.split_whitespace() {
+                                let word = word
+                                    .to_lowercase()
+                                    .trim_matches(|c: char| !c.is_alphabetic())
+                                    .to_string();
+                                if !word.is_empty() && word.len() > 2 {
+                                    *word_freq.entry(word).or_insert(0) += 1;
+                                }
+                            }
+                            let mut freq_vec: Vec<_> = word_freq.into_iter().collect();
+                            freq_vec.sort_by(|a, b| b.1.cmp(&a.1));
+
+                            egui::ScrollArea::vertical()
+                                .max_height(SCROLL_HEIGHT_SMALL)
+                                .show(ui, |ui| {
+                                    for (word, count) in freq_vec.iter().take(10) {
+                                        ui.horizontal(|ui| {
+                                            ui.label(RichText::new(word).monospace());
+                                            ui.label(format!("({})", count));
+                                        });
+                                    }
+                                });
+                        });
+                }
+            });
         });
     }
 }
@@ -2972,50 +3223,66 @@ impl MarkdownApp {
 impl eframe::App for MarkdownApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("md_toolbar").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                if ui.button("Bold").clicked() {
-                    self.source.push_str("**bold**");
-                }
-                if ui.button("Italic").clicked() {
-                    self.source.push_str("*italic*");
-                }
-                if ui.button("Code").clicked() {
-                    self.source.push_str("`code`");
-                }
-                if ui.button("H1").clicked() {
-                    self.source.push_str("\n# Heading\n");
-                }
-                if ui.button("H2").clicked() {
-                    self.source.push_str("\n## Heading\n");
-                }
-                if ui.button("List").clicked() {
-                    self.source.push_str("\n- Item\n");
-                }
-                if ui.button("Quote").clicked() {
-                    self.source.push_str("\n> Quote\n");
-                }
-            });
+            egui::Frame::none()
+                .inner_margin(ITEM_SPACING)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        if ui.button("Bold").clicked() {
+                            self.source.push_str("**bold**");
+                        }
+                        if ui.button("Italic").clicked() {
+                            self.source.push_str("*italic*");
+                        }
+                        if ui.button("Code").clicked() {
+                            self.source.push_str("`code`");
+                        }
+                        if ui.button("H1").clicked() {
+                            self.source.push_str("\n# Heading\n");
+                        }
+                        if ui.button("H2").clicked() {
+                            self.source.push_str("\n## Heading\n");
+                        }
+                        if ui.button("List").clicked() {
+                            self.source.push_str("\n- Item\n");
+                        }
+                        if ui.button("Quote").clicked() {
+                            self.source.push_str("\n> Quote\n");
+                        }
+                    });
+                });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.columns(2, |columns| {
-                columns[0].label("Source:");
-                egui::ScrollArea::vertical()
-                    .id_salt("md_source")
-                    .show(&mut columns[0], |ui| {
-                        ui.add(
-                            egui::TextEdit::multiline(&mut self.source)
-                                .font(egui::TextStyle::Monospace)
-                                .desired_width(f32::INFINITY),
-                        );
-                    });
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.columns(2, |columns| {
+                    // Source column
+                    egui::Frame::group(columns[0].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[0], |ui| {
+                            ui.label("Source:");
+                            egui::ScrollArea::vertical()
+                                .id_salt("md_source")
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        egui::TextEdit::multiline(&mut self.source)
+                                            .font(egui::TextStyle::Monospace)
+                                            .desired_width(f32::INFINITY),
+                                    );
+                                });
+                        });
 
-                columns[1].label("Preview:");
-                egui::ScrollArea::vertical()
-                    .id_salt("md_preview")
-                    .show(&mut columns[1], |ui| {
-                        self.render_markdown(ui);
-                    });
+                    // Preview column
+                    egui::Frame::group(columns[1].style())
+                        .inner_margin(ITEM_SPACING)
+                        .show(&mut columns[1], |ui| {
+                            ui.label("Preview:");
+                            egui::ScrollArea::vertical()
+                                .id_salt("md_preview")
+                                .show(ui, |ui| {
+                                    self.render_markdown(ui);
+                                });
+                        });
+                });
             });
         });
     }
@@ -3104,79 +3371,92 @@ impl eframe::App for TimerApp {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Pomodoro Timer");
-            ui.separator();
+            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+                ui.heading("Pomodoro Timer");
+                ui.add_space(SECTION_SPACING);
 
-            let phase = if self.is_break { "Break" } else { "Work" };
-            let color = if self.is_break {
-                Color32::GREEN
-            } else {
-                Color32::from_rgb(255, 100, 100)
-            };
-
-            ui.vertical_centered(|ui| {
-                ui.label(RichText::new(phase).size(24.0).color(color));
-                ui.label(RichText::new(self.format_time()).size(64.0).monospace());
-
-                // Progress bar
-                let total = if self.is_break {
-                    (self.break_mins * 60) as f32
+                let phase = if self.is_break { "Break" } else { "Work" };
+                let color = if self.is_break {
+                    Color32::GREEN
                 } else {
-                    (self.work_mins * 60) as f32
+                    Color32::from_rgb(255, 100, 100)
                 };
-                let progress = 1.0 - (self.remaining.as_secs_f32() / total);
-                ui.add(egui::ProgressBar::new(progress).fill(color));
-            });
 
-            ui.separator();
+                // Timer display section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(RichText::new(phase).size(24.0).color(color));
+                            ui.label(RichText::new(self.format_time()).size(64.0).monospace());
 
-            ui.horizontal(|ui| {
-                if self.running {
-                    if ui.button("Pause").clicked() {
+                            // Progress bar
+                            let total = if self.is_break {
+                                (self.break_mins * 60) as f32
+                            } else {
+                                (self.work_mins * 60) as f32
+                            };
+                            let progress = 1.0 - (self.remaining.as_secs_f32() / total);
+                            ui.add(egui::ProgressBar::new(progress).fill(color));
+                        });
+                    });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Controls
+                ui.horizontal(|ui| {
+                    if self.running {
+                        if ui.button("Pause").clicked() {
+                            self.running = false;
+                        }
+                    } else if ui.button("Start").clicked() {
+                        self.running = true;
+                        self.last_tick = Some(std::time::Instant::now());
+                    }
+
+                    if ui.button("Reset").clicked() {
                         self.running = false;
-                    }
-                } else if ui.button("Start").clicked() {
-                    self.running = true;
-                    self.last_tick = Some(std::time::Instant::now());
-                }
-
-                if ui.button("Reset").clicked() {
-                    self.running = false;
-                    self.reset_work();
-                }
-
-                if ui.button("Skip").clicked() {
-                    if self.is_break {
                         self.reset_work();
-                    } else {
-                        self.sessions += 1;
-                        self.reset_break();
                     }
-                }
+
+                    if ui.button("Skip").clicked() {
+                        if self.is_break {
+                            self.reset_work();
+                        } else {
+                            self.sessions += 1;
+                            self.reset_break();
+                        }
+                    }
+                });
+
+                ui.add_space(SECTION_SPACING);
+
+                // Settings section
+                egui::Frame::group(ui.style())
+                    .inner_margin(ITEM_SPACING)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Work:");
+                            ui.add(
+                                egui::DragValue::new(&mut self.work_mins)
+                                    .range(1..=60)
+                                    .suffix(" min"),
+                            );
+                            ui.label("Break:");
+                            ui.add(
+                                egui::DragValue::new(&mut self.break_mins)
+                                    .range(1..=30)
+                                    .suffix(" min"),
+                            );
+                        });
+
+                        ui.checkbox(&mut self.auto_start_break, "Auto-start break");
+
+                        ui.add_space(ITEM_SPACING);
+
+                        ui.label(format!("Sessions completed: {}", self.sessions));
+                    });
             });
-
-            ui.separator();
-
-            ui.horizontal(|ui| {
-                ui.label("Work:");
-                ui.add(
-                    egui::DragValue::new(&mut self.work_mins)
-                        .range(1..=60)
-                        .suffix(" min"),
-                );
-                ui.label("Break:");
-                ui.add(
-                    egui::DragValue::new(&mut self.break_mins)
-                        .range(1..=30)
-                        .suffix(" min"),
-                );
-            });
-
-            ui.checkbox(&mut self.auto_start_break, "Auto-start break");
-
-            ui.separator();
-
-            ui.label(format!("Sessions completed: {}", self.sessions));
         });
 
         if self.running {
