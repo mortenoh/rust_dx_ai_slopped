@@ -28,3 +28,4 @@ Thumbs.db
 
 # Distribution binaries
 /dist/
+*.parquet
