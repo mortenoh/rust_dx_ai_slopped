@@ -61,7 +61,7 @@ pub enum JsonCommand {
         #[arg(value_name = "FILE")]
         input: Option<PathBuf>,
 
-        /// JSON path query (e.g., ".foo.bar[0]")
+        /// JSON path query (e.g., ".foo.bar\[0\]")
         #[arg(short, long)]
         path: String,
     },

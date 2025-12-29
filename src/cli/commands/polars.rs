@@ -68,11 +68,11 @@ pub enum PolarsCommand {
         /// Column definitions as name:type pairs (comma-separated)
         ///
         /// PRIMITIVES (with optional parameters):
-        ///   id[start;step]  - Sequential integers (default: 1, 1)
-        ///   int[min;max]    - Random integers (default: 0, 1000)
-        ///   float[min;max]  - Random floats (default: 0.0, 1000.0)
-        ///   string[len]     - Random alphanumeric (default: 10)
-        ///   bool[prob]      - Random true/false (default: 0.5)
+        ///   id\[start;step\]  - Sequential integers (default: 1, 1)
+        ///   int\[min;max\]    - Random integers (default: 0, 1000)
+        ///   float\[min;max\]  - Random floats (default: 0.0, 1000.0)
+        ///   string\[len\]     - Random alphanumeric (default: 10)
+        ///   bool\[prob\]      - Random true/false (default: 0.5)
         ///   date            - Random dates (2020-2025)
         ///
         /// CATEGORIES:
@@ -99,15 +99,15 @@ pub enum PolarsCommand {
         ///   word, sentence, paragraph
         ///
         /// GEO:
-        ///   lat[min;max], lon[min;max]  - Coordinates
-        ///   coords[bbox], point[bbox]   - GeoJSON Point
+        ///   lat\[min;max\], lon\[min;max\]  - Coordinates
+        ///   coords\[bbox\], point\[bbox\]   - GeoJSON Point
         ///   (bbox = minLon;minLat;maxLon;maxLat)
         ///
         /// OTHER:
         ///   password, hex
         ///
         /// Example: -c "id:id,user:email,card:credit_card"
-        /// Example: -c "id:id,loc:point[4;57;31;71]"
+        /// Example: -c "id:id,loc:point\[4;57;31;71\]"
         #[arg(short, long, value_delimiter = ',', verbatim_doc_comment)]
         columns: Vec<String>,
 
