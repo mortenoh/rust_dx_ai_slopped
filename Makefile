@@ -18,8 +18,19 @@ MACOS_TARGETS := x86_64-apple-darwin \
                  aarch64-apple-darwin
 
 # Windows targets (MSVC via cargo-xwin for full Windows API support)
-WINDOWS_TARGETS := x86_64-pc-windows-msvc \
-                   aarch64-pc-windows-msvc
+#
+# Supported:
+#   - x86_64-pc-windows-msvc: Works with cargo-xwin cross-compilation
+#
+# Excluded:
+#   - aarch64-pc-windows-msvc: Cannot cross-compile from macOS/Linux due to:
+#     1. psm crate: Assembly in src/arch/aarch_aapcs64.s uses GNU assembler
+#        syntax (GLOBL, TYPE, FUNCTION macros) incompatible with clang-cl
+#     2. ring crate: C compilation fails with clang's /imsvc flag handling
+#     These are upstream issues in the crates, not cargo-xwin bugs.
+#     Native Windows ARM64 builds would work, but cross-compilation doesn't.
+#
+WINDOWS_TARGETS := x86_64-pc-windows-msvc
 
 ALL_TARGETS := $(LINUX_TARGETS) $(MACOS_TARGETS)
 
