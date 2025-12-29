@@ -71,6 +71,7 @@ pub fn fetch(
 }
 
 /// Run the data-values subcommand.
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     client: &Dhis2Client,
     data_set: String,
