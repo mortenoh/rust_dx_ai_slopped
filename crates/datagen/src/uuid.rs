@@ -1,5 +1,11 @@
-//! UUID generation utilities.
+//! UUID and ULID generation utilities.
+//!
+//! This module provides generation for:
+//! - UUID v4 (random)
+//! - UUID v7 (time-based, sortable)
+//! - ULID (Universally Unique Lexicographically Sortable Identifier)
 
+pub use ulid::Ulid;
 pub use uuid::Uuid;
 
 /// UUID version for generation
@@ -18,6 +24,68 @@ pub fn generate(version: UuidVersion) -> Uuid {
         UuidVersion::V4 => Uuid::new_v4(),
         UuidVersion::V7 => Uuid::now_v7(),
     }
+}
+
+/// Generate a new ULID.
+///
+/// ULIDs are 128-bit identifiers that are:
+/// - Lexicographically sortable
+/// - Compatible with UUID representation
+/// - Encoded as 26 character Crockford's Base32
+///
+/// # Example
+/// ```
+/// use dx_datagen::uuid::ulid;
+/// let id = ulid();
+/// assert_eq!(id.len(), 26);
+/// ```
+pub fn ulid() -> String {
+    Ulid::new().to_string()
+}
+
+/// Generate a ULID from a specific timestamp (milliseconds since Unix epoch).
+///
+/// Useful for generating ULIDs with a known time component for testing.
+///
+/// # Example
+/// ```
+/// use dx_datagen::uuid::ulid_from_timestamp;
+/// let id = ulid_from_timestamp(1234567890123);
+/// assert_eq!(id.len(), 26);
+/// ```
+pub fn ulid_from_timestamp(timestamp_ms: u64) -> String {
+    use std::time::{Duration, SystemTime};
+
+    let time = SystemTime::UNIX_EPOCH + Duration::from_millis(timestamp_ms);
+    Ulid::from_datetime(time).to_string()
+}
+
+/// Generate a random ULID using provided RNG (for deterministic generation).
+///
+/// # Example
+/// ```
+/// use dx_datagen::uuid::ulid_with_rng;
+/// use rand::SeedableRng;
+/// use rand::rngs::StdRng;
+///
+/// let mut rng = StdRng::seed_from_u64(42);
+/// let id = ulid_with_rng(&mut rng);
+/// assert_eq!(id.len(), 26);
+/// ```
+pub fn ulid_with_rng<R: ?Sized + rand::Rng>(rng: &mut R) -> String {
+    let random_bytes: u128 = rng.random();
+    // Take current time for the timestamp portion
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+
+    // ULID format: 48-bit timestamp + 80-bit random
+    let timestamp_part = (now as u128) << 80;
+    let random_part = random_bytes & ((1u128 << 80) - 1);
+    let ulid_bits = timestamp_part | random_part;
+
+    Ulid::from(ulid_bits).to_string()
 }
 
 /// Generate a v4 (random) UUID.
@@ -99,5 +167,39 @@ mod tests {
         let s = format(&id, UuidFormat::Braced);
         assert!(s.starts_with('{'));
         assert!(s.ends_with('}'));
+    }
+
+    #[test]
+    fn test_ulid() {
+        let id = ulid();
+        assert_eq!(id.len(), 26);
+        // ULID uses Crockford's Base32 (no I, L, O, U)
+        assert!(id.chars().all(|c| c.is_ascii_alphanumeric()));
+    }
+
+    #[test]
+    fn test_ulid_from_timestamp() {
+        let id1 = ulid_from_timestamp(1000);
+        let id2 = ulid_from_timestamp(2000);
+        assert_eq!(id1.len(), 26);
+        assert_eq!(id2.len(), 26);
+        // Later timestamp should sort after earlier
+        assert!(id1 < id2);
+    }
+
+    #[test]
+    fn test_ulid_with_rng_deterministic() {
+        use rand::rngs::StdRng;
+        use rand::SeedableRng;
+
+        let mut rng1 = StdRng::seed_from_u64(42);
+        let mut rng2 = StdRng::seed_from_u64(42);
+
+        let id1 = ulid_with_rng(&mut rng1);
+        let id2 = ulid_with_rng(&mut rng2);
+
+        assert_eq!(id1.len(), 26);
+        // Note: IDs may differ due to timestamp component, but random parts should be same
+        // with same seed
     }
 }

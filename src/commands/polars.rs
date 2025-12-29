@@ -3,7 +3,10 @@
 use crate::cli::commands::polars::{PolarsArgs, PolarsCommand, PolarsOutputFormat};
 use anyhow::{Context, Result};
 use colored::Colorize;
-use dx_datagen::{categories, generators, geo, network, numeric, password, personal, text, uuid};
+use dx_datagen::{
+    categories, color, commerce, file, generators, geo, network, numeric, password, personal,
+    science, text, uuid, vehicle,
+};
 use polars::prelude::*;
 use ratatui::layout::Constraint;
 use ratatui::style::{Color, Modifier, Style};
@@ -830,7 +833,7 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                 })
             }
 
-            // === UUID ===
+            // === UUID / ULID ===
             "uuid" | "uuid4" => {
                 generate_string_series(name, config.rows, config.null_prob, &mut *rng, |_| {
                     uuid::v4().to_string()
@@ -840,6 +843,213 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                 generate_string_series(name, config.rows, config.null_prob, &mut *rng, |_| {
                     uuid::v7().to_string()
                 })
+            }
+            "ulid" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                uuid::ulid_with_rng(r)
+            }),
+
+            // === Color ===
+            "hex_color" | "hexcolor" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    color::hex_color(r)
+                })
+            }
+            "color_name" | "colorname" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    color::color_name(r).to_string()
+                })
+            }
+            "rgb" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                let (red, g, b) = color::rgb(r);
+                format!("rgb({}, {}, {})", red, g, b)
+            }),
+            "hsl" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                color::css_hsl(r)
+            }),
+
+            // === File / System ===
+            "mime" | "mime_type" | "mimetype" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    file::mime_type(r).to_string()
+                })
+            }
+            "file_ext" | "extension" | "ext" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    file::file_extension(r).to_string()
+                })
+            }
+            "file_name" | "filename" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    file::file_name(r)
+                })
+            }
+            "file_path" | "filepath" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    file::file_path(r)
+                })
+            }
+            "semver" | "version" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    file::semver(r)
+                })
+            }
+            "user_agent" | "useragent" | "ua" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    file::user_agent(r).to_string()
+                })
+            }
+
+            // === Commerce ===
+            "company" | "company_name" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    commerce::company_name(r)
+                })
+            }
+            "product" | "product_name" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    commerce::product_name(r)
+                })
+            }
+            "job" | "job_title" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    commerce::job_title(r)
+                })
+            }
+            "industry" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    commerce::industry(r).to_string()
+                })
+            }
+            "currency" | "currency_code" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    commerce::currency_code(r).to_string()
+                })
+            }
+            "price" => {
+                // Support price[min;max]
+                let min: f64 = params.first().and_then(|s| s.parse().ok()).unwrap_or(1.0);
+                let max: f64 = params.get(1).and_then(|s| s.parse().ok()).unwrap_or(1000.0);
+                let values: Vec<Option<f64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(commerce::price(&mut *rng, min, max))
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
+            }
+
+            // === Vehicle ===
+            "vehicle" | "vehicle_make" | "car" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    vehicle::vehicle_make(r).to_string()
+                })
+            }
+            "vehicle_model" | "model" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    vehicle::vehicle_model(r).to_string()
+                })
+            }
+            "vehicle_full" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    vehicle::vehicle_full(r)
+                })
+            }
+            "vin" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                vehicle::vin(r)
+            }),
+            "license_plate" | "plate" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    vehicle::license_plate(r)
+                })
+            }
+
+            // === Finance / Crypto ===
+            "btc" | "bitcoin" | "btc_address" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::finance::bitcoin_address(r)
+                })
+            }
+            "eth" | "ethereum" | "eth_address" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::finance::ethereum_address(r)
+                })
+            }
+            "swift" | "swift_code" | "bic" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::finance::swift_code(r)
+                })
+            }
+            "routing" | "routing_number" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::finance::routing_number(r)
+                })
+            }
+            "account" | "account_number" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::finance::account_number(r)
+                })
+            }
+
+            // === Science ===
+            "element" | "chemical_element" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    science::chemical_element(r).to_string()
+                })
+            }
+            "element_symbol" | "symbol" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    science::chemical_symbol(r).to_string()
+                })
+            }
+            "unit" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                science::unit(r).to_string()
+            }),
+
+            // === Timestamp ===
+            "timestamp" | "timestamp_s" | "unix_timestamp" => {
+                // Support timestamp[min;max] in seconds since epoch
+                let min: i64 = params
+                    .first()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(946684800); // 2000-01-01
+                let max: i64 = params
+                    .get(1)
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1924991999); // 2030-12-31
+                let values: Vec<Option<i64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(rng.random_range(min..=max))
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
+            }
+            "timestamp_ms" | "unix_timestamp_ms" => {
+                // Support timestamp_ms[min;max] in milliseconds since epoch
+                let min: i64 = params
+                    .first()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(946684800000); // 2000-01-01
+                let max: i64 = params
+                    .get(1)
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(1924991999000); // 2030-12-31
+                let values: Vec<Option<i64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(rng.random_range(min..=max))
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
             }
 
             // === Other ===
@@ -1442,6 +1652,7 @@ fn print_available_generators() {
     println!("{}", "IDENTIFIERS".yellow().bold());
     println!("  {:20} 550e8400-e29b-41d4-...", "uuid, uuid4".white());
     println!("  {:20} 018f6b1c-... (time-based)", "uuid7".white());
+    println!("  {:20} 01ARZ3NDEKTSV4RR... (sortable)", "ulid".white());
     println!(
         "  {:20} 4532015112830366 (Luhn valid)",
         "credit_card, cc".white()
@@ -1474,6 +1685,82 @@ fn print_available_generators() {
     );
     println!("  {:20} GeoJSON Point geometry", "point[bbox]".white());
     println!("  {:20} (bbox = minLon;minLat;maxLon;maxLat)", "".dimmed());
+    println!();
+
+    println!("{}", "COLOR".yellow().bold());
+    println!("  {:20} #FF5733", "hex_color, hexcolor".white());
+    println!(
+        "  {:20} Red, Blue, Green, ...",
+        "color_name, colorname".white()
+    );
+    println!("  {:20} rgb(255, 87, 51)", "rgb".white());
+    println!("  {:20} hsl(210, 50%, 60%)", "hsl".white());
+    println!();
+
+    println!("{}", "FILE / SYSTEM".yellow().bold());
+    println!(
+        "  {:20} application/json, text/html",
+        "mime, mime_type".white()
+    );
+    println!("  {:20} pdf, docx, png, ...", "file_ext, extension".white());
+    println!("  {:20} report_123.pdf", "file_name, filename".white());
+    println!(
+        "  {:20} /home/user/docs/file.txt",
+        "file_path, filepath".white()
+    );
+    println!("  {:20} 1.2.3", "semver, version".white());
+    println!("  {:20} Mozilla/5.0...", "user_agent, ua".white());
+    println!();
+
+    println!("{}", "COMMERCE".yellow().bold());
+    println!("  {:20} Acme Corporation", "company, company_name".white());
+    println!(
+        "  {:20} Rustic Steel Chair",
+        "product, product_name".white()
+    );
+    println!("  {:20} Senior Web Developer", "job, job_title".white());
+    println!("  {:20} Technology, Healthcare", "industry".white());
+    println!("  {:20} USD, EUR, GBP", "currency, currency_code".white());
+    println!("  {:20} 99.99 (default: 1-1000)", "price[min;max]".white());
+    println!();
+
+    println!("{}", "VEHICLE".yellow().bold());
+    println!("  {:20} Toyota, Ford, BMW", "vehicle, vehicle_make".white());
+    println!(
+        "  {:20} Camry, F-150, 3 Series",
+        "vehicle_model, model".white()
+    );
+    println!("  {:20} 2023 Toyota Camry", "vehicle_full".white());
+    println!("  {:20} 1HGBH41JXMN109186", "vin".white());
+    println!("  {:20} ABC-1234", "license_plate, plate".white());
+    println!();
+
+    println!("{}", "FINANCE / CRYPTO".yellow().bold());
+    println!("  {:20} 1A1zP1eP5QGefi2DM...", "btc, bitcoin".white());
+    println!("  {:20} 0x742d35Cc6634C0...", "eth, ethereum".white());
+    println!("  {:20} CHASUS33XXX", "swift, bic".white());
+    println!(
+        "  {:20} 021000021 (9 digits)",
+        "routing, routing_number".white()
+    );
+    println!("  {:20} 1234567890123", "account, account_number".white());
+    println!();
+
+    println!("{}", "SCIENCE".yellow().bold());
+    println!(
+        "  {:20} Hydrogen, Carbon, Gold",
+        "element, chemical_element".white()
+    );
+    println!("  {:20} H, C, Au", "element_symbol, symbol".white());
+    println!("  {:20} meter, kilogram, second", "unit".white());
+    println!();
+
+    println!("{}", "TIMESTAMP".yellow().bold());
+    println!("  {:20} 1735300000 (seconds)", "timestamp[min;max]".white());
+    println!(
+        "  {:20} 1735300000000 (ms)",
+        "timestamp_ms[min;max]".white()
+    );
     println!();
 
     println!("{}", "OTHER".yellow().bold());

@@ -17,7 +17,10 @@
 //! let phone = locale.phone(&mut rng);
 //! ```
 
+pub mod de_de;
 pub mod en_us;
+pub mod es_es;
+pub mod fr_fr;
 pub mod no_no;
 
 use rand::Rng;
@@ -30,6 +33,12 @@ pub enum Locale {
     EnUs,
     /// Norwegian (Bokmål)
     NoNo,
+    /// German (Germany)
+    DeDe,
+    /// French (France)
+    FrFr,
+    /// Spanish (Spain)
+    EsEs,
 }
 
 impl Locale {
@@ -38,6 +47,9 @@ impl Locale {
         match code.to_lowercase().replace('-', "_").as_str() {
             "en_us" | "en" | "us" => Some(Locale::EnUs),
             "no_no" | "no" | "nb" | "nb_no" => Some(Locale::NoNo),
+            "de_de" | "de" => Some(Locale::DeDe),
+            "fr_fr" | "fr" => Some(Locale::FrFr),
+            "es_es" | "es" => Some(Locale::EsEs),
             _ => None,
         }
     }
@@ -47,6 +59,9 @@ impl Locale {
         match self {
             Locale::EnUs => "en_US",
             Locale::NoNo => "no_NO",
+            Locale::DeDe => "de_DE",
+            Locale::FrFr => "fr_FR",
+            Locale::EsEs => "es_ES",
         }
     }
 
@@ -55,6 +70,9 @@ impl Locale {
         match self {
             Locale::EnUs => "English",
             Locale::NoNo => "Norwegian",
+            Locale::DeDe => "German",
+            Locale::FrFr => "French",
+            Locale::EsEs => "Spanish",
         }
     }
 
@@ -63,7 +81,21 @@ impl Locale {
         match self {
             Locale::EnUs => "United States",
             Locale::NoNo => "Norway",
+            Locale::DeDe => "Germany",
+            Locale::FrFr => "France",
+            Locale::EsEs => "Spain",
         }
+    }
+
+    /// Get all available locales.
+    pub fn all() -> &'static [Locale] {
+        &[
+            Locale::EnUs,
+            Locale::NoNo,
+            Locale::DeDe,
+            Locale::FrFr,
+            Locale::EsEs,
+        ]
     }
 }
 
@@ -107,6 +139,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::first_name(rng),
             Locale::NoNo => no_no::first_name(rng),
+            Locale::DeDe => de_de::first_name(rng),
+            Locale::FrFr => fr_fr::first_name(rng),
+            Locale::EsEs => es_es::first_name(rng),
         }
     }
 
@@ -114,6 +149,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::first_name_male(rng),
             Locale::NoNo => no_no::first_name_male(rng),
+            Locale::DeDe => de_de::first_name_male(rng),
+            Locale::FrFr => fr_fr::first_name_male(rng),
+            Locale::EsEs => es_es::first_name_male(rng),
         }
     }
 
@@ -121,6 +159,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::first_name_female(rng),
             Locale::NoNo => no_no::first_name_female(rng),
+            Locale::DeDe => de_de::first_name_female(rng),
+            Locale::FrFr => fr_fr::first_name_female(rng),
+            Locale::EsEs => es_es::first_name_female(rng),
         }
     }
 
@@ -128,6 +169,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::last_name(rng),
             Locale::NoNo => no_no::last_name(rng),
+            Locale::DeDe => de_de::last_name(rng),
+            Locale::FrFr => fr_fr::last_name(rng),
+            Locale::EsEs => es_es::last_name(rng),
         }
     }
 
@@ -135,6 +179,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::phone(rng),
             Locale::NoNo => no_no::phone(rng),
+            Locale::DeDe => de_de::phone(rng),
+            Locale::FrFr => fr_fr::phone(rng),
+            Locale::EsEs => es_es::phone(rng),
         }
     }
 
@@ -142,6 +189,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::city(rng),
             Locale::NoNo => no_no::city(rng),
+            Locale::DeDe => de_de::city(rng),
+            Locale::FrFr => fr_fr::city(rng),
+            Locale::EsEs => es_es::city(rng),
         }
     }
 
@@ -149,6 +199,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::street_suffix(rng),
             Locale::NoNo => no_no::street_suffix(rng),
+            Locale::DeDe => de_de::street_suffix(rng),
+            Locale::FrFr => fr_fr::street_suffix(rng),
+            Locale::EsEs => es_es::street_suffix(rng),
         }
     }
 
@@ -156,6 +209,9 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::street_address(rng),
             Locale::NoNo => no_no::street_address(rng),
+            Locale::DeDe => de_de::street_address(rng),
+            Locale::FrFr => fr_fr::street_address(rng),
+            Locale::EsEs => es_es::street_address(rng),
         }
     }
 
@@ -163,11 +219,17 @@ impl LocaleData for Locale {
         match self {
             Locale::EnUs => en_us::postal_code(rng),
             Locale::NoNo => no_no::postal_code(rng),
+            Locale::DeDe => de_de::postal_code(rng),
+            Locale::FrFr => fr_fr::postal_code(rng),
+            Locale::EsEs => es_es::postal_code(rng),
         }
     }
 }
 
+pub use de_de::DeDe;
 pub use en_us::EnUs;
+pub use es_es::EsEs;
+pub use fr_fr::FrFr;
 pub use no_no::NoNo;
 
 #[cfg(test)]
@@ -182,6 +244,12 @@ mod tests {
         assert_eq!(Locale::from_code("en-US"), Some(Locale::EnUs));
         assert_eq!(Locale::from_code("no_NO"), Some(Locale::NoNo));
         assert_eq!(Locale::from_code("nb"), Some(Locale::NoNo));
+        assert_eq!(Locale::from_code("de_DE"), Some(Locale::DeDe));
+        assert_eq!(Locale::from_code("de"), Some(Locale::DeDe));
+        assert_eq!(Locale::from_code("fr_FR"), Some(Locale::FrFr));
+        assert_eq!(Locale::from_code("fr"), Some(Locale::FrFr));
+        assert_eq!(Locale::from_code("es_ES"), Some(Locale::EsEs));
+        assert_eq!(Locale::from_code("es"), Some(Locale::EsEs));
         assert_eq!(Locale::from_code("invalid"), None);
     }
 
@@ -189,6 +257,9 @@ mod tests {
     fn test_locale_code() {
         assert_eq!(Locale::EnUs.code(), "en_US");
         assert_eq!(Locale::NoNo.code(), "no_NO");
+        assert_eq!(Locale::DeDe.code(), "de_DE");
+        assert_eq!(Locale::FrFr.code(), "fr_FR");
+        assert_eq!(Locale::EsEs.code(), "es_ES");
     }
 
     #[test]
@@ -224,11 +295,70 @@ mod tests {
     }
 
     #[test]
+    fn test_locale_data_de_de() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let locale = Locale::DeDe;
+
+        let first = locale.first_name(&mut rng);
+        let last = locale.last_name(&mut rng);
+        let phone = locale.phone(&mut rng);
+        let city = locale.city(&mut rng);
+
+        assert!(!first.is_empty());
+        assert!(!last.is_empty());
+        assert!(!phone.is_empty());
+        assert!(!city.is_empty());
+    }
+
+    #[test]
+    fn test_locale_data_fr_fr() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let locale = Locale::FrFr;
+
+        let first = locale.first_name(&mut rng);
+        let last = locale.last_name(&mut rng);
+        let phone = locale.phone(&mut rng);
+        let city = locale.city(&mut rng);
+
+        assert!(!first.is_empty());
+        assert!(!last.is_empty());
+        assert!(!phone.is_empty());
+        assert!(!city.is_empty());
+    }
+
+    #[test]
+    fn test_locale_data_es_es() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let locale = Locale::EsEs;
+
+        let first = locale.first_name(&mut rng);
+        let last = locale.last_name(&mut rng);
+        let phone = locale.phone(&mut rng);
+        let city = locale.city(&mut rng);
+
+        assert!(!first.is_empty());
+        assert!(!last.is_empty());
+        assert!(!phone.is_empty());
+        assert!(!city.is_empty());
+    }
+
+    #[test]
     fn test_full_name() {
         let mut rng = StdRng::seed_from_u64(42);
         let locale = Locale::EnUs;
         let name = locale.full_name(&mut rng);
         assert!(name.contains(' '));
+    }
+
+    #[test]
+    fn test_all_locales() {
+        let all = Locale::all();
+        assert_eq!(all.len(), 5);
+        assert!(all.contains(&Locale::EnUs));
+        assert!(all.contains(&Locale::NoNo));
+        assert!(all.contains(&Locale::DeDe));
+        assert!(all.contains(&Locale::FrFr));
+        assert!(all.contains(&Locale::EsEs));
     }
 
     #[test]

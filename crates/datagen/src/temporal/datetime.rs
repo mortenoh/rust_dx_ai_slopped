@@ -84,6 +84,69 @@ pub fn timestamp_unix_ms<R: ?Sized + Rng>(rng: &mut R) -> i64 {
     timestamp_unix(rng) * 1000 + rng.random_range(0..1000)
 }
 
+/// Generate a unix timestamp within a specific range.
+///
+/// # Example
+/// ```
+/// use dx_datagen::temporal::datetime::timestamp_range;
+/// use rand::SeedableRng;
+/// use rand::rngs::StdRng;
+///
+/// let mut rng = StdRng::seed_from_u64(42);
+/// let ts = timestamp_range(&mut rng, 1000000000, 2000000000);
+/// assert!(ts >= 1000000000 && ts <= 2000000000);
+/// ```
+pub fn timestamp_range<R: ?Sized + Rng>(rng: &mut R, min: i64, max: i64) -> i64 {
+    if min >= max {
+        return min;
+    }
+    rng.random_range(min..=max)
+}
+
+/// Generate a recent unix timestamp (within last N days).
+///
+/// # Example
+/// ```
+/// use dx_datagen::temporal::datetime::timestamp_recent;
+/// use rand::SeedableRng;
+/// use rand::rngs::StdRng;
+///
+/// let mut rng = StdRng::seed_from_u64(42);
+/// let ts = timestamp_recent(&mut rng, 7);
+/// ```
+pub fn timestamp_recent<R: ?Sized + Rng>(rng: &mut R, days: i64) -> i64 {
+    let now = Utc::now().timestamp();
+    let past = now - (days * 86400);
+    rng.random_range(past..=now)
+}
+
+/// Generate a future unix timestamp (within next N days).
+///
+/// # Example
+/// ```
+/// use dx_datagen::temporal::datetime::timestamp_future;
+/// use rand::SeedableRng;
+/// use rand::rngs::StdRng;
+///
+/// let mut rng = StdRng::seed_from_u64(42);
+/// let ts = timestamp_future(&mut rng, 30);
+/// ```
+pub fn timestamp_future<R: ?Sized + Rng>(rng: &mut R, days: i64) -> i64 {
+    let now = Utc::now().timestamp();
+    let future = now + (days * 86400);
+    rng.random_range(now..=future)
+}
+
+/// Generate a recent unix timestamp in milliseconds (within last N days).
+pub fn timestamp_recent_ms<R: ?Sized + Rng>(rng: &mut R, days: i64) -> i64 {
+    timestamp_recent(rng, days) * 1000 + rng.random_range(0..1000)
+}
+
+/// Generate a future unix timestamp in milliseconds (within next N days).
+pub fn timestamp_future_ms<R: ?Sized + Rng>(rng: &mut R, days: i64) -> i64 {
+    timestamp_future(rng, days) * 1000 + rng.random_range(0..1000)
+}
+
 /// Generate an ISO 8601 formatted datetime string.
 pub fn iso8601<R: ?Sized + Rng>(rng: &mut R) -> String {
     let dt = datetime_past(rng, 365);

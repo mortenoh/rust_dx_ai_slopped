@@ -39,17 +39,22 @@
 
 // Core modules
 pub mod categories;
+pub mod color;
 pub mod generators;
 pub mod password;
 pub mod uuid;
 
 // Extended modules
+pub mod commerce;
+pub mod file;
 pub mod locale;
 pub mod network;
 pub mod numeric;
 pub mod personal;
+pub mod science;
 pub mod selection;
 pub mod text;
+pub mod vehicle;
 
 // Feature-gated modules
 #[cfg(feature = "temporal")]
@@ -62,7 +67,9 @@ pub mod geo;
 pub use generators::{
     alphanumeric, boolean, float_range, hex_bytes, hex_string, int_range, pick_one, shuffle,
 };
-pub use uuid::{v4, v7, Uuid, UuidFormat, UuidVersion};
+pub use uuid::{
+    ulid, ulid_from_timestamp, ulid_with_rng, v4, v7, Ulid, Uuid, UuidFormat, UuidVersion,
+};
 
 // Re-export selection
 pub use selection::{weighted_pick, weighted_pick_from, WeightedItem, WeightedSelector};
@@ -81,8 +88,9 @@ pub use network::{
 
 // Re-export numeric
 pub use numeric::{
-    credit_card, credit_card_type, iban, iban_for_country, isbn10, isbn13, ssn_no, ssn_us,
-    validate_luhn, CardType,
+    account_number, bic, bitcoin_address, credit_card, credit_card_type, ethereum_address, iban,
+    iban_for_country, isbn10, isbn13, routing_number, ssn_no, ssn_us, swift_code,
+    transaction_description, transaction_type, validate_luhn, CardType,
 };
 
 // Re-export locale
@@ -96,3 +104,35 @@ pub use geo::{
 
 #[cfg(feature = "geo")]
 pub use geo::{geojson_point, geojson_point_string};
+
+// Re-export color
+pub use color::{
+    color_name, css_color_name, css_hsl, css_hsla, css_rgb, css_rgba, hex_color, hex_color_alpha,
+    hsl, hsla, rgb, rgba,
+};
+
+// Re-export file
+pub use file::{
+    directory_path, file_extension, file_extension_by_category, file_name, file_path, mime_type,
+    mime_type_by_category, semver, semver_with_prerelease, user_agent, ExtensionCategory,
+    MimeCategory,
+};
+
+// Re-export commerce
+pub use commerce::{
+    catch_phrase, company_bs, company_name, company_suffix, currency_code, currency_name,
+    currency_symbol, department, industry, job_area, job_descriptor, job_title, job_type, price,
+    price_formatted, product_adjective, product_category, product_material, product_name,
+};
+
+// Re-export vehicle
+pub use vehicle::{
+    fuel_type, license_plate, vehicle_full, vehicle_make, vehicle_model, vehicle_type,
+    vehicle_year, vin,
+};
+
+// Re-export science
+pub use science::{
+    chemical_element, chemical_symbol, derived_unit, derived_unit_symbol, element_full,
+    scientific_notation, unit, unit_symbol,
+};
