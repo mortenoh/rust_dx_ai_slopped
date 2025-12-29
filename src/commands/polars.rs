@@ -14,6 +14,69 @@ enum Format {
     Parquet,
 }
 
+// Category generators - predefined value sets for realistic test data
+const FRUITS: &[&str] = &[
+    "apple",
+    "banana",
+    "orange",
+    "grape",
+    "mango",
+    "strawberry",
+    "pineapple",
+    "kiwi",
+    "peach",
+    "cherry",
+];
+const COLORS: &[&str] = &[
+    "red", "blue", "green", "yellow", "purple", "orange", "pink", "brown", "black", "white",
+];
+const CITIES: &[&str] = &[
+    "New York",
+    "London",
+    "Paris",
+    "Tokyo",
+    "Sydney",
+    "Berlin",
+    "Rome",
+    "Toronto",
+    "Dubai",
+    "Singapore",
+];
+const COUNTRIES: &[&str] = &[
+    "USA",
+    "UK",
+    "France",
+    "Germany",
+    "Japan",
+    "Canada",
+    "Australia",
+    "Brazil",
+    "India",
+    "China",
+];
+const STATUSES: &[&str] = &["pending", "active", "completed", "cancelled", "archived"];
+const PRIORITIES: &[&str] = &["low", "medium", "high", "critical"];
+const DEPARTMENTS: &[&str] = &[
+    "Engineering",
+    "Marketing",
+    "Sales",
+    "HR",
+    "Finance",
+    "Support",
+    "Operations",
+    "Legal",
+];
+const DAYS: &[&str] = &[
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+];
+const SIZES: &[&str] = &["XS", "S", "M", "L", "XL", "XXL"];
+
 /// Configuration for viewing data
 struct ViewConfig<'a> {
     file: &'a Path,
@@ -27,7 +90,7 @@ struct ViewConfig<'a> {
 
 /// Configuration for random data generation
 struct RandomConfig<'a> {
-    output: &'a Path,
+    output: Option<&'a Path>,
     rows: usize,
     columns: &'a [String],
     categories: usize,
@@ -77,7 +140,7 @@ pub fn run(args: PolarsArgs) -> Result<()> {
             null_prob,
             seed,
         } => cmd_random(RandomConfig {
-            output: &file,
+            output: file.as_deref(),
             rows,
             columns: &columns,
             categories,
@@ -620,6 +683,7 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                 Series::new((*name).into(), values)
             }
             "category" | "cat" | "enum" => {
+                // Generic category using --categories count
                 let values: Vec<Option<&str>> = (0..config.rows)
                     .map(|_| {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
@@ -633,6 +697,35 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                     })
                     .collect();
                 Series::new((*name).into(), values)
+            }
+            "fruit" => {
+                generate_category_series(name, FRUITS, config.rows, config.null_prob, &mut *rng)
+            }
+            "color" => {
+                generate_category_series(name, COLORS, config.rows, config.null_prob, &mut *rng)
+            }
+            "city" => {
+                generate_category_series(name, CITIES, config.rows, config.null_prob, &mut *rng)
+            }
+            "country" => {
+                generate_category_series(name, COUNTRIES, config.rows, config.null_prob, &mut *rng)
+            }
+            "status" => {
+                generate_category_series(name, STATUSES, config.rows, config.null_prob, &mut *rng)
+            }
+            "priority" => {
+                generate_category_series(name, PRIORITIES, config.rows, config.null_prob, &mut *rng)
+            }
+            "department" | "dept" => generate_category_series(
+                name,
+                DEPARTMENTS,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "day" => generate_category_series(name, DAYS, config.rows, config.null_prob, &mut *rng),
+            "size" => {
+                generate_category_series(name, SIZES, config.rows, config.null_prob, &mut *rng)
             }
             "date" => {
                 // Generate dates in 2020-2025 range
@@ -672,63 +765,170 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
 
     // Sort by ID columns if any exist
     if !id_columns.is_empty() {
-        df = df.sort(
-            id_columns.iter().copied(),
-            SortMultipleOptions::default(),
-        )?;
+        df = df.sort(id_columns.iter().copied(), SortMultipleOptions::default())?;
     }
 
-    // Write to file
-    let write_start = Instant::now();
-    let format = detect_format(config.output);
-    match format {
-        Format::Parquet => {
-            let file = std::fs::File::create(config.output)
-                .with_context(|| format!("Failed to create file: {}", config.output.display()))?;
-            ParquetWriter::new(file)
-                .finish(&mut df)
-                .with_context(|| "Failed to write Parquet")?;
+    // Either write to file or display on screen
+    match config.output {
+        Some(output_path) => {
+            // Write to file
+            let write_start = Instant::now();
+            let format = detect_format(output_path);
+            match format {
+                Format::Parquet => {
+                    let file = std::fs::File::create(output_path).with_context(|| {
+                        format!("Failed to create file: {}", output_path.display())
+                    })?;
+                    ParquetWriter::new(file)
+                        .finish(&mut df)
+                        .with_context(|| "Failed to write Parquet")?;
+                }
+                Format::Csv => {
+                    let file = std::fs::File::create(output_path).with_context(|| {
+                        format!("Failed to create file: {}", output_path.display())
+                    })?;
+                    CsvWriter::new(file)
+                        .finish(&mut df)
+                        .with_context(|| "Failed to write CSV")?;
+                }
+            }
+            let write_time = write_start.elapsed();
+
+            // Get file size
+            let file_size = std::fs::metadata(output_path).map(|m| m.len()).unwrap_or(0);
+
+            // Print summary
+            println!("{}", "Random Data Generated".green().bold());
+            println!("{}", "═".repeat(50));
+            println!();
+            println!("{}: {}", "Output".yellow(), output_path.display());
+            println!("{}: {:?}", "Format".yellow(), format);
+            println!("{}: {}", "Rows".yellow(), format_number(config.rows));
+            println!("{}: {}", "Columns".yellow(), df.width());
+            println!("{}: {}", "File size".yellow(), format_bytes(file_size));
+            println!();
+
+            println!("{}", "Schema:".cyan().bold());
+            for col in df.get_columns() {
+                println!(
+                    "  {} : {}",
+                    col.name().to_string().white(),
+                    format!("{:?}", col.dtype()).dimmed()
+                );
+            }
+            println!();
+
+            println!("{}: {:.2?}", "Generation time".dimmed(), gen_time);
+            println!("{}: {:.2?}", "Write time".dimmed(), write_time);
         }
-        Format::Csv => {
-            let file = std::fs::File::create(config.output)
-                .with_context(|| format!("Failed to create file: {}", config.output.display()))?;
-            CsvWriter::new(file)
-                .finish(&mut df)
-                .with_context(|| "Failed to write CSV")?;
+        None => {
+            // Display on screen (same as view command)
+            display_dataframe(&df, config.rows)?;
+            println!();
+            println!("{}: {:.2?}", "Generation time".dimmed(), gen_time);
         }
     }
-    let write_time = write_start.elapsed();
-
-    // Get file size
-    let file_size = std::fs::metadata(config.output)
-        .map(|m| m.len())
-        .unwrap_or(0);
-
-    // Print summary
-    println!("{}", "Random Data Generated".green().bold());
-    println!("{}", "═".repeat(50));
-    println!();
-    println!("{}: {}", "Output".yellow(), config.output.display());
-    println!("{}: {:?}", "Format".yellow(), format);
-    println!("{}: {}", "Rows".yellow(), format_number(config.rows));
-    println!("{}: {}", "Columns".yellow(), df.width());
-    println!("{}: {}", "File size".yellow(), format_bytes(file_size));
-    println!();
-
-    println!("{}", "Schema:".cyan().bold());
-    for col in df.get_columns() {
-        println!(
-            "  {} : {}",
-            col.name().to_string().white(),
-            format!("{:?}", col.dtype()).dimmed()
-        );
-    }
-    println!();
-
-    println!("{}: {:.2?}", "Generation time".dimmed(), gen_time);
-    println!("{}: {:.2?}", "Write time".dimmed(), write_time);
 
     Ok(())
+}
+
+/// Display a DataFrame on screen (table format)
+fn display_dataframe(df: &DataFrame, rows: usize) -> Result<()> {
+    let display_df = df.head(Some(rows));
+
+    println!(
+        "{} {}",
+        "Generated Data".cyan().bold(),
+        format!("({} rows, {} cols)", format_number(df.height()), df.width()).dimmed()
+    );
+    println!();
+
+    // Calculate column widths
+    let col_widths: Vec<usize> = display_df
+        .get_columns()
+        .iter()
+        .map(|col| {
+            let header_width = col.name().len();
+            let max_value_width = (0..display_df.height())
+                .map(|i| format_value_display(col.as_materialized_series(), i).len())
+                .max()
+                .unwrap_or(0);
+            header_width.max(max_value_width).min(40)
+        })
+        .collect();
+
+    // Header row
+    let headers: Vec<String> = display_df
+        .get_columns()
+        .iter()
+        .zip(&col_widths)
+        .map(|(col, width)| {
+            format!("{:width$}", col.name(), width = width)
+                .cyan()
+                .bold()
+                .to_string()
+        })
+        .collect();
+    println!("{}", headers.join(" │ "));
+
+    // Separator
+    let sep: Vec<String> = col_widths.iter().map(|w| "─".repeat(*w)).collect();
+    println!("{}", sep.join("─┼─"));
+
+    // Data rows
+    for i in 0..display_df.height() {
+        let row: Vec<String> = display_df
+            .get_columns()
+            .iter()
+            .zip(&col_widths)
+            .map(|(col, width)| {
+                let val = format_value_display(col.as_materialized_series(), i);
+                let truncated = if val.len() > *width {
+                    format!("{}…", &val[..*width - 1])
+                } else {
+                    val
+                };
+                format!("{:width$}", truncated, width = width)
+            })
+            .collect();
+        println!("{}", row.join(" │ "));
+    }
+
+    if df.height() > rows {
+        println!();
+        println!(
+            "{}",
+            format!(
+                "Showing first {} of {} rows",
+                rows,
+                format_number(df.height())
+            )
+            .dimmed()
+        );
+    }
+
+    Ok(())
+}
+
+/// Generate a Series from a predefined category list
+fn generate_category_series(
+    name: &str,
+    values: &[&str],
+    rows: usize,
+    null_prob: f64,
+    rng: &mut dyn rand::RngCore,
+) -> Series {
+    use rand::Rng;
+    let data: Vec<Option<&str>> = (0..rows)
+        .map(|_| {
+            if null_prob > 0.0 && rng.random_bool(null_prob) {
+                None
+            } else {
+                Some(values[rng.random_range(0..values.len())])
+            }
+        })
+        .collect();
+    Series::new(name.into(), data)
 }
 
 /// Generate a random alphanumeric string

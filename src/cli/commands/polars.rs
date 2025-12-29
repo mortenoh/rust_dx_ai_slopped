@@ -41,17 +41,19 @@ pub enum PolarsCommand {
         json: bool,
     },
 
-    /// Generate random data file (CSV or Parquet)
+    /// Generate random data (output to file or screen)
     Random {
         /// Output file path (format determined by extension: .csv, .parquet, .pq)
-        file: PathBuf,
+        /// If not specified, outputs to screen
+        file: Option<PathBuf>,
 
         /// Number of rows to generate
         #[arg(short = 'n', long, default_value = "10000")]
         rows: usize,
 
-        /// Column definitions: name:type (e.g., "id:id,name:string,score:float")
-        /// Types: id (sequential 1..n), int, float, string, bool, date, category
+        /// Column definitions: name:type (e.g., "id:id,city:city,score:float")
+        /// Types: id, int, float, string, bool, date
+        /// Categories: category, fruit, color, city, country, status, priority, department, day, size
         #[arg(short, long, value_delimiter = ',')]
         columns: Vec<String>,
 
