@@ -3,6 +3,7 @@
 use crate::cli::commands::polars::{PolarsArgs, PolarsCommand};
 use anyhow::{Context, Result};
 use colored::Colorize;
+use dx_datagen::{categories, generators};
 use polars::prelude::*;
 use ratatui::layout::Constraint;
 use ratatui::style::{Color, Modifier, Style};
@@ -16,69 +17,6 @@ enum Format {
     Csv,
     Parquet,
 }
-
-// Category generators - predefined value sets for realistic test data
-const FRUITS: &[&str] = &[
-    "apple",
-    "banana",
-    "orange",
-    "grape",
-    "mango",
-    "strawberry",
-    "pineapple",
-    "kiwi",
-    "peach",
-    "cherry",
-];
-const COLORS: &[&str] = &[
-    "red", "blue", "green", "yellow", "purple", "orange", "pink", "brown", "black", "white",
-];
-const CITIES: &[&str] = &[
-    "New York",
-    "London",
-    "Paris",
-    "Tokyo",
-    "Sydney",
-    "Berlin",
-    "Rome",
-    "Toronto",
-    "Dubai",
-    "Singapore",
-];
-const COUNTRIES: &[&str] = &[
-    "USA",
-    "UK",
-    "France",
-    "Germany",
-    "Japan",
-    "Canada",
-    "Australia",
-    "Brazil",
-    "India",
-    "China",
-];
-const STATUSES: &[&str] = &["pending", "active", "completed", "cancelled", "archived"];
-const PRIORITIES: &[&str] = &["low", "medium", "high", "critical"];
-const DEPARTMENTS: &[&str] = &[
-    "Engineering",
-    "Marketing",
-    "Sales",
-    "HR",
-    "Finance",
-    "Support",
-    "Operations",
-    "Legal",
-];
-const DAYS: &[&str] = &[
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-];
-const SIZES: &[&str] = &["XS", "S", "M", "L", "XL", "XXL"];
 
 /// Configuration for viewing data
 struct ViewConfig<'a> {
@@ -569,7 +507,7 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
                             None
                         } else {
-                            Some(generate_random_string(&mut *rng, config.string_len))
+                            Some(generators::alphanumeric(&mut *rng, config.string_len))
                         }
                     })
                     .collect();
@@ -603,35 +541,69 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                     .collect();
                 Series::new((*name).into(), values)
             }
-            "fruit" => {
-                generate_category_series(name, FRUITS, config.rows, config.null_prob, &mut *rng)
-            }
-            "color" => {
-                generate_category_series(name, COLORS, config.rows, config.null_prob, &mut *rng)
-            }
-            "city" => {
-                generate_category_series(name, CITIES, config.rows, config.null_prob, &mut *rng)
-            }
-            "country" => {
-                generate_category_series(name, COUNTRIES, config.rows, config.null_prob, &mut *rng)
-            }
-            "status" => {
-                generate_category_series(name, STATUSES, config.rows, config.null_prob, &mut *rng)
-            }
-            "priority" => {
-                generate_category_series(name, PRIORITIES, config.rows, config.null_prob, &mut *rng)
-            }
-            "department" | "dept" => generate_category_series(
+            "fruit" => generate_category_series(
                 name,
-                DEPARTMENTS,
+                categories::FRUITS,
                 config.rows,
                 config.null_prob,
                 &mut *rng,
             ),
-            "day" => generate_category_series(name, DAYS, config.rows, config.null_prob, &mut *rng),
-            "size" => {
-                generate_category_series(name, SIZES, config.rows, config.null_prob, &mut *rng)
-            }
+            "color" => generate_category_series(
+                name,
+                categories::COLORS,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "city" => generate_category_series(
+                name,
+                categories::CITIES,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "country" => generate_category_series(
+                name,
+                categories::COUNTRIES,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "status" => generate_category_series(
+                name,
+                categories::STATUSES,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "priority" => generate_category_series(
+                name,
+                categories::PRIORITIES,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "department" | "dept" => generate_category_series(
+                name,
+                categories::DEPARTMENTS,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "day" => generate_category_series(
+                name,
+                categories::DAYS,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
+            "size" => generate_category_series(
+                name,
+                categories::SIZES,
+                config.rows,
+                config.null_prob,
+                &mut *rng,
+            ),
             "date" => {
                 // Generate dates in 2020-2025 range
                 let base_date = 18262i32; // 2020-01-01 as days since epoch
@@ -653,7 +625,7 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
                             None
                         } else {
-                            Some(generate_random_string(&mut *rng, config.string_len))
+                            Some(generators::alphanumeric(&mut *rng, config.string_len))
                         }
                     })
                     .collect();
@@ -970,18 +942,6 @@ fn generate_category_series(
         })
         .collect();
     Series::new(name.into(), data)
-}
-
-/// Generate a random alphanumeric string
-fn generate_random_string(rng: &mut dyn rand::RngCore, len: usize) -> String {
-    use rand::Rng;
-    const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    (0..len)
-        .map(|_| {
-            let idx = rng.random_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect()
 }
 
 /// Format a number with thousand separators

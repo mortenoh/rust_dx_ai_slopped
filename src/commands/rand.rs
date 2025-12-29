@@ -13,6 +13,7 @@
 
 use crate::cli::commands::rand::{RandArgs, RandCommand};
 use anyhow::Result;
+use dx_datagen::{generators, password};
 use rand::prelude::{IndexedRandom, SliceRandom};
 use rand::Rng;
 
@@ -52,17 +53,9 @@ fn cmd_float(min: f64, max: f64, count: usize) -> Result<()> {
 }
 
 fn cmd_string(length: usize, count: usize) -> Result<()> {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let mut rng = rand::rng();
-
     for _ in 0..count {
-        let s: String = (0..length)
-            .map(|_| {
-                let idx = rng.random_range(0..CHARSET.len());
-                CHARSET[idx] as char
-            })
-            .collect();
-        println!("{}", s);
+        println!("{}", generators::alphanumeric(&mut rng, length));
     }
     Ok(())
 }
@@ -70,32 +63,15 @@ fn cmd_string(length: usize, count: usize) -> Result<()> {
 fn cmd_hex(bytes: usize, count: usize) -> Result<()> {
     let mut rng = rand::rng();
     for _ in 0..count {
-        let data: Vec<u8> = (0..bytes).map(|_| rng.random::<u8>()).collect();
-        println!("{}", hex::encode(data));
+        println!("{}", generators::hex_bytes(&mut rng, bytes));
     }
     Ok(())
 }
 
 fn cmd_password(length: usize, no_symbols: bool, count: usize) -> Result<()> {
-    const ALPHA: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    const DIGITS: &[u8] = b"0123456789";
-    const SYMBOLS: &[u8] = b"!@#$%^&*()_+-=[]{}|;:,.<>?";
-
-    let charset: Vec<u8> = if no_symbols {
-        [ALPHA, DIGITS].concat()
-    } else {
-        [ALPHA, DIGITS, SYMBOLS].concat()
-    };
-
     let mut rng = rand::rng();
     for _ in 0..count {
-        let s: String = (0..length)
-            .map(|_| {
-                let idx = rng.random_range(0..charset.len());
-                charset[idx] as char
-            })
-            .collect();
-        println!("{}", s);
+        println!("{}", password::password(&mut rng, length, !no_symbols));
     }
     Ok(())
 }

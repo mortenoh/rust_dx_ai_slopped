@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "crates/progress", "crates/expr", "crates/dhis2"]
+members = [".", "crates/progress", "crates/expr", "crates/dhis2", "crates/datagen"]
 
 [workspace.package]
 edition = "2021"
@@ -81,6 +81,7 @@ colored = "3"
 dx-progress = { path = "crates/progress" }
 dx-expr = { path = "crates/expr" }
 dx-dhis2 = { path = "crates/dhis2", features = ["tui"] }
+dx-datagen = { path = "crates/datagen" }
 sysinfo = "0.32"
 rand = "0.9.2"
 heck = "0.5.0"
