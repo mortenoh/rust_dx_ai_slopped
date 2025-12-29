@@ -392,6 +392,8 @@ else
 fi
 test_cmd "dhis2 --help" dhis2 --help
 test_cmd_contains "dhis2 data-values --help" "data-set" dhis2 data-values --help
+# Test actual data fetch (ART monthly summary at Ngelehun CHC, 2024)
+test_cmd_contains "dhis2 data-values fetch" "DataElement" dhis2 dv --data-set lyLU2wR22tC --org-unit DiszpKrYNg8 --start-date 2024-01-01 --end-date 2024-12-31 --limit 3
 
 # ============================================================================
 section "Completions Command"
