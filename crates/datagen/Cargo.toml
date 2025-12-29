@@ -7,6 +7,15 @@ license.workspace = true
 repository.workspace = true
 description = "Data generation utilities for test data, random values, and predefined categories"
 
+[features]
+default = []
+temporal = ["dep:chrono"]
+locales = []
+schema = ["dep:serde_json"]
+full = ["temporal", "locales", "schema"]
+
 [dependencies]
 rand = "0.9"
 uuid = { version = "1", features = ["v4", "v7"] }
+chrono = { version = "0.4", optional = true }
+serde_json = { version = "1.0", optional = true }

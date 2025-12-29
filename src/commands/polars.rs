@@ -1,9 +1,9 @@
 //! Polars command - DataFrame operations and data analysis demos.
 
-use crate::cli::commands::polars::{PolarsArgs, PolarsCommand};
+use crate::cli::commands::polars::{PolarsArgs, PolarsCommand, PolarsOutputFormat};
 use anyhow::{Context, Result};
 use colored::Colorize;
-use dx_datagen::{categories, generators};
+use dx_datagen::{categories, generators, network, numeric, password, personal, text, uuid};
 use polars::prelude::*;
 use ratatui::layout::Constraint;
 use ratatui::style::{Color, Modifier, Style};
@@ -40,6 +40,7 @@ struct RandomConfig<'a> {
     max: i64,
     null_prob: f64,
     seed: Option<u64>,
+    format: PolarsOutputFormat,
 }
 
 /// Detect file format from extension
@@ -80,6 +81,7 @@ pub fn run(args: PolarsArgs) -> Result<()> {
             max,
             null_prob,
             seed,
+            format,
         } => cmd_random(RandomConfig {
             output: file.as_deref(),
             rows,
@@ -90,6 +92,7 @@ pub fn run(args: PolarsArgs) -> Result<()> {
             max,
             null_prob,
             seed,
+            format,
         }),
     }
 }
@@ -618,6 +621,139 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                     .collect();
                 Series::new((*name).into(), values).cast(&DataType::Date)?
             }
+
+            // === Personal data ===
+            "first_name" | "firstname" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::names::first_name(r).to_string()
+                })
+            }
+            "last_name" | "lastname" | "surname" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::names::last_name(r).to_string()
+                })
+            }
+            "full_name" | "fullname" | "name" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::names::full_name(r)
+                })
+            }
+            "email" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::email::email(r)
+                })
+            }
+            "username" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::username::username(r)
+                })
+            }
+            "phone" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::phone::phone(r)
+                })
+            }
+            "address" | "street_address" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::address::street_address(r)
+                })
+            }
+            "zip" | "zip_code" | "postal_code" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    personal::address::zip_code(r)
+                })
+            }
+
+            // === Network data ===
+            "ipv4" | "ip" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    network::ip::ipv4(r).to_string()
+                })
+            }
+            "ipv6" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                network::ip::ipv6(r).to_string()
+            }),
+            "mac" | "mac_address" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    network::mac::mac_address(r)
+                })
+            }
+            "domain" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    network::domain::domain(r)
+                })
+            }
+            "url" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                network::url::url(r)
+            }),
+
+            // === Numeric identifiers ===
+            "credit_card" | "cc" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::credit_card::credit_card(r)
+                })
+            }
+            "isbn" | "isbn13" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::isbn::isbn13(r)
+                })
+            }
+            "isbn10" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::isbn::isbn10(r)
+                })
+            }
+            "iban" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                numeric::iban::iban(r)
+            }),
+            "ssn" | "ssn_us" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::ssn::ssn_us(r)
+                })
+            }
+            "ssn_no" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    numeric::ssn::ssn_no(r)
+                })
+            }
+
+            // === Text data ===
+            "word" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                text::words::word(r).to_string()
+            }),
+            "sentence" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    text::lorem::sentence(r)
+                })
+            }
+            "paragraph" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    text::lorem::paragraph(r)
+                })
+            }
+
+            // === UUID ===
+            "uuid" | "uuid4" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |_| {
+                    uuid::v4().to_string()
+                })
+            }
+            "uuid7" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |_| {
+                    uuid::v7().to_string()
+                })
+            }
+
+            // === Other ===
+            "password" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    password::password(r, 16, true)
+                })
+            }
+            "hex" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                generators::hex_string(r, 16)
+            }),
+
             _ => {
                 // Default to string
                 let values: Vec<Option<String>> = (0..config.rows)
@@ -699,10 +835,54 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
             println!("{}: {:.2?}", "Write time".dimmed(), write_time);
         }
         None => {
-            // Display on screen (same as view command)
-            display_dataframe(&df, config.rows)?;
-            println!();
-            println!("{}: {:.2?}", "Generation time".dimmed(), gen_time);
+            // Display on screen based on format
+            match config.format {
+                PolarsOutputFormat::Csv => {
+                    // Output as CSV to stdout
+                    let mut stdout = std::io::stdout();
+                    CsvWriter::new(&mut stdout)
+                        .finish(&mut df)
+                        .with_context(|| "Failed to write CSV to stdout")?;
+                }
+                PolarsOutputFormat::Json => {
+                    // Output as JSON array of objects
+                    let rows_json: Vec<serde_json::Value> = (0..df.height())
+                        .map(|i| {
+                            let mut row: serde_json::Map<String, serde_json::Value> =
+                                serde_json::Map::new();
+                            for col in df.get_columns() {
+                                let series = col.as_materialized_series();
+                                let value = format_value_json(series, i);
+                                row.insert(col.name().to_string(), value);
+                            }
+                            serde_json::Value::Object(row)
+                        })
+                        .collect();
+                    println!("{}", serde_json::to_string_pretty(&rows_json)?);
+                }
+                PolarsOutputFormat::Jsonl => {
+                    // Output as JSON Lines (one object per line)
+                    for i in 0..df.height() {
+                        let mut row: serde_json::Map<String, serde_json::Value> =
+                            serde_json::Map::new();
+                        for col in df.get_columns() {
+                            let series = col.as_materialized_series();
+                            let value = format_value_json(series, i);
+                            row.insert(col.name().to_string(), value);
+                        }
+                        println!(
+                            "{}",
+                            serde_json::to_string(&serde_json::Value::Object(row))?
+                        );
+                    }
+                }
+                PolarsOutputFormat::Table => {
+                    // Display as table (default)
+                    display_dataframe(&df, config.rows)?;
+                    println!();
+                    println!("{}: {:.2?}", "Generation time".dimmed(), gen_time);
+                }
+            }
         }
     }
 
@@ -938,6 +1118,30 @@ fn generate_category_series(
                 None
             } else {
                 Some(values[rng.random_range(0..values.len())])
+            }
+        })
+        .collect();
+    Series::new(name.into(), data)
+}
+
+/// Generate a Series using a generator function
+fn generate_string_series<F>(
+    name: &str,
+    rows: usize,
+    null_prob: f64,
+    rng: &mut dyn rand::RngCore,
+    generator: F,
+) -> Series
+where
+    F: Fn(&mut dyn rand::RngCore) -> String,
+{
+    use rand::Rng;
+    let data: Vec<Option<String>> = (0..rows)
+        .map(|_| {
+            if null_prob > 0.0 && rng.random_bool(null_prob) {
+                None
+            } else {
+                Some(generator(rng))
             }
         })
         .collect();

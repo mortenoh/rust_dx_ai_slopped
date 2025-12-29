@@ -1,7 +1,21 @@
 //! Polars command arguments - DataFrame operations and data analysis.
 
-use clap::{Args, Subcommand};
+use clap::{Args, Subcommand, ValueEnum};
 use std::path::PathBuf;
+
+/// Output format for screen display.
+#[derive(Debug, Clone, Copy, Default, ValueEnum)]
+pub enum PolarsOutputFormat {
+    /// Table format (default)
+    #[default]
+    Table,
+    /// CSV format
+    Csv,
+    /// JSON array of objects
+    Json,
+    /// JSON Lines (one object per line)
+    Jsonl,
+}
 
 #[derive(Args, Debug)]
 pub struct PolarsArgs {
@@ -51,10 +65,44 @@ pub enum PolarsCommand {
         #[arg(short = 'n', long, default_value = "20")]
         rows: usize,
 
-        /// Column definitions: name:type (e.g., "id:id,city:city,score:float")
-        /// Types: id, int, float, string, bool, date
-        /// Categories: category, fruit, color, city, country, status, priority, department, day, size
-        #[arg(short, long, value_delimiter = ',')]
+        /// Column definitions as name:type pairs (comma-separated)
+        ///
+        /// PRIMITIVES:
+        ///   id        - Sequential integers (1, 2, 3, ...)
+        ///   int       - Random integers (aliases: integer, i64)
+        ///   float     - Random floats (aliases: f64, double)
+        ///   string    - Random alphanumeric (aliases: str, text)
+        ///   bool      - Random true/false (alias: boolean)
+        ///   date      - Random dates (2020-2025)
+        ///
+        /// CATEGORIES:
+        ///   category  - Generic cat_0..cat_N (--categories)
+        ///   fruit, color, city, country, status
+        ///   priority, department, day, size
+        ///
+        /// PERSONAL:
+        ///   first_name, last_name, full_name (alias: name)
+        ///   email, username, phone
+        ///   address, zip_code
+        ///
+        /// NETWORK:
+        ///   ipv4 (alias: ip), ipv6, mac_address
+        ///   domain, url
+        ///
+        /// IDENTIFIERS:
+        ///   uuid (alias: uuid4), uuid7
+        ///   credit_card (alias: cc), iban
+        ///   isbn (alias: isbn13), isbn10
+        ///   ssn (alias: ssn_us), ssn_no
+        ///
+        /// TEXT:
+        ///   word, sentence, paragraph
+        ///
+        /// OTHER:
+        ///   password, hex
+        ///
+        /// Example: -c "id:id,user:email,card:credit_card"
+        #[arg(short, long, value_delimiter = ',', verbatim_doc_comment)]
         columns: Vec<String>,
 
         /// Number of categories for category columns
@@ -80,5 +128,9 @@ pub enum PolarsCommand {
         /// Random seed for reproducibility
         #[arg(long)]
         seed: Option<u64>,
+
+        /// Output format (table, json, jsonl)
+        #[arg(short, long, default_value = "table")]
+        format: PolarsOutputFormat,
     },
 }
