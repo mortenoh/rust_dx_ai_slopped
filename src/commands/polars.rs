@@ -4,8 +4,9 @@ use crate::cli::commands::polars::{PolarsArgs, PolarsCommand, PolarsOutputFormat
 use anyhow::{Context, Result};
 use colored::Colorize;
 use dx_datagen::{
-    categories, color, commerce, file, generators, geo, network, numeric, password, personal,
-    science, text, uuid, vehicle,
+    animals, astrology, categories, color, commerce, education, entertainment, file, food,
+    generators, geo, government, hacker, healthcare, network, numeric, password, personal, science,
+    sports, text, travel, uuid, vehicle, weather,
 };
 use polars::prelude::*;
 use ratatui::layout::Constraint;
@@ -1127,6 +1128,402 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                 })
             }
 
+            // === Entertainment ===
+            "book_title" | "book" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::book_title(r)
+                })
+            }
+            "book_author" | "author" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::book_author(r)
+                })
+            }
+            "book_genre" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::book_genre(r).to_string()
+                })
+            }
+            "movie_title" | "movie" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::movie_title(r)
+                })
+            }
+            "movie_director" | "director" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::movie_director(r)
+                })
+            }
+            "movie_genre" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::movie_genre(r).to_string()
+                })
+            }
+            "music_artist" | "artist" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::music_artist(r)
+                })
+            }
+            "music_album" | "album" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::music_album(r)
+                })
+            }
+            "music_song" | "song" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::music_song(r)
+                })
+            }
+            "music_genre" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::music_genre(r).to_string()
+                })
+            }
+            "instrument" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::music_instrument(r).to_string()
+                })
+            }
+            "tv_show" | "show" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::tv_show(r)
+                })
+            }
+            "game_title" | "game" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::game_title(r)
+                })
+            }
+            "game_platform" | "platform" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    entertainment::game_platform(r).to_string()
+                })
+            }
+
+            // === Food ===
+            "dish" | "food" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::dish(r).to_string()
+                })
+            }
+            "cuisine" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::cuisine(r).to_string()
+                })
+            }
+            "ingredient" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::ingredient(r).to_string()
+                })
+            }
+            "spice" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::spice(r).to_string()
+                })
+            }
+            "vegetable" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::vegetable(r).to_string()
+                })
+            }
+            "beverage" | "drink" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::beverage(r).to_string()
+                })
+            }
+            "coffee" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::coffee_drink(r).to_string()
+                })
+            }
+            "beer" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                food::beer_style(r).to_string()
+            }),
+            "wine" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                food::wine_variety(r).to_string()
+            }),
+            "restaurant" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    food::restaurant_name(r)
+                })
+            }
+
+            // === Animals ===
+            "animal" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    animals::animal(r).to_string()
+                })
+            }
+            "dog" | "dog_breed" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    animals::dog_breed(r).to_string()
+                })
+            }
+            "cat_breed" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    animals::cat_breed(r).to_string()
+                })
+            }
+            "bird" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                animals::bird(r).to_string()
+            }),
+            "fish" => generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                animals::fish(r).to_string()
+            }),
+            "pet_name" | "pet" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    animals::pet_name(r).to_string()
+                })
+            }
+
+            // === Travel ===
+            "airline" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::airline(r).to_string()
+                })
+            }
+            "flight" | "flight_number" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::flight_number(r)
+                })
+            }
+            "airport" | "airport_code" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::airport_code(r).to_string()
+                })
+            }
+            "aircraft" | "aircraft_type" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::aircraft_type(r).to_string()
+                })
+            }
+            "seat" | "seat_number" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::seat(r)
+                })
+            }
+            "hotel" | "hotel_chain" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::hotel_chain(r).to_string()
+                })
+            }
+            "room_type" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::room_type(r).to_string()
+                })
+            }
+            "landmark" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::landmark(r).to_string()
+                })
+            }
+            "destination" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    travel::destination(r).to_string()
+                })
+            }
+
+            // === Healthcare ===
+            "condition" | "medical_condition" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    healthcare::condition(r).to_string()
+                })
+            }
+            "medication" | "medicine" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    healthcare::medication(r).to_string()
+                })
+            }
+            "blood_type" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    healthcare::blood_type(r).to_string()
+                })
+            }
+            "hospital" | "hospital_name" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    healthcare::hospital_name(r)
+                })
+            }
+            "specialty" | "medical_specialty" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    healthcare::specialty(r).to_string()
+                })
+            }
+
+            // === Sports ===
+            "sport" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    sports::sport(r).to_string()
+                })
+            }
+            "team" | "team_name" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    sports::team_name(r)
+                })
+            }
+            "league" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    sports::league(r).to_string()
+                })
+            }
+            "position" | "player_position" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    sports::position(r).to_string()
+                })
+            }
+            "tournament" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    sports::tournament(r).to_string()
+                })
+            }
+
+            // === Hacker / Developer ===
+            "hacker_phrase" | "hacker" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::hacker_phrase(r)
+                })
+            }
+            "programming_language" | "lang" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::programming_language(r).to_string()
+                })
+            }
+            "framework" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::framework(r).to_string()
+                })
+            }
+            "database" | "db" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::database(r).to_string()
+                })
+            }
+            "git_branch" | "branch" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::git_branch(r)
+                })
+            }
+            "git_commit" | "commit_message" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::git_commit_message(r)
+                })
+            }
+            "git_sha" | "sha" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    hacker::git_sha(r)
+                })
+            }
+
+            // === Education ===
+            "university" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    education::university(r).to_string()
+                })
+            }
+            "degree" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    education::degree(r).to_string()
+                })
+            }
+            "major" | "field_of_study" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    education::major(r).to_string()
+                })
+            }
+            "course" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    education::course_name(r)
+                })
+            }
+            "gpa" => {
+                let values: Vec<Option<f64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(education::gpa(&mut *rng) as f64)
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
+            }
+
+            // === Government ===
+            "government_agency" | "agency" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    government::us_agency(r).to_string()
+                })
+            }
+            "passport" | "passport_number" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    government::passport_number(r)
+                })
+            }
+            "drivers_license" | "license_number" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    government::drivers_license(r)
+                })
+            }
+            "tax_id" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    government::tax_id(r)
+                })
+            }
+
+            // === Weather ===
+            "weather_condition" | "weather" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    weather::condition(r).to_string()
+                })
+            }
+            "temperature" | "temp" => {
+                // Support temp[min;max] in Celsius
+                let min: i8 = params.first().and_then(|s| s.parse().ok()).unwrap_or(-20);
+                let max: i8 = params.get(1).and_then(|s| s.parse().ok()).unwrap_or(40);
+                let values: Vec<Option<i64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(rng.random_range(min..=max) as i64)
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
+            }
+            "season" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    weather::season(r).to_string()
+                })
+            }
+            "forecast" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    weather::forecast_summary(r)
+                })
+            }
+
+            // === Astrology ===
+            "zodiac" | "zodiac_sign" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    astrology::zodiac_sign(r).to_string()
+                })
+            }
+            "chinese_zodiac" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    astrology::chinese_zodiac(r).to_string()
+                })
+            }
+            "birthstone" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    astrology::birthstone(r).to_string()
+                })
+            }
+            "horoscope" => {
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    astrology::horoscope(r)
+                })
+            }
+
             _ => {
                 // Default to string
                 let values: Vec<Option<String>> = (0..config.rows)
@@ -1761,6 +2158,163 @@ fn print_available_generators() {
         "  {:20} 1735300000000 (ms)",
         "timestamp_ms[min;max]".white()
     );
+    println!();
+
+    println!("{}", "ENTERTAINMENT".yellow().bold());
+    println!(
+        "  {:20} The Great Adventure, ...",
+        "book_title, book".white()
+    );
+    println!("  {:20} Famous Author Name", "book_author, author".white());
+    println!("  {:20} Mystery, Fantasy, Sci-Fi", "book_genre".white());
+    println!("  {:20} The Big Picture, ...", "movie_title, movie".white());
+    println!(
+        "  {:20} Famous Director Name",
+        "movie_director, director".white()
+    );
+    println!("  {:20} Action, Comedy, Drama", "movie_genre".white());
+    println!("  {:20} Artist Band Name", "music_artist, artist".white());
+    println!("  {:20} Greatest Hits Album", "music_album, album".white());
+    println!("  {:20} Song Title Here", "music_song, song".white());
+    println!("  {:20} Rock, Pop, Jazz, ...", "music_genre".white());
+    println!("  {:20} Guitar, Piano, Drums", "instrument".white());
+    println!("  {:20} Popular Show Name", "tv_show, show".white());
+    println!("  {:20} Epic Game Title", "game_title, game".white());
+    println!(
+        "  {:20} PlayStation, Xbox, PC",
+        "game_platform, platform".white()
+    );
+    println!();
+
+    println!("{}", "FOOD".yellow().bold());
+    println!("  {:20} Pasta, Sushi, Tacos", "dish, food".white());
+    println!("  {:20} Italian, Japanese, Mexican", "cuisine".white());
+    println!("  {:20} Tomato, Cheese, Rice", "ingredient".white());
+    println!("  {:20} Oregano, Cumin, Basil", "spice".white());
+    println!("  {:20} Carrot, Broccoli, Spinach", "vegetable".white());
+    println!("  {:20} Water, Juice, Soda", "beverage, drink".white());
+    println!("  {:20} Espresso, Latte, Mocha", "coffee".white());
+    println!("  {:20} IPA, Stout, Pilsner", "beer".white());
+    println!("  {:20} Merlot, Chardonnay, Pinot", "wine".white());
+    println!("  {:20} Golden Dragon, ...", "restaurant".white());
+    println!();
+
+    println!("{}", "ANIMALS".yellow().bold());
+    println!("  {:20} Dog, Cat, Elephant, ...", "animal".white());
+    println!("  {:20} Labrador, Poodle, ...", "dog, dog_breed".white());
+    println!("  {:20} Persian, Siamese, ...", "cat_breed".white());
+    println!("  {:20} Eagle, Sparrow, Owl", "bird".white());
+    println!("  {:20} Salmon, Tuna, Goldfish", "fish".white());
+    println!("  {:20} Max, Bella, Charlie", "pet_name, pet".white());
+    println!();
+
+    println!("{}", "TRAVEL".yellow().bold());
+    println!("  {:20} Delta, United, Emirates", "airline".white());
+    println!("  {:20} AA1234, UA567", "flight, flight_number".white());
+    println!("  {:20} JFK, LAX, LHR", "airport, airport_code".white());
+    println!(
+        "  {:20} Boeing 737, Airbus A320",
+        "aircraft, aircraft_type".white()
+    );
+    println!("  {:20} 12A, 24F", "seat, seat_number".white());
+    println!("  {:20} Hilton, Marriott", "hotel, hotel_chain".white());
+    println!("  {:20} Suite, Standard, Deluxe", "room_type".white());
+    println!("  {:20} Eiffel Tower, Big Ben", "landmark".white());
+    println!("  {:20} Paris, Tokyo, New York", "destination".white());
+    println!();
+
+    println!("{}", "HEALTHCARE".yellow().bold());
+    println!(
+        "  {:20} Hypertension, Diabetes",
+        "condition, medical_condition".white()
+    );
+    println!("  {:20} Aspirin, Ibuprofen", "medication, medicine".white());
+    println!("  {:20} A+, B-, O+, AB-", "blood_type".white());
+    println!(
+        "  {:20} City General Hospital",
+        "hospital, hospital_name".white()
+    );
+    println!(
+        "  {:20} Cardiology, Neurology",
+        "specialty, medical_specialty".white()
+    );
+    println!();
+
+    println!("{}", "SPORTS".yellow().bold());
+    println!("  {:20} Football, Basketball, Tennis", "sport".white());
+    println!("  {:20} City Lions, ...", "team, team_name".white());
+    println!("  {:20} NFL, NBA, Premier League", "league".white());
+    println!(
+        "  {:20} Quarterback, Forward, ...",
+        "position, player_position".white()
+    );
+    println!("  {:20} World Cup, Super Bowl", "tournament".white());
+    println!();
+
+    println!("{}", "HACKER / DEVELOPER".yellow().bold());
+    println!(
+        "  {:20} We need to hack the...",
+        "hacker_phrase, hacker".white()
+    );
+    println!(
+        "  {:20} Rust, Python, TypeScript",
+        "programming_language, lang".white()
+    );
+    println!("  {:20} React, Django, Rails", "framework".white());
+    println!("  {:20} PostgreSQL, MongoDB", "database, db".white());
+    println!("  {:20} feature/add-login", "git_branch, branch".white());
+    println!(
+        "  {:20} feat: add user auth",
+        "git_commit, commit_message".white()
+    );
+    println!("  {:20} a1b2c3d4e5f6...", "git_sha, sha".white());
+    println!();
+
+    println!("{}", "EDUCATION".yellow().bold());
+    println!("  {:20} Harvard, MIT, Stanford", "university".white());
+    println!("  {:20} B.S., M.A., Ph.D.", "degree".white());
+    println!(
+        "  {:20} Computer Science, Biology",
+        "major, field_of_study".white()
+    );
+    println!("  {:20} CS 101: Intro to...", "course".white());
+    println!("  {:20} 3.85 (0.0-4.0)", "gpa".white());
+    println!();
+
+    println!("{}", "GOVERNMENT".yellow().bold());
+    println!(
+        "  {:20} FBI, IRS, NASA",
+        "government_agency, agency".white()
+    );
+    println!("  {:20} AB1234567", "passport, passport_number".white());
+    println!(
+        "  {:20} D12345678",
+        "drivers_license, license_number".white()
+    );
+    println!("  {:20} 123-45-6789", "tax_id".white());
+    println!();
+
+    println!("{}", "WEATHER".yellow().bold());
+    println!(
+        "  {:20} Sunny, Cloudy, Rainy",
+        "weather_condition, weather".white()
+    );
+    println!(
+        "  {:20} 23.5 (Celsius, default -20 to 40)",
+        "temperature[min;max]".white()
+    );
+    println!("  {:20} Spring, Summer, Fall, Winter", "season".white());
+    println!("  {:20} Partly cloudy with...", "forecast".white());
+    println!();
+
+    println!("{}", "ASTROLOGY".yellow().bold());
+    println!(
+        "  {:20} Aries, Taurus, Gemini, ...",
+        "zodiac, zodiac_sign".white()
+    );
+    println!("  {:20} Rat, Ox, Tiger, ...", "chinese_zodiac".white());
+    println!("  {:20} Diamond, Ruby, Emerald", "birthstone".white());
+    println!("  {:20} Today you will find...", "horoscope".white());
     println!();
 
     println!("{}", "OTHER".yellow().bold());
