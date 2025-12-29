@@ -177,6 +177,60 @@ impl<T> WeightedSelector<T> {
 
         self.items.len() - 1
     }
+
+    /// Pick multiple random items based on weights.
+    ///
+    /// Items may be picked multiple times (with replacement).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the selector is empty.
+    pub fn pick_n<'a, R: ?Sized + Rng>(&'a self, rng: &mut R, n: usize) -> Vec<&'a T> {
+        (0..n).map(|_| self.pick(rng)).collect()
+    }
+
+    /// Pick multiple unique random items based on weights.
+    ///
+    /// Items cannot be picked more than once (without replacement).
+    /// Returns fewer items if n exceeds the number of items available.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the selector is empty.
+    pub fn pick_n_unique<'a, R: ?Sized + Rng>(&'a self, rng: &mut R, n: usize) -> Vec<&'a T>
+    where
+        T: Eq,
+    {
+        let count = n.min(self.items.len());
+        let mut result = Vec::with_capacity(count);
+        let mut used = std::collections::HashSet::new();
+
+        while result.len() < count {
+            let idx = self.pick_index(rng);
+            if used.insert(idx) {
+                result.push(&self.items[idx].item);
+            }
+        }
+
+        result
+    }
+
+    /// Get the total weight of all items.
+    pub fn total_weight(&self) -> f64 {
+        self.items.iter().map(|i| i.weight.max(0.0)).sum()
+    }
+
+    /// Get the probability of picking a specific item.
+    pub fn probability(&self, index: usize) -> Option<f64> {
+        if index >= self.items.len() {
+            return None;
+        }
+        let total = self.total_weight();
+        if total <= 0.0 {
+            return Some(1.0 / self.items.len() as f64);
+        }
+        Some(self.items[index].weight.max(0.0) / total)
+    }
 }
 
 #[cfg(test)]
@@ -296,5 +350,70 @@ mod tests {
 
         let picked = weighted_pick(&mut *rng, &items);
         assert!(["a", "b"].contains(picked));
+    }
+
+    #[test]
+    fn test_pick_n() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let selector = WeightedSelector::new()
+            .add("a", 1.0)
+            .add("b", 1.0)
+            .add("c", 1.0);
+
+        let picked = selector.pick_n(&mut rng, 5);
+        assert_eq!(picked.len(), 5);
+        for item in picked {
+            assert!(["a", "b", "c"].contains(item));
+        }
+    }
+
+    #[test]
+    fn test_pick_n_unique() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let selector = WeightedSelector::new()
+            .add("a", 1.0)
+            .add("b", 1.0)
+            .add("c", 1.0);
+
+        let picked = selector.pick_n_unique(&mut rng, 3);
+        assert_eq!(picked.len(), 3);
+
+        // All should be unique
+        let unique: std::collections::HashSet<_> = picked.iter().collect();
+        assert_eq!(unique.len(), 3);
+    }
+
+    #[test]
+    fn test_pick_n_unique_exceeds() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let selector = WeightedSelector::new().add("a", 1.0).add("b", 1.0);
+
+        // Request more than available
+        let picked = selector.pick_n_unique(&mut rng, 5);
+        assert_eq!(picked.len(), 2);
+    }
+
+    #[test]
+    fn test_total_weight() {
+        let selector = WeightedSelector::new()
+            .add("a", 1.0)
+            .add("b", 2.0)
+            .add("c", 3.0);
+
+        assert!((selector.total_weight() - 6.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_probability() {
+        let selector = WeightedSelector::new()
+            .add("a", 1.0)
+            .add("b", 2.0)
+            .add("c", 3.0);
+
+        // a: 1/6, b: 2/6, c: 3/6
+        assert!((selector.probability(0).unwrap() - 1.0 / 6.0).abs() < 0.001);
+        assert!((selector.probability(1).unwrap() - 2.0 / 6.0).abs() < 0.001);
+        assert!((selector.probability(2).unwrap() - 3.0 / 6.0).abs() < 0.001);
+        assert!(selector.probability(3).is_none());
     }
 }

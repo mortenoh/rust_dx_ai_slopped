@@ -45,16 +45,27 @@ pub mod password;
 pub mod uuid;
 
 // Extended modules
+pub mod animals;
+pub mod astrology;
 pub mod commerce;
+pub mod education;
+pub mod entertainment;
 pub mod file;
+pub mod food;
+pub mod government;
+pub mod hacker;
+pub mod healthcare;
 pub mod locale;
 pub mod network;
 pub mod numeric;
 pub mod personal;
 pub mod science;
 pub mod selection;
+pub mod sports;
 pub mod text;
+pub mod travel;
 pub mod vehicle;
+pub mod weather;
 
 // Feature-gated modules
 #[cfg(feature = "temporal")]
@@ -72,10 +83,16 @@ pub use uuid::{
 };
 
 // Re-export selection
-pub use selection::{weighted_pick, weighted_pick_from, WeightedItem, WeightedSelector};
+pub use selection::{
+    generate_batch, generate_batch_map, generate_batch_nullable, generate_batch_unique,
+    generate_batch_unique_with_retries, generate_until, weighted_pick, weighted_pick_from,
+    UniqueError, UniqueGenerator, UniqueTracker, WeightedItem, WeightedSelector,
+};
 
 // Re-export text
-pub use text::{adjective, from_pattern, noun, verb, word};
+pub use text::{
+    adjective, from_pattern, noun, render, render_default, verb, word, ProviderRegistry, Template,
+};
 
 // Re-export personal
 pub use personal::{email, email_with_domain, first_name, full_name, last_name, phone, username};
@@ -135,4 +152,72 @@ pub use vehicle::{
 pub use science::{
     chemical_element, chemical_symbol, derived_unit, derived_unit_symbol, element_full,
     scientific_notation, unit, unit_symbol,
+};
+
+// Re-export entertainment
+pub use entertainment::{
+    book_author, book_genre, book_publisher, book_series, book_title, game_genre, game_platform,
+    game_studio, game_title, movie_actor, movie_director, movie_genre, movie_rating, movie_title,
+    music_album, music_artist, music_genre, music_instrument, music_song, tv_channel, tv_genre,
+    tv_network, tv_show,
+};
+
+// Re-export food
+pub use food::{
+    beer_style, beverage, coffee_drink, cuisine, dessert, dish, fruit, ingredient, meal_type, meat,
+    restaurant_name, restaurant_type, spice, tea_type, vegetable, wine_variety,
+};
+
+// Re-export animals
+pub use animals::{animal, bird, cat_breed, dog_breed, fish, insect, mammal, pet_name, reptile};
+
+// Re-export travel
+pub use travel::{
+    aircraft_type, airline, airport_code, airport_name, destination, flight_number, hotel_chain,
+    hotel_name, landmark, room_type, seat, seat_class,
+};
+
+// Re-export healthcare
+pub use healthcare::{
+    blood_type, body_part, condition, doctor_title, hospital_name, medication, organ, specialty,
+    symptom,
+};
+
+// Re-export sports
+pub use sports::{championship, league, mascot, position, score, sport, team_name, tournament};
+
+// Re-export hacker
+pub use hacker::{
+    cloud_provider, database, devops_tool, framework, git_branch, git_commit_message, git_sha,
+    git_sha_full, hacker_abbreviation, hacker_adjective, hacker_noun, hacker_phrase, hacker_verb,
+    programming_language,
+};
+
+// Re-export education
+pub use education::{
+    classroom, course_code, course_name, degree, degree_type, gpa, grade, major, school_name,
+    subject, university,
+};
+
+// Re-export government
+pub use government::{
+    bill_number, case_number, document_type, drivers_license, drivers_license_state,
+    government_position, passport_number, permit_number, political_party, tax_id, us_agency,
+    voter_registration_number,
+};
+
+// Re-export weather
+pub use weather::condition as weather_condition;
+pub use weather::{
+    air_quality, cloud_coverage, dew_point_f, forecast_summary, humidity, precipitation_chance,
+    pressure_mb, season, temperature_c, temperature_f, temperature_f_season, uv_index, uv_level,
+    visibility_miles, wind_direction, wind_speed_kmh, wind_speed_mph,
+};
+
+// Re-export astrology
+pub use astrology::{
+    astrological_house, birthstone, birthstone_for_month, chinese_element, chinese_zodiac,
+    chinese_zodiac_full, element_for_sign, horoscope, modality_for_sign,
+    moon_phase as astro_moon_phase, planet, zodiac_element, zodiac_modality, zodiac_sign,
+    zodiac_sign_with_dates,
 };
