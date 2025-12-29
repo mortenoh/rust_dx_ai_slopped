@@ -67,13 +67,13 @@ pub enum PolarsCommand {
 
         /// Column definitions as name:type pairs (comma-separated)
         ///
-        /// PRIMITIVES:
-        ///   id        - Sequential integers (1, 2, 3, ...)
-        ///   int       - Random integers (aliases: integer, i64)
-        ///   float     - Random floats (aliases: f64, double)
-        ///   string    - Random alphanumeric (aliases: str, text)
-        ///   bool      - Random true/false (alias: boolean)
-        ///   date      - Random dates (2020-2025)
+        /// PRIMITIVES (with optional parameters):
+        ///   id[start;step]  - Sequential integers (default: 1, 1)
+        ///   int[min;max]    - Random integers (default: 0, 1000)
+        ///   float[min;max]  - Random floats (default: 0.0, 1000.0)
+        ///   string[len]     - Random alphanumeric (default: 10)
+        ///   bool[prob]      - Random true/false (default: 0.5)
+        ///   date            - Random dates (2020-2025)
         ///
         /// CATEGORIES:
         ///   category  - Generic cat_0..cat_N (--categories)

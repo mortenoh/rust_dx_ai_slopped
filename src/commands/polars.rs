@@ -447,24 +447,72 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
         Box::new(rand::rng())
     };
 
+    // Column definition with optional parameters
+    struct ColDef<'a> {
+        name: &'a str,
+        col_type: &'a str,
+        params: Vec<&'a str>,
+    }
+
+    // Parse column type and extract parameters: "int[0;100]" -> ("int", ["0", "100"])
+    fn parse_col_type(type_str: &str) -> (&str, Vec<&str>) {
+        if let Some(bracket_start) = type_str.find('[') {
+            if let Some(bracket_end) = type_str.find(']') {
+                let base_type = &type_str[..bracket_start];
+                let params_str = &type_str[bracket_start + 1..bracket_end];
+                // Use semicolon as separator to avoid conflict with name:type colon
+                let params: Vec<&str> = params_str.split(';').map(|s| s.trim()).collect();
+                return (base_type, params);
+            }
+        }
+        (type_str, vec![])
+    }
+
     // Default columns if none specified
-    let col_defs: Vec<(&str, &str)> = if config.columns.is_empty() {
+    let col_defs: Vec<ColDef> = if config.columns.is_empty() {
         vec![
-            ("id", "id"),
-            ("store", "city"),
-            ("item", "fruit"),
-            ("value", "int"),
+            ColDef {
+                name: "id",
+                col_type: "id",
+                params: vec![],
+            },
+            ColDef {
+                name: "store",
+                col_type: "city",
+                params: vec![],
+            },
+            ColDef {
+                name: "item",
+                col_type: "fruit",
+                params: vec![],
+            },
+            ColDef {
+                name: "value",
+                col_type: "int",
+                params: vec![],
+            },
         ]
     } else {
         config
             .columns
             .iter()
             .map(|c| {
-                let parts: Vec<&str> = c.split(':').collect();
-                if parts.len() == 2 {
-                    (parts[0], parts[1])
+                // Split only on the first colon to handle name:type[params]
+                if let Some(colon_pos) = c.find(':') {
+                    let name = &c[..colon_pos];
+                    let type_str = &c[colon_pos + 1..];
+                    let (col_type, params) = parse_col_type(type_str);
+                    ColDef {
+                        name,
+                        col_type,
+                        params,
+                    }
                 } else {
-                    (c.as_str(), "string")
+                    ColDef {
+                        name: c.as_str(),
+                        col_type: "string",
+                        params: vec![],
+                    }
                 }
             })
             .collect()
@@ -481,57 +529,89 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
     // Generate columns
     let mut series_vec: Vec<Series> = Vec::new();
 
-    for (name, col_type) in &col_defs {
-        let series = match *col_type {
+    for col_def in &col_defs {
+        let name = col_def.name;
+        let col_type = col_def.col_type;
+        let params = &col_def.params;
+
+        let series = match col_type {
             "id" => {
                 // Sequential ID column (1, 2, 3, ..., n) - never null
                 id_columns.push(name);
-                let values: Vec<i64> = (1..=config.rows as i64).collect();
-                Series::new((*name).into(), values)
+                // Support id(start) or id(start, step)
+                let start: i64 = params.first().and_then(|s| s.parse().ok()).unwrap_or(1);
+                let step: i64 = params.get(1).and_then(|s| s.parse().ok()).unwrap_or(1);
+                let values: Vec<i64> = (0..config.rows as i64).map(|i| start + i * step).collect();
+                Series::new(name.into(), values)
             }
             "int" | "integer" | "i64" => {
+                // Support int(min, max)
+                let min: i64 = params
+                    .first()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(config.min);
+                let max: i64 = params
+                    .get(1)
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(config.max);
                 let values: Vec<Option<i64>> = (0..config.rows)
                     .map(|_| {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
                             None
                         } else {
-                            Some(rng.random_range(config.min..=config.max))
+                            Some(rng.random_range(min..=max))
                         }
                     })
                     .collect();
-                Series::new((*name).into(), values)
+                Series::new(name.into(), values)
             }
             "float" | "f64" | "double" => {
+                // Support float(min, max)
+                let min: f64 = params
+                    .first()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(config.min as f64);
+                let max: f64 = params
+                    .get(1)
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(config.max as f64);
                 let values: Vec<Option<f64>> = (0..config.rows)
                     .map(|_| {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
                             None
                         } else {
-                            Some(rng.random_range(config.min as f64..=config.max as f64))
+                            Some(rng.random_range(min..=max))
                         }
                     })
                     .collect();
-                Series::new((*name).into(), values)
+                Series::new(name.into(), values)
             }
             "string" | "str" | "text" => {
+                // Support string(length)
+                let len: usize = params
+                    .first()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(config.string_len);
                 let values: Vec<Option<String>> = (0..config.rows)
                     .map(|_| {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
                             None
                         } else {
-                            Some(generators::alphanumeric(&mut *rng, config.string_len))
+                            Some(generators::alphanumeric(&mut *rng, len))
                         }
                     })
                     .collect();
-                Series::new((*name).into(), values)
+                Series::new(name.into(), values)
             }
             "bool" | "boolean" => {
+                // Support bool(probability) where probability is chance of true (0.0-1.0)
+                let prob: f64 = params.first().and_then(|s| s.parse().ok()).unwrap_or(0.5);
                 let values: Vec<Option<bool>> = (0..config.rows)
                     .map(|_| {
                         if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
                             None
                         } else {
-                            Some(rng.random_bool(0.5))
+                            Some(rng.random_bool(prob))
                         }
                     })
                     .collect();
@@ -1193,21 +1273,30 @@ fn print_available_generators() {
     println!("{}", "═".repeat(60));
     println!();
 
-    println!("{}", "PRIMITIVES".yellow().bold());
-    println!("  {:20} Sequential integers (1, 2, 3, ...)", "id".white());
     println!(
-        "  {:20} Random integers (--min/--max)",
-        "int, integer, i64".white()
+        "{}",
+        "PRIMITIVES (with optional parameters)".yellow().bold()
     );
     println!(
-        "  {:20} Random floats (--min/--max)",
-        "float, f64, double".white()
+        "  {:20} Sequential integers (default: 1, 1)",
+        "id[start;step]".white()
     );
     println!(
-        "  {:20} Random alphanumeric (--string-len)",
-        "string, str, text".white()
+        "  {:20} Random integers (default: 0, 1000)",
+        "int[min;max]".white()
     );
-    println!("  {:20} Random true/false", "bool, boolean".white());
+    println!(
+        "  {:20} Random floats (default: 0.0, 1000.0)",
+        "float[min;max]".white()
+    );
+    println!(
+        "  {:20} Random alphanumeric (default: 10)",
+        "string[len]".white()
+    );
+    println!(
+        "  {:20} Random true/false (default: 0.5)",
+        "bool[prob]".white()
+    );
     println!("  {:20} Random dates (2020-2025)", "date".white());
     println!();
 
@@ -1281,4 +1370,9 @@ fn print_available_generators() {
     println!("  dx polars random -c \"id:id,name:full_name,email:email\"");
     println!("  dx polars random -c \"id:id,card:credit_card,ip:ipv4\" -n 100");
     println!("  dx polars random -c \"id:id,book:isbn,price:float\" -f csv");
+    println!();
+
+    println!("{}", "PARAMETER EXAMPLES".cyan().bold());
+    println!("  dx polars random -c \"id:id[100;1],small:int[0;10],big:int[1000;9999]\"");
+    println!("  dx polars random -c \"pct:float[0;100],code:string[5],active:bool[0.8]\"");
 }
