@@ -536,14 +536,7 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
 
     // Default columns if none specified
     let col_defs: Vec<(&str, &str)> = if config.columns.is_empty() {
-        vec![
-            ("id", "int"),
-            ("name", "string"),
-            ("value", "float"),
-            ("category", "category"),
-            ("active", "bool"),
-            ("created_at", "date"),
-        ]
+        vec![("id", "id"), ("cat", "category"), ("value", "float")]
     } else {
         config
             .columns
@@ -564,11 +557,20 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
         .map(|i| format!("cat_{}", i))
         .collect();
 
+    // Track ID columns for sorting
+    let mut id_columns: Vec<&str> = Vec::new();
+
     // Generate columns
     let mut series_vec: Vec<Series> = Vec::new();
 
     for (name, col_type) in &col_defs {
         let series = match *col_type {
+            "id" => {
+                // Sequential ID column (1, 2, 3, ..., n) - never null
+                id_columns.push(name);
+                let values: Vec<i64> = (1..=config.rows as i64).collect();
+                Series::new((*name).into(), values)
+            }
             "int" | "integer" | "i64" => {
                 let values: Vec<Option<i64>> = (0..config.rows)
                     .map(|_| {
@@ -665,8 +667,16 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
 
     // Convert Vec<Series> to Vec<Column>
     let columns_vec: Vec<Column> = series_vec.into_iter().map(|s| s.into()).collect();
-    let df = DataFrame::new(columns_vec)?;
+    let mut df = DataFrame::new(columns_vec)?;
     let gen_time = start.elapsed();
+
+    // Sort by ID columns if any exist
+    if !id_columns.is_empty() {
+        df = df.sort(
+            id_columns.iter().copied(),
+            SortMultipleOptions::default(),
+        )?;
+    }
 
     // Write to file
     let write_start = Instant::now();
@@ -676,14 +686,14 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
             let file = std::fs::File::create(config.output)
                 .with_context(|| format!("Failed to create file: {}", config.output.display()))?;
             ParquetWriter::new(file)
-                .finish(&mut df.clone())
+                .finish(&mut df)
                 .with_context(|| "Failed to write Parquet")?;
         }
         Format::Csv => {
             let file = std::fs::File::create(config.output)
                 .with_context(|| format!("Failed to create file: {}", config.output.display()))?;
             CsvWriter::new(file)
-                .finish(&mut df.clone())
+                .finish(&mut df)
                 .with_context(|| "Failed to write CSV")?;
         }
     }

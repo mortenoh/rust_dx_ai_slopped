@@ -50,8 +50,8 @@ pub enum PolarsCommand {
         #[arg(short = 'n', long, default_value = "10000")]
         rows: usize,
 
-        /// Column definitions: name:type (e.g., "id:int,name:string,value:float,active:bool")
-        /// Types: int, float, string, bool, date, category
+        /// Column definitions: name:type (e.g., "id:id,name:string,score:float")
+        /// Types: id (sequential 1..n), int, float, string, bool, date, category
         #[arg(short, long, value_delimiter = ',')]
         columns: Vec<String>,
 
