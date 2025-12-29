@@ -7,4 +7,10 @@ ignore = [
     "RUSTSEC-2024-0436",
     # yaml-rust - used by syntect (transitive, unmaintained)
     "RUSTSEC-2024-0320",
+    # rsa - Marvin Attack timing sidechannel, used by jsonwebtoken (no fix available)
+    "RUSTSEC-2023-0071",
+    # instant - unmaintained, used by notify/notify-debouncer-mini (transitive)
+    "RUSTSEC-2024-0384",
+    # number_prefix - unmaintained, used by indicatif (dev-dependency only)
+    "RUSTSEC-2025-0119",
 ]
