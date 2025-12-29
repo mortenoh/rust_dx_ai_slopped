@@ -40,9 +40,9 @@
 //! - Remaining 10: a-zA-Z0-9 (alphanumeric)
 
 mod client;
+pub mod data_elements;
 pub mod data_sets;
 pub mod data_values;
-pub mod data_elements;
 pub mod info;
 pub mod org_unit_group_sets;
 pub mod org_unit_groups;
