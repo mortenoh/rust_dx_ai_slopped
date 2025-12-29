@@ -54,7 +54,7 @@ pub fn validate_isbn10(isbn: &str) -> bool {
         })
         .sum();
 
-    sum % 11 == 0
+    sum.is_multiple_of(11)
 }
 
 /// Validate an ISBN-13 number.
@@ -75,7 +75,7 @@ pub fn validate_isbn13(isbn: &str) -> bool {
         .map(|(i, &d)| if i % 2 == 0 { d } else { d * 3 })
         .sum();
 
-    sum % 10 == 0
+    sum.is_multiple_of(10)
 }
 
 /// Calculate the ISBN-10 check digit.

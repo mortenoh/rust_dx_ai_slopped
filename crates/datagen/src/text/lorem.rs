@@ -237,7 +237,7 @@ pub fn paragraphs<R: ?Sized + Rng>(rng: &mut R, count: usize) -> String {
 pub fn title<R: ?Sized + Rng>(rng: &mut R, word_count: usize) -> String {
     let text = words(rng, word_count);
     text.split_whitespace()
-        .map(|word| capitalize_first(word))
+        .map(capitalize_first)
         .collect::<Vec<_>>()
         .join(" ")
 }

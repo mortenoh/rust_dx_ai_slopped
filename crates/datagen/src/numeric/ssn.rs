@@ -84,6 +84,7 @@ pub fn ssn_no<R: ?Sized + Rng>(rng: &mut R) -> String {
 }
 
 /// Calculate the first check digit for Norwegian SSN.
+#[allow(clippy::too_many_arguments)]
 fn calculate_no_check1(
     d1: u32,
     d2: u32,
@@ -95,7 +96,7 @@ fn calculate_no_check1(
     i2: u32,
     i3: u32,
 ) -> u32 {
-    let sum = 3 * d1 + 7 * d2 + 6 * m1 + 1 * m2 + 8 * y1 + 9 * y2 + 4 * i1 + 5 * i2 + 2 * i3;
+    let sum = 3 * d1 + 7 * d2 + 6 * m1 + m2 + 8 * y1 + 9 * y2 + 4 * i1 + 5 * i2 + 2 * i3;
     let remainder = sum % 11;
     if remainder == 0 {
         0
@@ -105,6 +106,7 @@ fn calculate_no_check1(
 }
 
 /// Calculate the second check digit for Norwegian SSN.
+#[allow(clippy::too_many_arguments)]
 fn calculate_no_check2(
     d1: u32,
     d2: u32,
