@@ -377,6 +377,22 @@ fi
 rm -rf "$TMPDIR"
 
 # ============================================================================
+section "DHIS2 Command"
+# ============================================================================
+
+# UID generation is offline and fast
+test_cmd "dhis2 uid" dhis2 uid
+test_cmd_contains "dhis2 uid multiple" "" dhis2 uid 3
+test_cmd_contains "dhis2 uid validate valid" "valid" dhis2 uid --validate "AbCdEfGhIjK"
+# Invalid UID returns exit code 1, so we just check it runs
+if $DX dhis2 uid --validate "123" 2>&1 | grep -q "NOT a valid"; then
+    pass "dhis2 uid validate invalid"
+else
+    fail "dhis2 uid validate invalid" "did not detect invalid UID"
+fi
+test_cmd "dhis2 --help" dhis2 --help
+
+# ============================================================================
 section "Completions Command"
 # ============================================================================
 

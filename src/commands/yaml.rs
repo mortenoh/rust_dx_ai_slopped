@@ -41,11 +41,11 @@ fn read_input(input: Option<PathBuf>) -> Result<String> {
 fn cmd_format(input: Option<PathBuf>) -> Result<()> {
     let content = read_input(input)?;
 
-    // Parse and re-serialize to format
-    let value: serde_yaml::Value =
-        serde_yaml::from_str(&content).context("Failed to parse YAML")?;
+    // Parse and re-serialize to format (using serde_json::Value as intermediate)
+    let value: serde_json::Value =
+        serde_saphyr::from_str(&content).context("Failed to parse YAML")?;
 
-    let output = serde_yaml::to_string(&value).context("Failed to serialize YAML")?;
+    let output = serde_saphyr::to_string(&value).context("Failed to serialize YAML")?;
     print!("{}", output);
     Ok(())
 }
@@ -53,7 +53,7 @@ fn cmd_format(input: Option<PathBuf>) -> Result<()> {
 fn cmd_validate(input: Option<PathBuf>, quiet: bool) -> Result<()> {
     let content = read_input(input)?;
 
-    match serde_yaml::from_str::<serde_yaml::Value>(&content) {
+    match serde_saphyr::from_str::<serde_json::Value>(&content) {
         Ok(_) => {
             if !quiet {
                 println!("{}", "Valid YAML".green());
@@ -74,7 +74,7 @@ fn cmd_to_json(input: Option<PathBuf>, pretty: bool) -> Result<()> {
 
     // Parse YAML
     let value: serde_json::Value =
-        serde_yaml::from_str(&content).context("Failed to parse YAML")?;
+        serde_saphyr::from_str(&content).context("Failed to parse YAML")?;
 
     // Output as JSON
     let output = if pretty {
@@ -91,11 +91,11 @@ fn cmd_from_json(input: Option<PathBuf>) -> Result<()> {
     let content = read_input(input)?;
 
     // Parse JSON
-    let value: serde_yaml::Value =
+    let value: serde_json::Value =
         serde_json::from_str(&content).context("Failed to parse JSON")?;
 
     // Output as YAML
-    let output = serde_yaml::to_string(&value).context("Failed to serialize YAML")?;
+    let output = serde_saphyr::to_string(&value).context("Failed to serialize YAML")?;
     print!("{}", output);
     Ok(())
 }
