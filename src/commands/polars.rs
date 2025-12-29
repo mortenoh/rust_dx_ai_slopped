@@ -392,7 +392,16 @@ fn format_value_json(series: &Series, idx: usize) -> serde_json::Value {
             .str()
             .ok()
             .and_then(|v| v.get(idx))
-            .map(|v| serde_json::json!(v))
+            .map(|v| {
+                // Try to parse as JSON if it looks like JSON (starts with { or [)
+                if (v.starts_with('{') && v.ends_with('}'))
+                    || (v.starts_with('[') && v.ends_with(']'))
+                {
+                    serde_json::from_str(v).unwrap_or_else(|_| serde_json::json!(v))
+                } else {
+                    serde_json::json!(v)
+                }
+            })
             .unwrap_or(serde_json::Value::Null),
         _ => series
             .get(idx)
