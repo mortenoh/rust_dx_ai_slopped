@@ -391,6 +391,7 @@ else
     fail "dhis2 uid validate invalid" "did not detect invalid UID"
 fi
 test_cmd "dhis2 --help" dhis2 --help
+test_cmd_contains "dhis2 data-values --help" "data-set" dhis2 data-values --help
 
 # ============================================================================
 section "Completions Command"
