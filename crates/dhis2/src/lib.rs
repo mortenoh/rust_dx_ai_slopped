@@ -53,8 +53,8 @@ pub mod uid;
 
 pub use client::Dhis2Client;
 
-/// Default DHIS2 demo server URL.
-pub const DEFAULT_SERVER: &str = "https://play.im.dhis2.org/stable-2-42-3-1";
+/// Default DHIS2 demo server URL (redirects to latest version).
+pub const DEFAULT_SERVER: &str = "https://play.dhis2.org/demo";
 
 /// Default username for the demo server.
 pub const DEFAULT_USER: &str = "admin";

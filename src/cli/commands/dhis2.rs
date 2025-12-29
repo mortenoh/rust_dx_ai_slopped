@@ -9,7 +9,7 @@ pub struct Dhis2Args {
     #[arg(
         long,
         env = "DHIS2_SERVER",
-        default_value = "https://play.im.dhis2.org/stable-2-42-3-1",
+        default_value = "https://play.dhis2.org/demo",
         global = true
     )]
     pub server: String,
