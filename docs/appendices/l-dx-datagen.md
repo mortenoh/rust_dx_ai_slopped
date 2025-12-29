@@ -4,7 +4,7 @@ Fast, comprehensive fake data generation library for Rust. Powers the `dx polars
 
 ## Overview
 
-dx-datagen provides 100+ generators across 15+ categories for generating realistic test data. All generators are:
+dx-datagen provides 150+ generators across 20+ categories for generating realistic test data. All generators are:
 
 - **Reproducible** with seeding support
 - **Trait object compatible** for dynamic dispatch
@@ -263,6 +263,167 @@ categories::animal(&mut rng);        // "dog"
 categories::planet(&mut rng);        // "Mars"
 ```
 
+### Entertainment (`entertainment`)
+
+```rust
+use dx_datagen::entertainment;
+
+// Books
+entertainment::book_title(&mut rng);     // "The Great Adventure"
+entertainment::book_author(&mut rng);    // "Jane Austen"
+entertainment::book_genre(&mut rng);     // "Mystery"
+entertainment::book_publisher(&mut rng); // "Penguin Books"
+
+// Movies
+entertainment::movie_title(&mut rng);    // "The Last Journey"
+entertainment::movie_director(&mut rng); // "Steven Spielberg"
+entertainment::movie_genre(&mut rng);    // "Action"
+
+// Music
+entertainment::music_artist(&mut rng);   // "The Beatles"
+entertainment::music_album(&mut rng);    // "Greatest Hits"
+entertainment::music_song(&mut rng);     // "Summer Nights"
+entertainment::music_genre(&mut rng);    // "Rock"
+entertainment::music_instrument(&mut rng); // "Guitar"
+
+// TV & Games
+entertainment::tv_show(&mut rng);        // "Breaking News"
+entertainment::game_title(&mut rng);     // "Epic Quest"
+entertainment::game_platform(&mut rng);  // "PlayStation"
+entertainment::game_genre(&mut rng);     // "RPG"
+```
+
+### Food (`food`)
+
+```rust
+use dx_datagen::food;
+
+food::dish(&mut rng);                // "Pasta Carbonara"
+food::cuisine(&mut rng);             // "Italian"
+food::ingredient(&mut rng);          // "Olive Oil"
+food::spice(&mut rng);               // "Paprika"
+food::vegetable(&mut rng);           // "Broccoli"
+food::beverage(&mut rng);            // "Orange Juice"
+food::coffee(&mut rng);              // "Cappuccino"
+food::beer(&mut rng);                // "IPA"
+food::wine(&mut rng);                // "Chardonnay"
+food::restaurant(&mut rng);          // "The Golden Fork"
+```
+
+### Animals (`animals`)
+
+```rust
+use dx_datagen::animals;
+
+animals::animal(&mut rng);           // "Lion"
+animals::dog_breed(&mut rng);        // "Golden Retriever"
+animals::cat_breed(&mut rng);        // "Siamese"
+animals::bird(&mut rng);             // "Eagle"
+animals::fish(&mut rng);             // "Salmon"
+animals::pet_name(&mut rng);         // "Buddy"
+```
+
+### Travel (`travel`)
+
+```rust
+use dx_datagen::travel;
+
+travel::airline(&mut rng);           // "United Airlines"
+travel::flight_number(&mut rng);     // "UA1234"
+travel::airport_code(&mut rng);      // "JFK"
+travel::airport_name(&mut rng);      // "John F. Kennedy International"
+travel::aircraft_type(&mut rng);     // "Boeing 737"
+travel::seat(&mut rng);              // "12A"
+travel::hotel_chain(&mut rng);       // "Marriott"
+travel::room_type(&mut rng);         // "Suite"
+travel::landmark(&mut rng);          // "Eiffel Tower"
+travel::destination(&mut rng);       // "Paris, France"
+```
+
+### Healthcare (`healthcare`)
+
+```rust
+use dx_datagen::healthcare;
+
+healthcare::condition(&mut rng);     // "Hypertension"
+healthcare::medication(&mut rng);    // "Aspirin"
+healthcare::blood_type(&mut rng);    // "O+"
+healthcare::hospital(&mut rng);      // "General Hospital"
+healthcare::specialty(&mut rng);     // "Cardiology"
+```
+
+### Sports (`sports`)
+
+```rust
+use dx_datagen::sports;
+
+sports::sport(&mut rng);             // "Basketball"
+sports::team(&mut rng);              // "Lakers"
+sports::league(&mut rng);            // "NBA"
+sports::position(&mut rng);          // "Point Guard"
+sports::tournament(&mut rng);        // "World Cup"
+```
+
+### Hacker (`hacker`)
+
+```rust
+use dx_datagen::hacker;
+
+hacker::hacker_phrase(&mut rng);     // "Compiling quantum flux..."
+hacker::programming_language(&mut rng); // "Rust"
+hacker::framework(&mut rng);         // "React"
+hacker::database(&mut rng);          // "PostgreSQL"
+hacker::cloud_provider(&mut rng);    // "AWS"
+hacker::git_branch(&mut rng);        // "feature/login"
+hacker::git_commit_message(&mut rng); // "Fix null pointer exception"
+hacker::git_sha(&mut rng);           // "a1b2c3d4e5f6"
+```
+
+### Education (`education`)
+
+```rust
+use dx_datagen::education;
+
+education::university(&mut rng);     // "MIT"
+education::degree(&mut rng);         // "Bachelor of Science"
+education::major(&mut rng);          // "Computer Science"
+education::course_name(&mut rng);    // "Data Structures"
+education::gpa(&mut rng);            // 3.85
+```
+
+### Government (`government`)
+
+```rust
+use dx_datagen::government;
+
+government::us_agency(&mut rng);     // "FBI"
+government::passport_number(&mut rng); // "AB1234567"
+government::drivers_license(&mut rng); // "D1234567890123"
+government::tax_id(&mut rng);        // "12-3456789"
+```
+
+### Weather (`weather`)
+
+```rust
+use dx_datagen::weather;
+
+weather::condition(&mut rng);        // "Sunny"
+weather::temperature_celsius(&mut rng); // 22
+weather::season(&mut rng);           // "Summer"
+weather::forecast_summary(&mut rng); // "Partly cloudy with chance of rain"
+```
+
+### Astrology (`astrology`)
+
+```rust
+use dx_datagen::astrology;
+
+astrology::zodiac_sign(&mut rng);    // "Aries"
+astrology::chinese_zodiac(&mut rng); // "Dragon"
+astrology::birthstone(&mut rng);     // "Ruby"
+astrology::horoscope(&mut rng);      // "Today brings new opportunities..."
+```
+
 ## Locale Support
 
 Generate locale-specific data for names, addresses, and phone numbers:
@@ -301,6 +462,12 @@ es_es::dni(&mut rng);                // Spanish national ID
 | `de_DE` | German | Bundesländer (states) |
 | `fr_FR` | French | Regions, SIRET/SIREN |
 | `es_ES` | Spanish | Communities, DNI/NIE |
+| `ja_JP` | Japanese | Prefectures, Japanese names |
+| `zh_CN` | Chinese (Simplified) | Provinces, Chinese names |
+| `pt_BR` | Portuguese (Brazil) | States, Brazilian names |
+| `it_IT` | Italian | Regions, Italian names |
+| `nl_NL` | Dutch | Provinces, Dutch names |
+| `sv_SE` | Swedish | Counties, Swedish names |
 
 ## Feature Flags
 

@@ -109,7 +109,7 @@ value                Int64              0       498.23         0.00       999.00
 
 ## random
 
-Generate random test data with 60+ generator types and output to screen or file.
+Generate random test data with 100+ generator types and output to screen or file.
 
 ### Usage
 
@@ -185,7 +185,7 @@ dx polars random -c "active:bool[0.8]"        # 80% true
 | `address` | - | Street address | "123 Main St" |
 | `password` | `[len]` | Random password | "Kx9#mPq2!" |
 
-**Supported locales:** `en` (default), `de`, `fr`, `es`, `no`
+**Supported locales:** `en` (default), `de`, `fr`, `es`, `no`, `ja`, `zh`, `pt`, `it`, `nl`, `sv`
 
 **Examples:**
 ```bash
@@ -315,6 +315,138 @@ dx polars random -c "geometry:point[40.4;41.0;-74.3;-73.7]" -f json
 | `department`, `dept` | Engineering, Marketing, Sales, HR, Finance, Support, Operations, Legal |
 | `day` | Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday |
 | `size` | XS, S, M, L, XL, XXL |
+
+#### Entertainment
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `book_title` | Book title | "The Great Adventure" |
+| `book_author` | Author name | "Jane Austen" |
+| `book_genre` | Book genre | "Mystery" |
+| `book_publisher` | Publisher name | "Penguin Books" |
+| `movie_title` | Movie title | "The Last Journey" |
+| `movie_director` | Director name | "Steven Spielberg" |
+| `movie_genre` | Movie genre | "Action" |
+| `music_artist` | Music artist | "The Beatles" |
+| `music_album` | Album name | "Greatest Hits" |
+| `music_song` | Song title | "Summer Nights" |
+| `music_genre` | Music genre | "Rock" |
+| `instrument` | Musical instrument | "Guitar" |
+| `tv_show` | TV show name | "Breaking News" |
+| `game_title` | Video game title | "Epic Quest" |
+| `game_platform` | Gaming platform | "PlayStation" |
+| `game_genre` | Game genre | "RPG" |
+
+#### Food
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `dish` | Dish name | "Pasta Carbonara" |
+| `cuisine` | Cuisine type | "Italian" |
+| `ingredient` | Cooking ingredient | "Olive Oil" |
+| `spice` | Spice name | "Paprika" |
+| `vegetable` | Vegetable name | "Broccoli" |
+| `beverage` | Beverage name | "Orange Juice" |
+| `coffee` | Coffee drink | "Cappuccino" |
+| `beer` | Beer style | "IPA" |
+| `wine` | Wine variety | "Chardonnay" |
+| `restaurant` | Restaurant name | "The Golden Fork" |
+
+#### Animals
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `animal` | Animal name | "Lion" |
+| `dog_breed` | Dog breed | "Golden Retriever" |
+| `cat_breed` | Cat breed | "Siamese" |
+| `bird` | Bird species | "Eagle" |
+| `fish` | Fish species | "Salmon" |
+| `pet_name` | Pet name | "Buddy" |
+
+#### Travel
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `airline` | Airline name | "United Airlines" |
+| `flight` | Flight number | "UA1234" |
+| `airport` | Airport code | "JFK" |
+| `airport_name` | Airport full name | "John F. Kennedy International" |
+| `aircraft` | Aircraft type | "Boeing 737" |
+| `seat` | Seat number | "12A" |
+| `hotel` | Hotel chain | "Marriott" |
+| `room_type` | Room type | "Suite" |
+| `landmark` | Landmark name | "Eiffel Tower" |
+| `destination` | Travel destination | "Paris, France" |
+
+#### Healthcare
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `condition` | Medical condition | "Hypertension" |
+| `medication` | Medication name | "Aspirin" |
+| `blood_type` | Blood type | "O+" |
+| `hospital` | Hospital name | "General Hospital" |
+| `specialty` | Medical specialty | "Cardiology" |
+
+#### Sports
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `sport` | Sport name | "Basketball" |
+| `team` | Team name | "Lakers" |
+| `league` | Sports league | "NBA" |
+| `position` | Player position | "Point Guard" |
+| `tournament` | Tournament name | "World Cup" |
+
+#### Hacker/Developer
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `hacker` | Hacker phrase | "Compiling quantum flux..." |
+| `programming_language` | Programming language | "Rust" |
+| `framework` | Software framework | "React" |
+| `database` | Database name | "PostgreSQL" |
+| `cloud_provider` | Cloud provider | "AWS" |
+| `git_branch` | Git branch name | "feature/login" |
+| `git_commit` | Git commit message | "Fix null pointer exception" |
+| `git_sha` | Git SHA | "a1b2c3d4" |
+
+#### Education
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `university` | University name | "MIT" |
+| `degree` | Degree type | "Bachelor of Science" |
+| `major` | Field of study | "Computer Science" |
+| `course` | Course name | "Data Structures" |
+| `gpa` | GPA score | 3.85 |
+
+#### Government
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `us_agency` | US government agency | "FBI" |
+| `passport` | Passport number | "AB1234567" |
+| `drivers_license` | Driver's license | "D1234567890123" |
+| `tax_id` | Tax ID number | "12-3456789" |
+
+#### Weather
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `weather` | Weather condition | "Sunny" |
+| `temperature` | Temperature (Celsius) | 22 |
+| `season` | Season name | "Summer" |
+| `forecast` | Weather forecast | "Partly cloudy with chance of rain" |
+
+#### Astrology
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `zodiac` | Zodiac sign | "Aries" |
+| `chinese_zodiac` | Chinese zodiac | "Dragon" |
+| `birthstone` | Birthstone | "Ruby" |
+| `horoscope` | Horoscope text | "Today brings new opportunities..." |
 
 ### Output Formats
 

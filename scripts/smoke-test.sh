@@ -396,6 +396,48 @@ test_cmd_contains "dhis2 data-values --help" "data-set" dhis2 data-values --help
 test_cmd_contains "dhis2 data-values fetch" "DataElement" dhis2 dv --data-set lyLU2wR22tC --org-unit DiszpKrYNg8 --start-date 2024-01-01 --end-date 2024-12-31 --limit 3
 
 # ============================================================================
+section "Polars Command"
+# ============================================================================
+
+# Basic random generation
+test_cmd "polars random basic" polars random -n 5 -c "id:id,name:name"
+test_cmd_contains "polars random with types" "id" polars random -n 3 -c "id:id,email:email,phone:phone"
+
+# New entertainment generators
+test_cmd "polars random entertainment" polars random -n 3 -c "book:book_title,movie:movie_title,artist:music_artist"
+
+# New food generators
+test_cmd "polars random food" polars random -n 3 -c "dish:dish,cuisine:cuisine,beverage:beverage"
+
+# New animal generators
+test_cmd "polars random animals" polars random -n 3 -c "animal:animal,dog:dog_breed,pet:pet_name"
+
+# New travel generators
+test_cmd "polars random travel" polars random -n 3 -c "airline:airline,airport:airport,destination:destination"
+
+# New healthcare generators
+test_cmd "polars random healthcare" polars random -n 3 -c "condition:condition,medication:medication,hospital:hospital"
+
+# New sports generators
+test_cmd "polars random sports" polars random -n 3 -c "sport:sport,team:team,league:league"
+
+# New hacker generators
+test_cmd "polars random hacker" polars random -n 3 -c "phrase:hacker,lang:programming_language,db:database"
+
+# New education generators
+test_cmd "polars random education" polars random -n 3 -c "univ:university,degree:degree,major:major"
+
+# New weather generators
+test_cmd "polars random weather" polars random -n 3 -c "weather:weather,temp:temperature,season:season"
+
+# New astrology generators
+test_cmd "polars random astrology" polars random -n 3 -c "zodiac:zodiac,birthstone:birthstone,horoscope:horoscope"
+
+# Test output formats
+test_cmd "polars random csv format" polars random -n 3 -c "id:id,name:name" -f csv
+test_cmd "polars random json format" polars random -n 3 -c "id:id,name:name" -f json
+
+# ============================================================================
 section "Completions Command"
 # ============================================================================
 

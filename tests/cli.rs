@@ -2,11 +2,12 @@
 //!
 //! Tests all commands both with and without arguments.
 
+use assert_cmd::cargo::cargo_bin_cmd;
 use assert_cmd::Command;
 use predicates::prelude::*;
 
 fn dx() -> Command {
-    Command::cargo_bin("dx").unwrap()
+    Command::from(cargo_bin_cmd!("dx"))
 }
 
 // ============================================================================
