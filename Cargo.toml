@@ -77,8 +77,8 @@ anyhow = "1"
 regex = "1"
 walkdir = "2"
 ureq = { version = "3", default-features = false, features = ["native-tls", "gzip"] }
-notify = "7"
-notify-debouncer-mini = "0.5"
+notify = "8"
+notify-debouncer-mini = "0.7"
 
 # Terminal UI
 colored = "3"
@@ -99,7 +99,7 @@ terminal_size = "0.4"
 nix = { version = "0.29", features = ["term"] }
 
 # Optional TUI (enabled with --features ui)
-ratatui = { version = "0.29", optional = true }
+ratatui = { version = "0.30", optional = true }
 crossterm = { version = "0.29", optional = true }
 
 # HTTP client for DHIS2 API
@@ -121,7 +121,6 @@ tonic-prost = "0.14.2"
 [dev-dependencies]
 assert_cmd = "2"
 predicates = "3"
-indicatif = "0.17"  # Only for examples
 insta = { version = "1", features = ["yaml"] }
 tempfile = "3"
 criterion = { version = "0.5", features = ["html_reports"] }
