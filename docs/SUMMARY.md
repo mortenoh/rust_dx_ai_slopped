@@ -152,3 +152,4 @@
 - [Async Rust with Tokio](./appendices/i-async-tokio.md)
 - [Cross-Platform Testing Environments](./appendices/j-cross-platform-testing-environments.md)
 - [QEMU Complete CLI Guide](./appendices/k-qemu-complete-guide.md)
+- [dx-datagen Library](./appendices/l-dx-datagen.md)

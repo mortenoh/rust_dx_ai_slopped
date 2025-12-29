@@ -110,6 +110,15 @@ dx polars view data.parquet                 # View data from file
 dx polars view data.csv --stats             # Show statistics
 dx polars view data.parquet --schema        # Show schema only
 
+# Advanced data generation (60+ generator types)
+dx polars random -c "id:id,name:name,email:email,company:company"
+dx polars random -c "score:int[0;100],price:float[9.99;99.99]"
+dx polars random -c "kunde:name[de],client:name[fr]"  # Locale-specific
+dx polars random -c "vin:vin,plate:license_plate,make:vehicle"
+dx polars random -c "tx:ulid,btc:btc,eth:eth"         # Crypto/IDs
+dx polars random -c "color:hex_color,mime:mime,ver:semver"
+dx polars random -n 100 -f json              # Output as JSON
+
 # Fun terminal effects
 dx fun matrix                               # Matrix-style falling code
 dx fun life                                 # Conway's Game of Life

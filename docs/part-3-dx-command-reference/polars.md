@@ -109,7 +109,7 @@ value                Int64              0       498.23         0.00       999.00
 
 ## random
 
-Generate random test data and output to screen or file (CSV/Parquet).
+Generate random test data with 60+ generator types and output to screen or file.
 
 ### Usage
 
@@ -124,7 +124,9 @@ If no file is specified, data is displayed on screen.
 | Option | Description |
 |--------|-------------|
 | `-n, --rows <N>` | Number of rows to generate (default: 20) |
-| `-c, --columns <COLS>` | Column definitions (see Column Types below) |
+| `-c, --columns <COLS>` | Column definitions (see Generator Types below) |
+| `-c list` | Show all available generator types |
+| `-f, --format <FMT>` | Output format: table, csv, json, jsonl |
 | `--categories <N>` | Number of categories for `category` type (default: 10) |
 | `--string-len <N>` | Length for `string` columns (default: 10) |
 | `--min <N>` | Minimum value for numeric columns (default: 0) |
@@ -132,24 +134,174 @@ If no file is specified, data is displayed on screen.
 | `--null-prob <P>` | Null probability 0.0-1.0 (default: 0.0) |
 | `--seed <N>` | Random seed for reproducibility |
 
-### Column Types
+### Column Definition Syntax
 
-Define columns using the format `name:type`. Available types:
+Define columns using the format `name:type` or `name:type[params]`:
+
+```bash
+# Basic syntax
+-c "column_name:generator_type"
+
+# With parameters (separated by semicolons)
+-c "column_name:generator_type[param1;param2]"
+
+# Multiple columns
+-c "id:id,name:name,score:float[0;100]"
+```
+
+### Generator Types
 
 #### Basic Types
 
+| Type | Parameters | Description | Example Values |
+|------|------------|-------------|----------------|
+| `id` | `[start;step]` | Sequential integers (never null) | 1, 2, 3, ... |
+| `int`, `integer`, `i64` | `[min;max]` | Random integers | 42, 789, 156 |
+| `float`, `f64`, `double` | `[min;max]` | Random floats | 123.4567, 89.1234 |
+| `string`, `str`, `text` | `[len]` | Random alphanumeric strings | "xK9mPq2bNw" |
+| `bool`, `boolean` | `[prob]` | Random true/false (prob = true %) | true, false |
+| `hex` | `[len]` | Hexadecimal strings | "a4f2c8" |
+| `date` | - | Random dates (2020-2025) | 2023-05-15 |
+
+**Examples:**
+```bash
+dx polars random -c "id:id[100;2]"           # IDs: 100, 102, 104, ...
+dx polars random -c "score:int[0;100]"       # Integers 0-100
+dx polars random -c "price:float[9.99;99.99]" # Floats in range
+dx polars random -c "code:string[6]"          # 6-char strings
+dx polars random -c "active:bool[0.8]"        # 80% true
+```
+
+#### Personal Data
+
+| Type | Parameters | Description | Example Values |
+|------|------------|-------------|----------------|
+| `name` | `[locale]` | Full name | "John Smith" |
+| `first_name` | `[locale]` | First name | "Emma" |
+| `last_name` | `[locale]` | Last name | "Johnson" |
+| `email` | - | Email address | "user@example.com" |
+| `username` | - | Username | "cool_user42" |
+| `phone` | - | Phone number | "(555) 123-4567" |
+| `address` | - | Street address | "123 Main St" |
+| `password` | `[len]` | Random password | "Kx9#mPq2!" |
+
+**Supported locales:** `en` (default), `de`, `fr`, `es`, `no`
+
+**Examples:**
+```bash
+dx polars random -c "customer:name"           # English names
+dx polars random -c "kunde:name[de]"          # German names
+dx polars random -c "client:name[fr]"         # French names
+dx polars random -c "cliente:name[es]"        # Spanish names
+dx polars random -c "kontakt:first_name[no]"  # Norwegian first names
+```
+
+#### Network
+
 | Type | Description | Example Values |
 |------|-------------|----------------|
-| `id` | Sequential integers 1..n (never null) | 1, 2, 3, ... |
-| `int`, `integer`, `i64` | Random integers | 42, 789, 156 |
-| `float`, `f64`, `double` | Random floats | 123.4567, 89.1234 |
-| `string`, `str`, `text` | Random alphanumeric strings | "xK9mPq2bNw" |
-| `bool`, `boolean` | Random true/false | true, false |
-| `date` | Random dates (2020-2025) | 2023-05-15 |
+| `ipv4` | IPv4 address | "192.168.1.100" |
+| `ipv6` | IPv6 address | "2001:db8::1" |
+| `domain` | Domain name | "example.com" |
+| `url` | Full URL | "https://example.com/page" |
+| `mac` | MAC address | "00:1A:2B:3C:4D:5E" |
 
-#### Category Types
+#### Identifiers
 
-Pre-defined value sets for realistic test data:
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `uuid` | UUID v4 | "550e8400-e29b-41d4-a716-446655440000" |
+| `ulid` | ULID (sortable) | "01ARZ3NDEKTSV4RRFFQ69G5FAV" |
+| `credit_card` | Credit card number | "4532015112830366" |
+| `iban` | International Bank Account Number | "DE89370400440532013000" |
+| `isbn` | ISBN-13 | "978-3-16-148410-0" |
+| `ssn` | US Social Security Number | "123-45-6789" |
+
+#### Color
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `hex_color` | Hex color code | "#FF5733" |
+| `color_name` | Color name | "Cerulean" |
+| `rgb` | RGB tuple | "(255, 87, 51)" |
+| `hsl` | HSL tuple | "(9, 100%, 60%)" |
+
+#### File/System
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `mime` | MIME type | "application/pdf" |
+| `file_ext` | File extension | ".pdf", ".docx" |
+| `file_name` | File name | "report.pdf" |
+| `file_path` | Full file path | "/home/user/docs/report.pdf" |
+| `semver` | Semantic version | "1.2.3" |
+| `user_agent` | Browser user agent | "Mozilla/5.0..." |
+
+#### Commerce
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `company` | Company name | "Acme Corporation" |
+| `product` | Product name | "Ergonomic Steel Chair" |
+| `job` | Job title | "Senior Software Engineer" |
+| `industry` | Industry name | "Technology" |
+| `currency` | Currency code | "USD", "EUR" |
+| `price` | Formatted price | "$19.99" |
+
+#### Vehicle
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `vehicle` | Vehicle make | "Toyota", "Ford" |
+| `vehicle_model` | Vehicle model | "Camry", "F-150" |
+| `vehicle_full` | Year + Make + Model | "2023 Toyota Camry" |
+| `vin` | Vehicle Identification Number | "1HGBH41JXMN109186" |
+| `license_plate` | License plate | "ABC-1234" |
+
+#### Finance/Crypto
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `btc` | Bitcoin address | "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" |
+| `eth` | Ethereum address | "0x742d35Cc6634C0532925a3b844Bc9e7595f..." |
+| `swift` | SWIFT/BIC code | "CHASUS33" |
+| `routing` | US routing number | "021000021" |
+| `account` | Bank account number | "1234567890" |
+
+#### Science
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `element` | Chemical element name | "Hydrogen", "Carbon" |
+| `element_symbol` | Element symbol | "H", "C", "Fe" |
+| `unit` | SI unit | "kilogram", "meter" |
+
+#### Temporal
+
+| Type | Description | Example Values |
+|------|-------------|----------------|
+| `timestamp` | Unix timestamp (seconds) | 1703980800 |
+| `timestamp_ms` | Unix timestamp (milliseconds) | 1703980800000 |
+
+#### Geographic
+
+| Type | Parameters | Description | Example Values |
+|------|------------|-------------|----------------|
+| `lat` | `[min;max]` | Latitude | 40.7128 |
+| `lon` | `[min;max]` | Longitude | -74.0060 |
+| `coords` | `[minlat;maxlat;minlon;maxlon]` | Lat,Lon pair | "40.7,-74.0" |
+| `point` | `[minlat;maxlat;minlon;maxlon]` | GeoJSON Point | `{"type":"Point",...}` |
+
+**Examples:**
+```bash
+# New York City bounding box
+dx polars random -c "location:coords[40.4;41.0;-74.3;-73.7]"
+
+# GeoJSON points for mapping
+dx polars random -c "geometry:point[40.4;41.0;-74.3;-73.7]" -f json
+```
+
+#### Categories (Pre-defined Value Sets)
 
 | Type | Values |
 |------|--------|
@@ -164,42 +316,80 @@ Pre-defined value sets for realistic test data:
 | `day` | Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday |
 | `size` | XS, S, M, L, XL, XXL |
 
-### Examples
+### Output Formats
 
+| Format | Flag | Description |
+|--------|------|-------------|
+| Table | `-f table` (default) | Pretty-printed table |
+| CSV | `-f csv` | Comma-separated values |
+| JSON | `-f json` | JSON array of objects |
+| JSONL | `-f jsonl` | Newline-delimited JSON |
+
+**Examples:**
 ```bash
-# Generate with defaults (id, store, item, value)
-dx polars random
+dx polars random -n 5 -f table   # Pretty table (default)
+dx polars random -n 5 -f csv     # CSV output
+dx polars random -n 5 -f json    # JSON array
+dx polars random -n 5 -f jsonl   # One JSON object per line
+```
 
-# Output:
-# ┌Generated Data (20 rows, 4 cols)──────────────────────┐
-# │id   store       item         value                   │
-# │1    Toronto     grape        222                     │
-# │2    Paris       banana       272                     │
-# └──────────────────────────────────────────────────────┘
+### Examples by Use Case
 
-# Generate to Parquet file
-dx polars random data.parquet -n 10000
+#### E-commerce Test Data
+```bash
+dx polars random orders.parquet -n 100000 \
+  -c "order_id:id,customer:name,email:email,city:city,product:product,quantity:int[1;10],price:float[9.99;999.99],status:status"
+```
 
-# Generate to CSV file
-dx polars random data.csv -n 5000
+#### Employee Directory
+```bash
+dx polars random employees.csv -n 500 \
+  -c "emp_id:id,name:name,email:email,department:department,title:job,hire_date:date,active:bool"
+```
 
-# Custom columns with category generators
-dx polars random sales.parquet -n 10000 \
-  -c "id:id,date:date,product:fruit,store:city,quantity:int,price:float,status:status"
+#### IoT Sensor Readings
+```bash
+dx polars random sensors.parquet -n 1000000 \
+  -c "ts:timestamp_ms,sensor_id:id,lat:lat,lon:lon,temp:float[-20;50],humidity:float[0;100],status:status"
+```
 
-# Specify value ranges
-dx polars random prices.parquet -n 1000 \
-  -c "id:id,amount:float" --min 10 --max 500
+#### Financial Transactions
+```bash
+dx polars random transactions.parquet -n 50000 \
+  -c "tx_id:ulid,from_account:account,to_account:account,amount:float[0.01;10000],currency:currency,timestamp:timestamp"
+```
 
-# Add nulls to test null handling
-dx polars random test.parquet -n 1000 \
-  -c "id:id,name:string,value:float" --null-prob 0.1
+#### Multi-locale Customer Data
+```bash
+# German customers
+dx polars random de_customers.csv -n 1000 \
+  -c "id:id,name:name[de],email:email,phone:phone"
 
-# Reproducible data with seed
-dx polars random test.parquet -n 100 --seed 42
+# French customers
+dx polars random fr_customers.csv -n 1000 \
+  -c "id:id,name:name[fr],email:email,phone:phone"
 
-# All column types demo
-dx polars random -n 5 -c "id:id,name:string,score:float,active:bool,created:date,fruit:fruit,city:city,status:status,priority:priority,dept:department"
+# Spanish customers
+dx polars random es_customers.csv -n 1000 \
+  -c "id:id,name:name[es],email:email,phone:phone"
+```
+
+#### Vehicle Fleet
+```bash
+dx polars random fleet.parquet -n 5000 \
+  -c "id:id,vehicle:vehicle_full,vin:vin,plate:license_plate,fuel:category,status:status"
+```
+
+#### Color Palette Generator
+```bash
+dx polars random colors.json -n 20 -f json \
+  -c "name:color_name,hex:hex_color,rgb:rgb"
+```
+
+#### API Mock Data with GeoJSON
+```bash
+dx polars random locations.json -n 100 -f json \
+  -c "id:ulid,name:company,geometry:point[40.4;41.0;-74.3;-73.7]"
 ```
 
 ### File Formats
@@ -229,18 +419,13 @@ The output format is determined by the file extension:
 ### Test Data Generation
 
 ```bash
-# E-commerce order data
-dx polars random orders.parquet -n 100000 \
-  -c "order_id:id,customer_city:city,product:fruit,quantity:int,unit_price:float,status:status,priority:priority"
+# Generate reproducible test data
+dx polars random test.parquet -n 10000 --seed 42 \
+  -c "id:id,name:name,email:email,score:float[0;100]"
 
-# Employee directory
-dx polars random employees.parquet -n 500 \
-  -c "emp_id:id,department:department,hire_date:date,active:bool"
-
-# IoT sensor readings
-dx polars random sensors.csv -n 1000000 \
-  -c "timestamp:date,sensor_id:id,temperature:float,humidity:float,status:status" \
-  --min -20 --max 50
+# Add null values for testing null handling
+dx polars random nulls_test.parquet -n 1000 \
+  -c "id:id,value:float" --null-prob 0.1
 ```
 
 ### Data Inspection
@@ -262,11 +447,11 @@ dx polars view data.parquet -n 100 -c "id,name" --json > test_data.json
 ### Pipeline Integration
 
 ```bash
-# Generate test data and pipe to analysis
-dx polars random -n 1000 -c "id:id,value:float" | grep "value"
+# Generate and pipe to jq for filtering
+dx polars random -n 100 -c "id:id,status:status" -f json | jq '.[] | select(.status == "active")'
 
-# View stats as JSON for programmatic use
-dx polars view data.parquet --stats --json | jq '.statistics'
+# Generate CSV and import to database
+dx polars random -n 10000 -c "id:id,name:name,email:email" -f csv | psql -c "COPY users FROM STDIN CSV"
 ```
 
 ---
@@ -275,4 +460,5 @@ dx polars view data.parquet --stats --json | jq '.statistics'
 
 - [csv](./csv.md) - CSV formatting and conversion
 - [json](./json.md) - JSON processing
+- [dx-datagen Library](../appendices/l-dx-datagen.md) - Full data generation library documentation
 - [Polars documentation](https://pola.rs/) - Full Polars library documentation
