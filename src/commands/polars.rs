@@ -14,6 +14,17 @@ enum Format {
     Parquet,
 }
 
+/// Configuration for viewing data
+struct ViewConfig<'a> {
+    file: &'a Path,
+    rows: usize,
+    tail: bool,
+    columns: &'a [String],
+    schema_only: bool,
+    stats: bool,
+    json: bool,
+}
+
 /// Configuration for random data generation
 struct RandomConfig<'a> {
     output: &'a Path,
@@ -38,6 +49,23 @@ fn detect_format(path: &Path) -> Format {
 /// Run the polars command
 pub fn run(args: PolarsArgs) -> Result<()> {
     match args.command {
+        PolarsCommand::View {
+            file,
+            rows,
+            tail,
+            columns,
+            schema,
+            stats,
+            json,
+        } => cmd_view(ViewConfig {
+            file: &file,
+            rows,
+            tail,
+            columns: &columns,
+            schema_only: schema,
+            stats,
+            json,
+        }),
         PolarsCommand::Random {
             file,
             rows,
@@ -59,6 +87,436 @@ pub fn run(args: PolarsArgs) -> Result<()> {
             null_prob,
             seed,
         }),
+    }
+}
+
+/// Read a DataFrame from file
+fn read_df(path: &Path) -> Result<DataFrame> {
+    let format = detect_format(path);
+    match format {
+        Format::Csv => CsvReadOptions::default()
+            .try_into_reader_with_file_path(Some(path.into()))?
+            .finish()
+            .with_context(|| format!("Failed to read CSV: {}", path.display())),
+        Format::Parquet => ParquetReader::new(std::fs::File::open(path)?)
+            .finish()
+            .with_context(|| format!("Failed to read Parquet: {}", path.display())),
+    }
+}
+
+/// View data from file
+fn cmd_view(config: ViewConfig) -> Result<()> {
+    let start = Instant::now();
+    let df = read_df(config.file)?;
+    let read_time = start.elapsed();
+
+    // Get file metadata
+    let file_size = std::fs::metadata(config.file).map(|m| m.len()).unwrap_or(0);
+    let format = detect_format(config.file);
+
+    // Select columns if specified
+    let df = if config.columns.is_empty() {
+        df
+    } else {
+        df.select(config.columns.iter().map(|s| s.as_str()))
+            .with_context(|| "Failed to select columns")?
+    };
+
+    // Schema only mode
+    if config.schema_only {
+        if config.json {
+            let schema_json: Vec<serde_json::Value> = df
+                .get_columns()
+                .iter()
+                .map(|col| {
+                    serde_json::json!({
+                        "name": col.name().to_string(),
+                        "dtype": format!("{:?}", col.dtype()),
+                        "null_count": col.null_count(),
+                    })
+                })
+                .collect();
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "file": config.file.display().to_string(),
+                    "format": format!("{:?}", format),
+                    "rows": df.height(),
+                    "columns": df.width(),
+                    "file_size": file_size,
+                    "schema": schema_json,
+                }))?
+            );
+        } else {
+            println!("{}", "Schema".cyan().bold());
+            println!("{}", "═".repeat(50));
+            println!();
+            println!("{}: {}", "File".yellow(), config.file.display());
+            println!("{}: {:?}", "Format".yellow(), format);
+            println!("{}: {}", "Rows".yellow(), format_number(df.height()));
+            println!("{}: {}", "Columns".yellow(), df.width());
+            println!("{}: {}", "Size".yellow(), format_bytes(file_size));
+            println!();
+            println!("{}", "Columns:".white().bold());
+            for col in df.get_columns() {
+                let null_count = col.null_count();
+                let null_pct = if df.height() > 0 {
+                    (null_count as f64 / df.height() as f64) * 100.0
+                } else {
+                    0.0
+                };
+                println!(
+                    "  {:20} {:15} {} nulls ({:.1}%)",
+                    col.name().to_string().white(),
+                    format!("{:?}", col.dtype()).dimmed(),
+                    null_count,
+                    null_pct
+                );
+            }
+        }
+        return Ok(());
+    }
+
+    // Stats mode
+    if config.stats {
+        return cmd_view_stats(&df, config.file, format, file_size, config.json);
+    }
+
+    // Get rows to display
+    let display_df = if config.tail {
+        df.tail(Some(config.rows))
+    } else {
+        df.head(Some(config.rows))
+    };
+
+    // JSON output
+    if config.json {
+        let mut rows_json: Vec<serde_json::Value> = Vec::new();
+        for i in 0..display_df.height() {
+            let mut row: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+            for col in display_df.get_columns() {
+                let series = col.as_materialized_series();
+                let value = format_value_json(series, i);
+                row.insert(col.name().to_string(), value);
+            }
+            rows_json.push(serde_json::Value::Object(row));
+        }
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "file": config.file.display().to_string(),
+                "total_rows": df.height(),
+                "displayed_rows": display_df.height(),
+                "columns": df.width(),
+                "data": rows_json,
+            }))?
+        );
+        return Ok(());
+    }
+
+    // Pretty print
+    println!(
+        "{} {}",
+        config.file.display().to_string().cyan().bold(),
+        format!("({} rows, {} cols)", format_number(df.height()), df.width()).dimmed()
+    );
+    println!();
+
+    // Print header
+    let col_widths: Vec<usize> = display_df
+        .get_columns()
+        .iter()
+        .map(|col| {
+            let header_width = col.name().len();
+            let max_value_width = (0..display_df.height())
+                .map(|i| format_value_display(col.as_materialized_series(), i).len())
+                .max()
+                .unwrap_or(0);
+            header_width.max(max_value_width).min(40) // Cap at 40 chars
+        })
+        .collect();
+
+    // Header row
+    let headers: Vec<String> = display_df
+        .get_columns()
+        .iter()
+        .zip(&col_widths)
+        .map(|(col, width)| {
+            format!("{:width$}", col.name(), width = width)
+                .cyan()
+                .bold()
+                .to_string()
+        })
+        .collect();
+    println!("{}", headers.join(" │ "));
+
+    // Separator
+    let sep: Vec<String> = col_widths.iter().map(|w| "─".repeat(*w)).collect();
+    println!("{}", sep.join("─┼─"));
+
+    // Data rows
+    for i in 0..display_df.height() {
+        let row: Vec<String> = display_df
+            .get_columns()
+            .iter()
+            .zip(&col_widths)
+            .map(|(col, width)| {
+                let val = format_value_display(col.as_materialized_series(), i);
+                let truncated = if val.len() > *width {
+                    format!("{}…", &val[..*width - 1])
+                } else {
+                    val
+                };
+                format!("{:width$}", truncated, width = width)
+            })
+            .collect();
+        println!("{}", row.join(" │ "));
+    }
+
+    println!();
+    if df.height() > config.rows {
+        let showing = if config.tail { "last" } else { "first" };
+        println!(
+            "{}",
+            format!(
+                "Showing {} {} of {} rows",
+                showing,
+                config.rows,
+                format_number(df.height())
+            )
+            .dimmed()
+        );
+    }
+    println!("{}", format!("Read time: {:.2?}", read_time).dimmed());
+
+    Ok(())
+}
+
+/// Show statistics for the dataframe
+fn cmd_view_stats(
+    df: &DataFrame,
+    file: &Path,
+    format: Format,
+    file_size: u64,
+    json_output: bool,
+) -> Result<()> {
+    if json_output {
+        let stats: Vec<serde_json::Value> = df
+            .get_columns()
+            .iter()
+            .map(|col| {
+                let series = col.as_materialized_series();
+                let mut stat = serde_json::json!({
+                    "name": col.name().to_string(),
+                    "dtype": format!("{:?}", col.dtype()),
+                    "count": series.len(),
+                    "null_count": series.null_count(),
+                });
+                if series.dtype().is_numeric() {
+                    if let Some(mean) = series.mean() {
+                        stat["mean"] = serde_json::json!(mean);
+                    }
+                    if let Some(min) = series.min::<f64>().ok().flatten() {
+                        stat["min"] = serde_json::json!(min);
+                    }
+                    if let Some(max) = series.max::<f64>().ok().flatten() {
+                        stat["max"] = serde_json::json!(max);
+                    }
+                }
+                stat
+            })
+            .collect();
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "file": file.display().to_string(),
+                "format": format!("{:?}", format),
+                "rows": df.height(),
+                "columns": df.width(),
+                "file_size": file_size,
+                "statistics": stats,
+            }))?
+        );
+        return Ok(());
+    }
+
+    println!("{}", "Statistics".cyan().bold());
+    println!("{}", "═".repeat(70));
+    println!();
+    println!("{}: {}", "File".yellow(), file.display());
+    println!("{}: {:?}", "Format".yellow(), format);
+    println!("{}: {}", "Rows".yellow(), format_number(df.height()));
+    println!("{}: {}", "Columns".yellow(), df.width());
+    println!("{}: {}", "Size".yellow(), format_bytes(file_size));
+    println!();
+
+    // Print stats table header
+    println!(
+        "{:20} {:10} {:>10} {:>12} {:>12} {:>12}",
+        "Column".white().bold(),
+        "Type".white().bold(),
+        "Nulls".white().bold(),
+        "Mean".white().bold(),
+        "Min".white().bold(),
+        "Max".white().bold()
+    );
+    println!("{}", "─".repeat(70));
+
+    for col in df.get_columns() {
+        let series = col.as_materialized_series();
+        let dtype = format!("{:?}", col.dtype());
+        let nulls = series.null_count();
+
+        let (mean, min, max) = if series.dtype().is_numeric() {
+            (
+                series.mean().map(|v| format!("{:.2}", v)),
+                series
+                    .min::<f64>()
+                    .ok()
+                    .flatten()
+                    .map(|v| format!("{:.2}", v)),
+                series
+                    .max::<f64>()
+                    .ok()
+                    .flatten()
+                    .map(|v| format!("{:.2}", v)),
+            )
+        } else {
+            (None, None, None)
+        };
+
+        println!(
+            "{:20} {:10} {:>10} {:>12} {:>12} {:>12}",
+            col.name().to_string().truncate_str(20),
+            dtype.truncate_str(10).dimmed(),
+            nulls,
+            mean.unwrap_or_else(|| "-".to_string()),
+            min.unwrap_or_else(|| "-".to_string()),
+            max.unwrap_or_else(|| "-".to_string()),
+        );
+    }
+
+    Ok(())
+}
+
+/// Format a value for display (with colors)
+fn format_value_display(series: &Series, idx: usize) -> String {
+    let value = series.get(idx);
+    if value.is_err() || matches!(value.as_ref().ok(), Some(AnyValue::Null)) {
+        return "null".dimmed().to_string();
+    }
+
+    match series.dtype() {
+        DataType::Float64 | DataType::Float32 => {
+            if let Ok(val) = series.f64() {
+                if let Some(v) = val.get(idx) {
+                    return format!("{:.4}", v);
+                }
+            }
+            if let Ok(val) = series.f32() {
+                if let Some(v) = val.get(idx) {
+                    return format!("{:.4}", v);
+                }
+            }
+            "-".to_string()
+        }
+        DataType::Boolean => {
+            if let Ok(val) = series.bool() {
+                if let Some(v) = val.get(idx) {
+                    return if v {
+                        "true".green().to_string()
+                    } else {
+                        "false".red().to_string()
+                    };
+                }
+            }
+            "-".to_string()
+        }
+        DataType::String => {
+            let val = series.str().ok().and_then(|s| s.get(idx));
+            match val {
+                Some(s) => s.to_string(),
+                None => "-".to_string(),
+            }
+        }
+        _ => series
+            .get(idx)
+            .map(|v| format!("{}", v))
+            .unwrap_or_default(),
+    }
+}
+
+/// Format a value for JSON output
+fn format_value_json(series: &Series, idx: usize) -> serde_json::Value {
+    let value = series.get(idx);
+    if value.is_err() || matches!(value.as_ref().ok(), Some(AnyValue::Null)) {
+        return serde_json::Value::Null;
+    }
+
+    match series.dtype() {
+        DataType::Float64 => series
+            .f64()
+            .ok()
+            .and_then(|v| v.get(idx))
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        DataType::Float32 => series
+            .f32()
+            .ok()
+            .and_then(|v| v.get(idx))
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        DataType::Int64 => series
+            .i64()
+            .ok()
+            .and_then(|v| v.get(idx))
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        DataType::Int32 => series
+            .i32()
+            .ok()
+            .and_then(|v| v.get(idx))
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        DataType::Boolean => series
+            .bool()
+            .ok()
+            .and_then(|v| v.get(idx))
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        DataType::String => series
+            .str()
+            .ok()
+            .and_then(|v| v.get(idx))
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        _ => series
+            .get(idx)
+            .map(|v| serde_json::json!(format!("{}", v)))
+            .unwrap_or(serde_json::Value::Null),
+    }
+}
+
+/// Trait for truncating strings with ellipsis
+trait TruncateStr {
+    fn truncate_str(&self, max_len: usize) -> String;
+}
+
+impl TruncateStr for str {
+    fn truncate_str(&self, max_len: usize) -> String {
+        if self.len() <= max_len {
+            self.to_string()
+        } else if max_len > 1 {
+            format!("{}…", &self[..max_len - 1])
+        } else {
+            "…".to_string()
+        }
+    }
+}
+
+impl TruncateStr for String {
+    fn truncate_str(&self, max_len: usize) -> String {
+        self.as_str().truncate_str(max_len)
     }
 }
 

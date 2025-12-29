@@ -11,6 +11,36 @@ pub struct PolarsArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum PolarsCommand {
+    /// View data from CSV or Parquet file
+    View {
+        /// Input file (CSV or Parquet)
+        file: PathBuf,
+
+        /// Number of rows to display
+        #[arg(short = 'n', long, default_value = "20")]
+        rows: usize,
+
+        /// Show last N rows instead of first
+        #[arg(long)]
+        tail: bool,
+
+        /// Select specific columns (comma-separated)
+        #[arg(short, long, value_delimiter = ',')]
+        columns: Vec<String>,
+
+        /// Show schema only (no data)
+        #[arg(long)]
+        schema: bool,
+
+        /// Show summary statistics
+        #[arg(long)]
+        stats: bool,
+
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Generate random data file (CSV or Parquet)
     Random {
         /// Output file path (format determined by extension: .csv, .parquet, .pq)
