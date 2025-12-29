@@ -11,6 +11,7 @@
 //! - **network**: Network data (IP addresses, MAC addresses, domains, URLs)
 //! - **numeric**: Formatted numeric identifiers (credit cards, ISBN, SSN, IBAN)
 //! - **temporal**: Date and time generation (feature-gated with `temporal`)
+//! - **geo**: Geographic coordinates and GeoJSON points (feature-gated with `geo`)
 //!
 //! # Example
 //!
@@ -54,6 +55,9 @@ pub mod text;
 #[cfg(feature = "temporal")]
 pub mod temporal;
 
+// Geo module (always available, but GeoJSON output requires "geo" feature)
+pub mod geo;
+
 // Re-export commonly used items at crate root
 pub use generators::{
     alphanumeric, boolean, float_range, hex_bytes, hex_string, int_range, pick_one, shuffle,
@@ -83,3 +87,12 @@ pub use numeric::{
 
 // Re-export locale
 pub use locale::{Locale, LocaleData};
+
+// Re-export geo
+pub use geo::{
+    coordinates, coordinates_in_bounds, coordinates_string, latitude, latitude_in_range, longitude,
+    longitude_in_range,
+};
+
+#[cfg(feature = "geo")]
+pub use geo::{geojson_point, geojson_point_string};

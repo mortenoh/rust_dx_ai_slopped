@@ -99,7 +99,7 @@ fn cmd_decompress(input: &PathBuf, out_file: Option<PathBuf>) -> Result<()> {
             std::io::copy(&mut decoder, &mut writer)?;
         }
         "zst" | "zstd" => {
-            let mut decoder = ruzstd::streaming_decoder::StreamingDecoder::new(reader)
+            let mut decoder = ruzstd::decoding::StreamingDecoder::new(reader)
                 .map_err(|e| anyhow::anyhow!("Failed to create zstd decoder: {}", e))?;
             let mut buffer = Vec::new();
             decoder

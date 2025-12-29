@@ -14,11 +14,27 @@ Do not add any AI attribution to commits, PRs, or anywhere else. This means:
 Always run `make lint` before committing. This runs `cargo fmt` and `cargo clippy --fix`.
 
 ### Adding Dependencies
-Always use `cargo add` to add new dependencies instead of manually editing Cargo.toml. This ensures we get the latest compatible versions:
-```bash
-cargo add polars --features lazy,csv,parquet
-cargo add some-crate --no-default-features --features feat1,feat2
-```
+**ALWAYS use the very latest version of dependencies.** This is critical:
+
+1. **Use `cargo add`** to add new dependencies - this automatically gets the latest version:
+   ```bash
+   cargo add polars --features lazy,csv,parquet
+   cargo add some-crate --no-default-features --features feat1,feat2
+   ```
+
+2. **Check crates.io** before adding a dependency to verify you're using the latest version:
+   - Visit https://crates.io/crates/{crate-name} to see the latest version
+   - Use `cargo search {crate-name}` to check versions from the CLI
+
+3. **When updating existing dependencies**, always bump to the latest version:
+   ```bash
+   cargo update {crate-name}  # Update a specific crate
+   cargo update               # Update all dependencies
+   ```
+
+4. **Never use old versions** - if you see a version in Cargo.toml, verify it's current before making changes
+
+5. **Fix breaking API changes** - when updating dependencies causes build errors, update the code to use the new API rather than pinning to old versions
 
 ### Feature Completeness
 When adding or modifying features, always update ALL related artifacts:

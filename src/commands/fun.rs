@@ -1603,13 +1603,13 @@ where
 /// Check if q or Escape was pressed (non-blocking)
 #[cfg(unix)]
 fn check_quit_key() -> bool {
-    use std::os::unix::io::AsRawFd;
+    use std::os::fd::AsFd;
 
-    let stdin_fd = std::io::stdin().as_raw_fd();
+    let stdin = std::io::stdin();
 
     // Try to read a byte without blocking (VMIN=0, VTIME=0 should already be set)
     let mut buf = [0u8; 1];
-    match nix::unistd::read(stdin_fd, &mut buf) {
+    match nix::unistd::read(stdin.as_fd(), &mut buf) {
         Ok(1) => buf[0] == b'q' || buf[0] == b'Q' || buf[0] == 27, // 27 = Escape
         _ => false,
     }

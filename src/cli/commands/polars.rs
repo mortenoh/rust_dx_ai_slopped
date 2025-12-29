@@ -98,10 +98,16 @@ pub enum PolarsCommand {
         /// TEXT:
         ///   word, sentence, paragraph
         ///
+        /// GEO:
+        ///   lat[min;max], lon[min;max]  - Coordinates
+        ///   coords[bbox], point[bbox]   - GeoJSON Point
+        ///   (bbox = minLon;minLat;maxLon;maxLat)
+        ///
         /// OTHER:
         ///   password, hex
         ///
         /// Example: -c "id:id,user:email,card:credit_card"
+        /// Example: -c "id:id,loc:point[4;57;31;71]"
         #[arg(short, long, value_delimiter = ',', verbatim_doc_comment)]
         columns: Vec<String>,
 

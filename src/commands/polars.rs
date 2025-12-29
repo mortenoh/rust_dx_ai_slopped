@@ -3,7 +3,7 @@
 use crate::cli::commands::polars::{PolarsArgs, PolarsCommand, PolarsOutputFormat};
 use anyhow::{Context, Result};
 use colored::Colorize;
-use dx_datagen::{categories, generators, network, numeric, password, personal, text, uuid};
+use dx_datagen::{categories, generators, geo, network, numeric, password, personal, text, uuid};
 use polars::prelude::*;
 use ratatui::layout::Constraint;
 use ratatui::style::{Color, Modifier, Style};
@@ -843,6 +843,71 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
                 generators::hex_string(r, 16)
             }),
 
+            // === Geographic data ===
+            "lat" | "latitude" => {
+                // Support lat[min;max]
+                let min: f64 = params.first().and_then(|s| s.parse().ok()).unwrap_or(-90.0);
+                let max: f64 = params.get(1).and_then(|s| s.parse().ok()).unwrap_or(90.0);
+                let values: Vec<Option<f64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(geo::latitude_in_range(&mut *rng, min, max))
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
+            }
+            "lon" | "longitude" => {
+                // Support lon[min;max]
+                let min: f64 = params
+                    .first()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(-180.0);
+                let max: f64 = params.get(1).and_then(|s| s.parse().ok()).unwrap_or(180.0);
+                let values: Vec<Option<f64>> = (0..config.rows)
+                    .map(|_| {
+                        if config.null_prob > 0.0 && rng.random_bool(config.null_prob) {
+                            None
+                        } else {
+                            Some(geo::longitude_in_range(&mut *rng, min, max))
+                        }
+                    })
+                    .collect();
+                Series::new(name.into(), values)
+            }
+            "coords" | "coordinates" => {
+                // Support coords[minLon;minLat;maxLon;maxLat]
+                let bbox: [f64; 4] = [
+                    params
+                        .first()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(-180.0),
+                    params.get(1).and_then(|s| s.parse().ok()).unwrap_or(-90.0),
+                    params.get(2).and_then(|s| s.parse().ok()).unwrap_or(180.0),
+                    params.get(3).and_then(|s| s.parse().ok()).unwrap_or(90.0),
+                ];
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    geo::coordinates_in_bounds_string(r, bbox)
+                })
+            }
+            "point" | "geojson_point" | "geojson" => {
+                // Support point[minLon;minLat;maxLon;maxLat]
+                let bbox: [f64; 4] = [
+                    params
+                        .first()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(-180.0),
+                    params.get(1).and_then(|s| s.parse().ok()).unwrap_or(-90.0),
+                    params.get(2).and_then(|s| s.parse().ok()).unwrap_or(180.0),
+                    params.get(3).and_then(|s| s.parse().ok()).unwrap_or(90.0),
+                ];
+                generate_string_series(name, config.rows, config.null_prob, &mut *rng, |r| {
+                    geo::geojson_point_in_bounds_string(r, bbox)
+                })
+            }
+
             _ => {
                 // Default to string
                 let values: Vec<Option<String>> = (0..config.rows)
@@ -1361,6 +1426,23 @@ fn print_available_generators() {
     println!("  {:20} Full paragraph of lorem ipsum", "paragraph".white());
     println!();
 
+    println!("{}", "GEO".yellow().bold());
+    println!(
+        "  {:20} Random latitude (-90 to 90)",
+        "lat[min;max]".white()
+    );
+    println!(
+        "  {:20} Random longitude (-180 to 180)",
+        "lon[min;max]".white()
+    );
+    println!(
+        "  {:20} \"(lon, lat)\" coordinate string",
+        "coords[bbox]".white()
+    );
+    println!("  {:20} GeoJSON Point geometry", "point[bbox]".white());
+    println!("  {:20} (bbox = minLon;minLat;maxLon;maxLat)", "".dimmed());
+    println!();
+
     println!("{}", "OTHER".yellow().bold());
     println!("  {:20} Secure random password", "password".white());
     println!("  {:20} Random hex string", "hex".white());
@@ -1375,4 +1457,5 @@ fn print_available_generators() {
     println!("{}", "PARAMETER EXAMPLES".cyan().bold());
     println!("  dx polars random -c \"id:id[100;1],small:int[0;10],big:int[1000;9999]\"");
     println!("  dx polars random -c \"pct:float[0;100],code:string[5],active:bool[0.8]\"");
+    println!("  dx polars random -c \"id:id,loc:point[4;57;31;71]\" # Norway bbox");
 }
