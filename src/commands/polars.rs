@@ -1082,9 +1082,13 @@ fn render_dataframe_table(df: &DataFrame, rows: usize, title: &str) -> Result<()
         })
         .collect();
 
-    // Calculate column widths (percentage-based for flexibility)
+    // Calculate column widths based on terminal width
     let col_count = display_df.width();
-    let widths: Vec<Constraint> = (0..col_count)
+    let (term_width, _) = crossterm::terminal::size().unwrap_or((120, 24));
+    let available_width = term_width.saturating_sub(4) as usize; // Account for borders
+
+    // First pass: calculate ideal widths for each column
+    let ideal_widths: Vec<usize> = (0..col_count)
         .map(|i| {
             let col = &display_df.get_columns()[i];
             let header_width = col.name().len();
@@ -1092,10 +1096,30 @@ fn render_dataframe_table(df: &DataFrame, rows: usize, title: &str) -> Result<()
                 .map(|j| format_value_plain(col.as_materialized_series(), j).len())
                 .max()
                 .unwrap_or(0);
-            let width = header_width.max(max_value_width).min(40) as u16 + 2;
-            Constraint::Length(width)
+            header_width.max(max_value_width) + 2
         })
         .collect();
+
+    let total_ideal: usize = ideal_widths.iter().sum();
+
+    // Second pass: distribute available width proportionally
+    let widths: Vec<Constraint> = if total_ideal <= available_width {
+        // All columns fit - use ideal widths
+        ideal_widths
+            .iter()
+            .map(|&w| Constraint::Length(w as u16))
+            .collect()
+    } else {
+        // Need to shrink - distribute proportionally with minimum of 10 chars
+        ideal_widths
+            .iter()
+            .map(|&ideal| {
+                let proportion = ideal as f64 / total_ideal as f64;
+                let width = (proportion * available_width as f64) as usize;
+                Constraint::Length(width.max(10) as u16)
+            })
+            .collect()
+    };
 
     // Build the table widget
     let block_title = format!(
