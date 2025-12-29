@@ -23,10 +23,6 @@ categories = ["command-line-utilities", "development-tools"]
 name = "dx"
 path = "src/main.rs"
 
-[features]
-default = ["ui", "egui"]
-ui = ["dep:ratatui", "dep:crossterm"]
-egui = ["dep:eframe", "dep:egui_extras", "dep:egui_plot", "dep:image", "dep:syntect"]
 
 [dependencies]
 # CLI framework
@@ -98,19 +94,19 @@ ctrlc = "3.4"
 terminal_size = "0.4"
 nix = { version = "0.29", features = ["term"] }
 
-# Optional TUI (enabled with --features ui)
-ratatui = { version = "0.30", optional = true }
-crossterm = { version = "0.29", optional = true }
+# TUI
+ratatui = "0.30"
+crossterm = "0.29"
 
 # HTTP client for DHIS2 API
 reqwest = { version = "0.12", features = ["json", "blocking"] }
 
-# Optional GUI (enabled with --features egui)
-eframe = { version = "0.33", optional = true }
-egui_extras = { version = "0.33", optional = true, features = ["image", "syntect"] }
-egui_plot = { version = "0.34", optional = true }
-image = { version = "0.25", optional = true, default-features = false, features = ["png", "jpeg"] }
-syntect = { version = "5", optional = true }
+# GUI
+eframe = "0.33"
+egui_extras = { version = "0.33", features = ["image", "syntect"] }
+egui_plot = "0.34"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+syntect = "5"
 tokio = { version = "1.48.0", features = [
     "rt-multi-thread",
     "macros",

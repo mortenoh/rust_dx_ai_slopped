@@ -7,7 +7,6 @@ pub mod config;
 pub mod csv;
 pub mod dhis2;
 pub mod diff;
-#[cfg(feature = "egui")]
 pub mod egui;
 pub mod encode;
 pub mod encrypt;
@@ -27,7 +26,6 @@ pub mod system;
 pub mod template;
 pub mod text;
 pub mod time;
-#[cfg(feature = "ui")]
 pub mod ui;
 pub mod uuid;
 pub mod watch;

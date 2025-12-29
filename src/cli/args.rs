@@ -3,15 +3,11 @@
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 
-#[cfg(feature = "egui")]
-use super::commands::EguiArgs;
-#[cfg(feature = "ui")]
-use super::commands::UiArgs;
 use super::commands::{
-    CalcArgs, ChatArgs, CompressArgs, ConfigArgs, CsvArgs, Dhis2Args, DiffArgs, EncodeArgs,
-    EncryptArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs, HttpArgs, JsonArgs, JwtArgs,
-    MarkdownArgs, NetArgs, PolarsArgs, RandArgs, SystemArgs, TemplateArgs, TextArgs, TimeArgs,
-    UuidArgs, WatchArgs, XmlArgs, YamlArgs,
+    CalcArgs, ChatArgs, CompressArgs, ConfigArgs, CsvArgs, Dhis2Args, DiffArgs, EguiArgs,
+    EncodeArgs, EncryptArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs, HttpArgs, JsonArgs,
+    JwtArgs, MarkdownArgs, NetArgs, PolarsArgs, RandArgs, SystemArgs, TemplateArgs, TextArgs,
+    TimeArgs, UiArgs, UuidArgs, WatchArgs, XmlArgs, YamlArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -162,12 +158,10 @@ pub enum Commands {
     /// DHIS2 utilities - interact with DHIS2 instances
     Dhis2(Dhis2Args),
 
-    /// Interactive TUI dashboard (requires --features ui)
-    #[cfg(feature = "ui")]
+    /// Interactive TUI dashboard
     Ui(UiArgs),
 
-    /// Interactive GUI demos with egui (requires --features egui)
-    #[cfg(feature = "egui")]
+    /// Interactive GUI demos with egui
     Egui(EguiArgs),
 
     /// Generate shell completions

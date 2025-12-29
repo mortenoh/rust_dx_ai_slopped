@@ -7,7 +7,6 @@ pub mod config;
 pub mod csv;
 pub mod dhis2;
 pub mod diff;
-#[cfg(feature = "egui")]
 pub mod egui;
 pub mod encode;
 pub mod encrypt;
@@ -27,7 +26,6 @@ pub mod system;
 pub mod template;
 pub mod text;
 pub mod time;
-#[cfg(feature = "ui")]
 pub mod ui;
 pub mod uuid;
 pub mod watch;
@@ -41,7 +39,6 @@ pub use config::{ConfigArgs, ConfigCommand, ConfigFormat};
 pub use csv::{CsvArgs, CsvCommand};
 pub use dhis2::{Dhis2Args, Dhis2Command};
 pub use diff::DiffArgs;
-#[cfg(feature = "egui")]
 pub use egui::{EguiArgs, EguiCommand};
 pub use encode::{EncodeArgs, EncodingFormat};
 pub use encrypt::{EncryptArgs, EncryptCommand};
@@ -61,7 +58,6 @@ pub use system::{SystemArgs, SystemCommand};
 pub use template::{TemplateArgs, TemplateCommand};
 pub use text::{TextArgs, TextCommand};
 pub use time::{TimeArgs, TimeCommand, TimeFormat};
-#[cfg(feature = "ui")]
 pub use ui::UiArgs;
 pub use uuid::{UuidArgs, UuidFormat, UuidVersion};
 pub use watch::WatchArgs;

@@ -8,8 +8,6 @@
 //! - /: Search (type to filter)
 //! - q: Quit
 
-#![cfg(feature = "ui")]
-
 use super::client::Dhis2Client;
 use super::org_units::OrgUnit;
 use anyhow::Result;

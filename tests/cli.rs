@@ -1239,7 +1239,6 @@ fn test_system_alias_sys() {
 // ============================================================================
 
 #[test]
-#[cfg(feature = "ui")]
 fn test_ui_help() {
     dx().args(["ui", "--help"]).assert().success();
 }
@@ -1253,7 +1252,6 @@ fn test_ui_help() {
 // ============================================================================
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_no_args() {
     dx().arg("egui")
         .assert()
@@ -1262,7 +1260,6 @@ fn test_egui_no_args() {
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_help() {
     dx().args(["egui", "--help"])
         .assert()
@@ -1301,82 +1298,69 @@ fn test_egui_help() {
 
 // Existing tools
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_demo_help() {
     dx().args(["egui", "demo", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_counter_help() {
     dx().args(["egui", "counter", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_clock_help() {
     dx().args(["egui", "clock", "--help"]).assert().success();
 }
 
 // Generators
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_uuid_help() {
     dx().args(["egui", "uuid", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_password_help() {
     dx().args(["egui", "password", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_qrcode_help() {
     dx().args(["egui", "qrcode", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_lorem_help() {
     dx().args(["egui", "lorem", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_color_help() {
     dx().args(["egui", "color", "--help"]).assert().success();
 }
 
 // Encoders/Decoders
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_hash_help() {
     dx().args(["egui", "hash", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_base64_help() {
     dx().args(["egui", "base64", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_hex_help() {
     dx().args(["egui", "hex", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_url_help() {
     dx().args(["egui", "url", "--help"]).assert().success();
 }
 
 // Converters
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_timestamp_help() {
     dx().args(["egui", "timestamp", "--help"])
         .assert()
@@ -1384,38 +1368,32 @@ fn test_egui_timestamp_help() {
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_units_help() {
     dx().args(["egui", "units", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_base_help() {
     dx().args(["egui", "base", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_json_help() {
     dx().args(["egui", "json", "--help"]).assert().success();
 }
 
 // Utilities
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_regex_help() {
     dx().args(["egui", "regex", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_diff_help() {
     dx().args(["egui", "diff", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_stopwatch_help() {
     dx().args(["egui", "stopwatch", "--help"])
         .assert()
@@ -1423,7 +1401,6 @@ fn test_egui_stopwatch_help() {
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_calculator_help() {
     dx().args(["egui", "calculator", "--help"])
         .assert()
@@ -1432,13 +1409,11 @@ fn test_egui_calculator_help() {
 
 // Text Tools
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_case_help() {
     dx().args(["egui", "case", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_text_stats_help() {
     dx().args(["egui", "text-stats", "--help"])
         .assert()
@@ -1446,19 +1421,16 @@ fn test_egui_text_stats_help() {
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_markdown_help() {
     dx().args(["egui", "markdown", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_timer_help() {
     dx().args(["egui", "timer", "--help"]).assert().success();
 }
 
 #[test]
-#[cfg(feature = "egui")]
 fn test_egui_work_help() {
     dx().args(["egui", "work", "--help"]).assert().success();
 }

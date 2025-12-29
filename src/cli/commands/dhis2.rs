@@ -160,6 +160,5 @@ pub enum Dhis2Command {
     },
 
     /// Interactive TUI browser for organisation units
-    #[cfg(feature = "ui")]
     Tui,
 }

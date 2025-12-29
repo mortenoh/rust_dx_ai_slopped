@@ -4,6 +4,9 @@ use crate::cli::commands::polars::{PolarsArgs, PolarsCommand};
 use anyhow::{Context, Result};
 use colored::Colorize;
 use polars::prelude::*;
+use ratatui::layout::Constraint;
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 use std::path::Path;
 use std::time::Instant;
 
@@ -277,66 +280,10 @@ fn cmd_view(config: ViewConfig) -> Result<()> {
         return Ok(());
     }
 
-    // Pretty print
-    println!(
-        "{} {}",
-        config.file.display().to_string().cyan().bold(),
-        format!("({} rows, {} cols)", format_number(df.height()), df.width()).dimmed()
-    );
-    println!();
+    // Use ratatui for table rendering
+    let title = config.file.display().to_string();
+    render_dataframe_table(&display_df, display_df.height(), &title)?;
 
-    // Print header
-    let col_widths: Vec<usize> = display_df
-        .get_columns()
-        .iter()
-        .map(|col| {
-            let header_width = col.name().len();
-            let max_value_width = (0..display_df.height())
-                .map(|i| format_value_display(col.as_materialized_series(), i).len())
-                .max()
-                .unwrap_or(0);
-            header_width.max(max_value_width).min(40) // Cap at 40 chars
-        })
-        .collect();
-
-    // Header row
-    let headers: Vec<String> = display_df
-        .get_columns()
-        .iter()
-        .zip(&col_widths)
-        .map(|(col, width)| {
-            format!("{:width$}", col.name(), width = width)
-                .cyan()
-                .bold()
-                .to_string()
-        })
-        .collect();
-    println!("{}", headers.join(" │ "));
-
-    // Separator
-    let sep: Vec<String> = col_widths.iter().map(|w| "─".repeat(*w)).collect();
-    println!("{}", sep.join("─┼─"));
-
-    // Data rows
-    for i in 0..display_df.height() {
-        let row: Vec<String> = display_df
-            .get_columns()
-            .iter()
-            .zip(&col_widths)
-            .map(|(col, width)| {
-                let val = format_value_display(col.as_materialized_series(), i);
-                let truncated = if val.len() > *width {
-                    format!("{}…", &val[..*width - 1])
-                } else {
-                    val
-                };
-                format!("{:width$}", truncated, width = width)
-            })
-            .collect();
-        println!("{}", row.join(" │ "));
-    }
-
-    println!();
     if df.height() > config.rows {
         let showing = if config.tail { "last" } else { "first" };
         println!(
@@ -460,53 +407,6 @@ fn cmd_view_stats(
     }
 
     Ok(())
-}
-
-/// Format a value for display (with colors)
-fn format_value_display(series: &Series, idx: usize) -> String {
-    let value = series.get(idx);
-    if value.is_err() || matches!(value.as_ref().ok(), Some(AnyValue::Null)) {
-        return "null".dimmed().to_string();
-    }
-
-    match series.dtype() {
-        DataType::Float64 | DataType::Float32 => {
-            if let Ok(val) = series.f64() {
-                if let Some(v) = val.get(idx) {
-                    return format!("{:.4}", v);
-                }
-            }
-            if let Ok(val) = series.f32() {
-                if let Some(v) = val.get(idx) {
-                    return format!("{:.4}", v);
-                }
-            }
-            "-".to_string()
-        }
-        DataType::Boolean => {
-            if let Ok(val) = series.bool() {
-                if let Some(v) = val.get(idx) {
-                    return if v {
-                        "true".green().to_string()
-                    } else {
-                        "false".red().to_string()
-                    };
-                }
-            }
-            "-".to_string()
-        }
-        DataType::String => {
-            let val = series.str().ok().and_then(|s| s.get(idx));
-            match val {
-                Some(s) => s.to_string(),
-                None => "-".to_string(),
-            }
-        }
-        _ => series
-            .get(idx)
-            .map(|v| format!("{}", v))
-            .unwrap_or_default(),
-    }
 }
 
 /// Format a value for JSON output
@@ -837,70 +737,87 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
     Ok(())
 }
 
-/// Display a DataFrame on screen (table format)
+/// Display a DataFrame on screen using ratatui Table
 fn display_dataframe(df: &DataFrame, rows: usize) -> Result<()> {
+    render_dataframe_table(df, rows, "Generated Data")
+}
+
+/// Render a DataFrame as a ratatui table
+fn render_dataframe_table(df: &DataFrame, rows: usize, title: &str) -> Result<()> {
     let display_df = df.head(Some(rows));
 
-    println!(
-        "{} {}",
-        "Generated Data".cyan().bold(),
-        format!("({} rows, {} cols)", format_number(df.height()), df.width()).dimmed()
-    );
-    println!();
-
-    // Calculate column widths
-    let col_widths: Vec<usize> = display_df
+    // Build header row
+    let header_cells: Vec<Cell> = display_df
         .get_columns()
         .iter()
         .map(|col| {
+            Cell::from(col.name().to_string()).style(
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )
+        })
+        .collect();
+    let header = Row::new(header_cells).style(Style::default()).height(1);
+
+    // Build data rows
+    let data_rows: Vec<Row> = (0..display_df.height())
+        .map(|i| {
+            let cells: Vec<Cell> = display_df
+                .get_columns()
+                .iter()
+                .map(|col| {
+                    let val = format_value_plain(col.as_materialized_series(), i);
+                    let style = get_value_style(col.as_materialized_series(), i);
+                    Cell::from(val).style(style)
+                })
+                .collect();
+            Row::new(cells)
+        })
+        .collect();
+
+    // Calculate column widths (percentage-based for flexibility)
+    let col_count = display_df.width();
+    let widths: Vec<Constraint> = (0..col_count)
+        .map(|i| {
+            let col = &display_df.get_columns()[i];
             let header_width = col.name().len();
             let max_value_width = (0..display_df.height())
-                .map(|i| format_value_display(col.as_materialized_series(), i).len())
+                .map(|j| format_value_plain(col.as_materialized_series(), j).len())
                 .max()
                 .unwrap_or(0);
-            header_width.max(max_value_width).min(40)
+            let width = header_width.max(max_value_width).min(40) as u16 + 2;
+            Constraint::Length(width)
         })
         .collect();
 
-    // Header row
-    let headers: Vec<String> = display_df
-        .get_columns()
-        .iter()
-        .zip(&col_widths)
-        .map(|(col, width)| {
-            format!("{:width$}", col.name(), width = width)
-                .cyan()
-                .bold()
-                .to_string()
-        })
-        .collect();
-    println!("{}", headers.join(" │ "));
+    // Build the table widget
+    let block_title = format!(
+        "{} ({} rows, {} cols)",
+        title,
+        format_number(df.height()),
+        df.width()
+    );
+    let table = Table::new(data_rows, &widths)
+        .header(header)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::DarkGray))
+                .title(block_title)
+                .title_style(
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+        )
+        .row_highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
-    // Separator
-    let sep: Vec<String> = col_widths.iter().map(|w| "─".repeat(*w)).collect();
-    println!("{}", sep.join("─┼─"));
-
-    // Data rows
-    for i in 0..display_df.height() {
-        let row: Vec<String> = display_df
-            .get_columns()
-            .iter()
-            .zip(&col_widths)
-            .map(|(col, width)| {
-                let val = format_value_display(col.as_materialized_series(), i);
-                let truncated = if val.len() > *width {
-                    format!("{}…", &val[..*width - 1])
-                } else {
-                    val
-                };
-                format!("{:width$}", truncated, width = width)
-            })
-            .collect();
-        println!("{}", row.join(" │ "));
-    }
+    // Render to terminal using inline viewport
+    let table_height = (display_df.height() + 3) as u16; // +3 for header, borders
+    render_widget_inline(table, table_height)?;
 
     if df.height() > rows {
-        println!();
         println!(
             "{}",
             format!(
@@ -913,6 +830,125 @@ fn display_dataframe(df: &DataFrame, rows: usize) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Render a ratatui widget inline (without taking over the screen)
+fn render_widget_inline<W: ratatui::widgets::Widget>(widget: W, height: u16) -> Result<()> {
+    use ratatui::layout::Rect;
+
+    // Get terminal width
+    let (width, _) = crossterm::terminal::size().unwrap_or((80, 24));
+
+    // Create a buffer and render the widget to it
+    let area = Rect::new(0, 0, width, height);
+    let mut buffer = ratatui::buffer::Buffer::empty(area);
+    widget.render(area, &mut buffer);
+
+    // Print the buffer contents line by line
+    for y in 0..height {
+        let mut line = String::new();
+        for x in 0..width {
+            let cell = buffer.cell((x, y)).unwrap();
+            // Apply styling using crossterm
+            let mut styled = cell.symbol().to_string();
+            if cell.fg != Color::Reset {
+                styled = apply_color(&styled, cell.fg);
+            }
+            if cell.modifier.contains(Modifier::BOLD) {
+                styled = styled.bold().to_string();
+            }
+            if cell.modifier.contains(Modifier::DIM) {
+                styled = styled.dimmed().to_string();
+            }
+            line.push_str(&styled);
+        }
+        println!("{}", line.trim_end());
+    }
+
+    Ok(())
+}
+
+/// Apply ratatui Color to a string using colored crate
+fn apply_color(s: &str, color: Color) -> String {
+    match color {
+        Color::Cyan => s.cyan().to_string(),
+        Color::Green => s.green().to_string(),
+        Color::Red => s.red().to_string(),
+        Color::Yellow => s.yellow().to_string(),
+        Color::Blue => s.blue().to_string(),
+        Color::Magenta => s.magenta().to_string(),
+        Color::White => s.white().to_string(),
+        Color::DarkGray => s.dimmed().to_string(),
+        Color::Gray => s.dimmed().to_string(),
+        _ => s.to_string(),
+    }
+}
+
+/// Get plain value string (no color codes)
+fn format_value_plain(series: &Series, idx: usize) -> String {
+    let value = series.get(idx);
+    if value.is_err() || matches!(value.as_ref().ok(), Some(AnyValue::Null)) {
+        return "null".to_string();
+    }
+
+    match series.dtype() {
+        DataType::Float64 | DataType::Float32 => {
+            if let Ok(val) = series.f64() {
+                if let Some(v) = val.get(idx) {
+                    return format!("{:.4}", v);
+                }
+            }
+            if let Ok(val) = series.f32() {
+                if let Some(v) = val.get(idx) {
+                    return format!("{:.4}", v);
+                }
+            }
+            "-".to_string()
+        }
+        DataType::Boolean => {
+            if let Ok(val) = series.bool() {
+                if let Some(v) = val.get(idx) {
+                    return if v { "true" } else { "false" }.to_string();
+                }
+            }
+            "-".to_string()
+        }
+        DataType::String => {
+            let val = series.str().ok().and_then(|s| s.get(idx));
+            match val {
+                Some(s) => s.to_string(),
+                None => "-".to_string(),
+            }
+        }
+        _ => series
+            .get(idx)
+            .map(|v| format!("{}", v))
+            .unwrap_or_default(),
+    }
+}
+
+/// Get style for a value based on its type
+fn get_value_style(series: &Series, idx: usize) -> Style {
+    let value = series.get(idx);
+    if value.is_err() || matches!(value.as_ref().ok(), Some(AnyValue::Null)) {
+        return Style::default().fg(Color::DarkGray);
+    }
+
+    match series.dtype() {
+        DataType::Boolean => {
+            if let Ok(val) = series.bool() {
+                if let Some(v) = val.get(idx) {
+                    return if v {
+                        Style::default().fg(Color::Green)
+                    } else {
+                        Style::default().fg(Color::Red)
+                    };
+                }
+            }
+            Style::default()
+        }
+        _ => Style::default(),
+    }
 }
 
 /// Generate a Series from a predefined category list

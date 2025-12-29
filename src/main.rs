@@ -185,12 +185,10 @@ fn main() -> Result<()> {
         // DHIS2 command: interact with DHIS2 instances
         Commands::Dhis2(args) => commands::dhis2::run(args),
 
-        // UI command: interactive TUI dashboard (requires --features ui)
-        #[cfg(feature = "ui")]
+        // UI command: interactive TUI dashboard
         Commands::Ui(args) => commands::ui::run(args),
 
-        // Egui command: interactive GUI demos (requires --features egui)
-        #[cfg(feature = "egui")]
+        // Egui command: interactive GUI demos
         Commands::Egui(args) => commands::egui::run(args),
 
         // Completions command: generate shell completions
