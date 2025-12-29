@@ -27,7 +27,7 @@ pub fn run(args: Dhis2Args) -> Result<()> {
             limit,
             value_type,
             json,
-        } => dx_dhis2::elements::run(&client, limit, value_type, json),
+        } => dx_dhis2::data_elements::run(&client, limit, value_type, json),
 
         Dhis2Command::DataSets { limit, json } => dx_dhis2::data_sets::run(&client, limit, json),
 
