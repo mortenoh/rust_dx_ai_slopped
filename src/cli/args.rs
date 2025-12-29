@@ -10,8 +10,8 @@ use super::commands::UiArgs;
 use super::commands::{
     CalcArgs, ChatArgs, CompressArgs, ConfigArgs, CsvArgs, Dhis2Args, DiffArgs, EncodeArgs,
     EncryptArgs, EnvArgs, ExprArgs, FunArgs, GrepArgs, HashArgs, HttpArgs, JsonArgs, JwtArgs,
-    MarkdownArgs, NetArgs, RandArgs, SystemArgs, TemplateArgs, TextArgs, TimeArgs, UuidArgs,
-    WatchArgs, XmlArgs, YamlArgs,
+    MarkdownArgs, NetArgs, PolarsArgs, RandArgs, SystemArgs, TemplateArgs, TextArgs, TimeArgs,
+    UuidArgs, WatchArgs, XmlArgs, YamlArgs,
 };
 
 /// dx - Developer Experience CLI
@@ -133,6 +133,10 @@ pub enum Commands {
 
     /// Network utilities (IP, DNS, ports)
     Net(NetArgs),
+
+    /// DataFrame operations with Polars (CSV, Parquet, SQL)
+    #[command(visible_alias = "pl")]
+    Polars(PolarsArgs),
 
     /// Real-time chat using gRPC
     Chat(ChatArgs),

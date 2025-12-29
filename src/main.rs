@@ -158,6 +158,9 @@ fn main() -> Result<()> {
         // Net command: network utilities
         Commands::Net(args) => commands::net::run(args),
 
+        // Polars command: DataFrame operations
+        Commands::Polars(args) => commands::polars::run(args),
+
         // Chat command: gRPC-based real-time chat (async)
         // Uses tokio runtime since chat is the only async command
         Commands::Chat(args) => tokio::runtime::Runtime::new()

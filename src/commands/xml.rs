@@ -65,7 +65,7 @@ fn cmd_format(input: Option<PathBuf>, indent_size: usize) -> Result<()> {
                 writer.write_event(Event::Empty(elem))?;
             }
             Ok(Event::Text(e)) => {
-                let text = e.unescape()?;
+                let text = e.decode()?;
                 if !text.trim().is_empty() {
                     writer.write_event(Event::Text(BytesText::new(&text)))?;
                 }
@@ -84,6 +84,9 @@ fn cmd_format(input: Option<PathBuf>, indent_size: usize) -> Result<()> {
             }
             Ok(Event::DocType(e)) => {
                 writer.write_event(Event::DocType(e))?;
+            }
+            Ok(Event::GeneralRef(e)) => {
+                writer.write_event(Event::GeneralRef(e))?;
             }
             Err(e) => anyhow::bail!("Error parsing XML: {}", e),
         }
@@ -229,7 +232,7 @@ fn xml_to_json(reader: &mut Reader<&[u8]>) -> Result<Value> {
                 }
             }
             Ok(Event::Text(e)) => {
-                let text = e.unescape()?.to_string();
+                let text = e.decode()?.to_string();
                 if !text.trim().is_empty() {
                     if let Some((_, _, children)) = stack.last_mut() {
                         children.push(Value::String(text));

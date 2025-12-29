@@ -1,0 +1,52 @@
+//! Polars command arguments - DataFrame operations and data analysis.
+
+use clap::{Args, Subcommand};
+use std::path::PathBuf;
+
+#[derive(Args, Debug)]
+pub struct PolarsArgs {
+    #[command(subcommand)]
+    pub command: PolarsCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum PolarsCommand {
+    /// Generate random data file (CSV or Parquet)
+    Random {
+        /// Output file path (format determined by extension: .csv, .parquet, .pq)
+        file: PathBuf,
+
+        /// Number of rows to generate
+        #[arg(short = 'n', long, default_value = "10000")]
+        rows: usize,
+
+        /// Column definitions: name:type (e.g., "id:int,name:string,value:float,active:bool")
+        /// Types: int, float, string, bool, date, category
+        #[arg(short, long, value_delimiter = ',')]
+        columns: Vec<String>,
+
+        /// Number of categories for category columns
+        #[arg(long, default_value = "10")]
+        categories: usize,
+
+        /// String length for string columns
+        #[arg(long, default_value = "10")]
+        string_len: usize,
+
+        /// Min value for numeric columns
+        #[arg(long, default_value = "0")]
+        min: i64,
+
+        /// Max value for numeric columns
+        #[arg(long, default_value = "1000")]
+        max: i64,
+
+        /// Null probability (0.0 - 1.0)
+        #[arg(long, default_value = "0.0")]
+        null_prob: f64,
+
+        /// Random seed for reproducibility
+        #[arg(long)]
+        seed: Option<u64>,
+    },
+}

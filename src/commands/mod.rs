@@ -21,6 +21,7 @@ pub mod json;
 pub mod jwt;
 pub mod markdown;
 pub mod net;
+pub mod polars;
 pub mod rand;
 pub mod system;
 pub mod template;

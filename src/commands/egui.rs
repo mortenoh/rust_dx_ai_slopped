@@ -85,7 +85,7 @@ struct DemoApp {
 impl eframe::App for DemoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Hello egui!");
                 ui.add_space(SECTION_SPACING);
 
@@ -141,7 +141,7 @@ struct CounterApp {
 impl eframe::App for CounterApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Counter");
                 ui.add_space(SECTION_SPACING);
 
@@ -205,7 +205,7 @@ struct ClockApp;
 impl eframe::App for ClockApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Analog Clock");
                 ui.add_space(SECTION_SPACING);
 
@@ -357,7 +357,7 @@ impl eframe::App for WorkApp {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Work Simulator");
                 ui.add_space(SECTION_SPACING);
 
@@ -521,7 +521,7 @@ impl UuidApp {
 impl eframe::App for UuidApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("UUID Generator");
                 ui.add_space(SECTION_SPACING);
 
@@ -606,7 +606,11 @@ impl eframe::App for UuidApp {
                                         for (i, uuid) in self.uuids.iter().enumerate() {
                                             ui.label(RichText::new(uuid).monospace());
                                             if ui.small_button("Copy").clicked() {
-                                                ui.output_mut(|o| o.copied_text = uuid.clone());
+                                                ui.output_mut(|o| {
+                                                    o.commands.push(egui::OutputCommand::CopyText(
+                                                        uuid.clone(),
+                                                    ))
+                                                });
                                             }
                                             if i < self.uuids.len() - 1 {
                                                 ui.end_row();
@@ -728,7 +732,7 @@ impl PasswordApp {
 impl eframe::App for PasswordApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Password Generator");
                 ui.add_space(SECTION_SPACING);
 
@@ -784,7 +788,11 @@ impl eframe::App for PasswordApp {
                                     ui.horizontal(|ui| {
                                         ui.label(RichText::new(password).monospace());
                                         if ui.small_button("Copy").clicked() {
-                                            ui.output_mut(|o| o.copied_text = password.clone());
+                                            ui.output_mut(|o| {
+                                                o.commands.push(egui::OutputCommand::CopyText(
+                                                    password.clone(),
+                                                ))
+                                            });
                                         }
                                     });
                                 }
@@ -828,7 +836,7 @@ impl Default for QrcodeApp {
 impl eframe::App for QrcodeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("QR Code Generator");
                 ui.add_space(SECTION_SPACING);
 
@@ -867,7 +875,7 @@ impl eframe::App for QrcodeApp {
                         let size =
                             egui::vec2((width * self.scale) as f32, (width * self.scale) as f32);
 
-                        egui::Frame::none()
+                        egui::Frame::NONE
                             .fill(bg)
                             .inner_margin(ITEM_SPACING)
                             .show(ui, |ui| {
@@ -963,7 +971,7 @@ impl LoremApp {
 impl eframe::App for LoremApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Lorem Ipsum Generator");
                 ui.add_space(SECTION_SPACING);
 
@@ -1003,7 +1011,10 @@ impl eframe::App for LoremApp {
                         self.generate();
                     }
                     if ui.button("Copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = self.text.clone());
+                        ui.output_mut(|o| {
+                            o.commands
+                                .push(egui::OutputCommand::CopyText(self.text.clone()))
+                        });
                     }
                 });
 
@@ -1112,7 +1123,7 @@ impl ColorApp {
 impl eframe::App for ColorApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Color Picker");
                 ui.add_space(SECTION_SPACING);
 
@@ -1145,7 +1156,9 @@ impl eframe::App for ColorApp {
                                 ui.label("HEX:");
                                 ui.label(RichText::new(&hex).monospace());
                                 if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = hex);
+                                    ui.output_mut(|o| {
+                                        o.commands.push(egui::OutputCommand::CopyText(hex))
+                                    });
                                 }
                                 ui.end_row();
 
@@ -1153,7 +1166,9 @@ impl eframe::App for ColorApp {
                                 ui.label("RGB:");
                                 ui.label(RichText::new(&rgb).monospace());
                                 if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = rgb);
+                                    ui.output_mut(|o| {
+                                        o.commands.push(egui::OutputCommand::CopyText(rgb))
+                                    });
                                 }
                                 ui.end_row();
 
@@ -1161,7 +1176,9 @@ impl eframe::App for ColorApp {
                                 ui.label("HSL:");
                                 ui.label(RichText::new(&hsl).monospace());
                                 if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = hsl);
+                                    ui.output_mut(|o| {
+                                        o.commands.push(egui::OutputCommand::CopyText(hsl))
+                                    });
                                 }
                                 ui.end_row();
                             });
@@ -1297,7 +1314,7 @@ impl HashApp {
 impl eframe::App for HashApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Hash Calculator");
                 ui.add_space(SECTION_SPACING);
 
@@ -1342,7 +1359,9 @@ impl eframe::App for HashApp {
                                 };
                                 ui.label(text);
                                 if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = md5);
+                                    ui.output_mut(|o| {
+                                        o.commands.push(egui::OutputCommand::CopyText(md5))
+                                    });
                                 }
                                 ui.end_row();
 
@@ -1357,7 +1376,9 @@ impl eframe::App for HashApp {
                                 };
                                 ui.label(text);
                                 if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = sha256);
+                                    ui.output_mut(|o| {
+                                        o.commands.push(egui::OutputCommand::CopyText(sha256))
+                                    });
                                 }
                                 ui.end_row();
 
@@ -1372,7 +1393,9 @@ impl eframe::App for HashApp {
                                 };
                                 ui.label(text);
                                 if ui.small_button("Copy").clicked() {
-                                    ui.output_mut(|o| o.copied_text = sha512);
+                                    ui.output_mut(|o| {
+                                        o.commands.push(egui::OutputCommand::CopyText(sha512))
+                                    });
                                 }
                                 ui.end_row();
                             });
@@ -1422,7 +1445,10 @@ impl eframe::App for HashApp {
                                         && ui.small_button("Copy").clicked()
                                     {
                                         if let Some(ref h) = self.bcrypt_hash {
-                                            ui.output_mut(|o| o.copied_text = h.clone());
+                                            ui.output_mut(|o| {
+                                                o.commands
+                                                    .push(egui::OutputCommand::CopyText(h.clone()))
+                                            });
                                         }
                                     }
                                 });
@@ -1448,7 +1474,10 @@ impl eframe::App for HashApp {
                                         && ui.small_button("Copy").clicked()
                                     {
                                         if let Some(ref h) = self.argon2_hash {
-                                            ui.output_mut(|o| o.copied_text = h.clone());
+                                            ui.output_mut(|o| {
+                                                o.commands
+                                                    .push(egui::OutputCommand::CopyText(h.clone()))
+                                            });
                                         }
                                     }
                                 });
@@ -1522,7 +1551,7 @@ impl Base64App {
 impl eframe::App for Base64App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Base64 Encoder/Decoder");
                 ui.add_space(SECTION_SPACING);
 
@@ -1602,7 +1631,7 @@ impl Default for HexApp {
 impl eframe::App for HexApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Hex Encoder/Decoder");
                 ui.add_space(SECTION_SPACING);
 
@@ -1628,7 +1657,9 @@ impl eframe::App for HexApp {
                         ui.horizontal(|ui| {
                             ui.label("Hex output:");
                             if ui.small_button("Copy").clicked() {
-                                ui.output_mut(|o| o.copied_text = hex.clone());
+                                ui.output_mut(|o| {
+                                    o.commands.push(egui::OutputCommand::CopyText(hex.clone()))
+                                });
                             }
                         });
                         ui.label(RichText::new(&hex).monospace());
@@ -1736,7 +1767,7 @@ impl Default for UrlApp {
 impl eframe::App for UrlApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("URL Encoder/Decoder");
                 ui.add_space(SECTION_SPACING);
 
@@ -1874,7 +1905,7 @@ impl Default for TimestampApp {
 impl eframe::App for TimestampApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Timestamp Converter");
                 ui.add_space(SECTION_SPACING);
 
@@ -2016,7 +2047,7 @@ impl Default for UnitsApp {
 impl eframe::App for UnitsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Unit Converter");
                 ui.add_space(SECTION_SPACING);
 
@@ -2228,7 +2259,7 @@ impl BaseApp {
 impl eframe::App for BaseApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Number Base Converter");
                 ui.add_space(SECTION_SPACING);
 
@@ -2417,26 +2448,24 @@ fn sort_json_keys(value: serde_json::Value) -> serde_json::Value {
 impl eframe::App for JsonApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("json_toolbar").show(ctx, |ui| {
-            egui::Frame::none()
-                .inner_margin(ITEM_SPACING)
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        if ui.button("Format").clicked() {
-                            self.format();
-                        }
-                        if ui.button("Minify").clicked() {
-                            self.minify();
-                        }
-                        ui.add_space(ITEM_SPACING);
-                        ui.label("Indent:");
-                        ui.add(egui::Slider::new(&mut self.indent, 1..=8));
-                        ui.checkbox(&mut self.sort_keys, "Sort keys");
-                    });
+            egui::Frame::NONE.inner_margin(ITEM_SPACING).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("Format").clicked() {
+                        self.format();
+                    }
+                    if ui.button("Minify").clicked() {
+                        self.minify();
+                    }
+                    ui.add_space(ITEM_SPACING);
+                    ui.label("Indent:");
+                    ui.add(egui::Slider::new(&mut self.indent, 1..=8));
+                    ui.checkbox(&mut self.sort_keys, "Sort keys");
                 });
+            });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 if let Some(err) = &self.error {
                     ui.label(RichText::new(err).color(Color32::RED));
                     ui.add_space(ITEM_SPACING);
@@ -2533,7 +2562,7 @@ const REGEX_PRESETS: &[(&str, &str)] = &[
 impl eframe::App for RegexApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Regex Tester");
                 ui.add_space(SECTION_SPACING);
 
@@ -2697,7 +2726,7 @@ impl Default for DiffApp {
 impl eframe::App for DiffApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Text Diff Viewer");
                 ui.add_space(SECTION_SPACING);
 
@@ -2843,7 +2872,7 @@ impl StopwatchApp {
 impl eframe::App for StopwatchApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Stopwatch");
                 ui.add_space(SECTION_SPACING);
 
@@ -2965,7 +2994,7 @@ impl CalculatorApp {
 impl eframe::App for CalculatorApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Expression Calculator");
                 ui.add_space(SECTION_SPACING);
 
@@ -3109,7 +3138,7 @@ impl eframe::App for CaseApp {
         use heck::*;
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Case Converter");
                 ui.add_space(SECTION_SPACING);
 
@@ -3152,7 +3181,10 @@ impl eframe::App for CaseApp {
                                         ui.label(RichText::new(name).strong());
                                         ui.label(RichText::new(&value).monospace());
                                         if ui.small_button("Copy").clicked() {
-                                            ui.output_mut(|o| o.copied_text = value);
+                                            ui.output_mut(|o| {
+                                                o.commands
+                                                    .push(egui::OutputCommand::CopyText(value))
+                                            });
                                         }
                                         ui.end_row();
                                     }
@@ -3193,7 +3225,7 @@ impl Default for TextStatsApp {
 impl eframe::App for TextStatsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Text Statistics");
                 ui.add_space(SECTION_SPACING);
 
@@ -3434,37 +3466,35 @@ impl MarkdownApp {
 impl eframe::App for MarkdownApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("md_toolbar").show(ctx, |ui| {
-            egui::Frame::none()
-                .inner_margin(ITEM_SPACING)
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        if ui.button("Bold").clicked() {
-                            self.source.push_str("**bold**");
-                        }
-                        if ui.button("Italic").clicked() {
-                            self.source.push_str("*italic*");
-                        }
-                        if ui.button("Code").clicked() {
-                            self.source.push_str("`code`");
-                        }
-                        if ui.button("H1").clicked() {
-                            self.source.push_str("\n# Heading\n");
-                        }
-                        if ui.button("H2").clicked() {
-                            self.source.push_str("\n## Heading\n");
-                        }
-                        if ui.button("List").clicked() {
-                            self.source.push_str("\n- Item\n");
-                        }
-                        if ui.button("Quote").clicked() {
-                            self.source.push_str("\n> Quote\n");
-                        }
-                    });
+            egui::Frame::NONE.inner_margin(ITEM_SPACING).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("Bold").clicked() {
+                        self.source.push_str("**bold**");
+                    }
+                    if ui.button("Italic").clicked() {
+                        self.source.push_str("*italic*");
+                    }
+                    if ui.button("Code").clicked() {
+                        self.source.push_str("`code`");
+                    }
+                    if ui.button("H1").clicked() {
+                        self.source.push_str("\n# Heading\n");
+                    }
+                    if ui.button("H2").clicked() {
+                        self.source.push_str("\n## Heading\n");
+                    }
+                    if ui.button("List").clicked() {
+                        self.source.push_str("\n- Item\n");
+                    }
+                    if ui.button("Quote").clicked() {
+                        self.source.push_str("\n> Quote\n");
+                    }
                 });
+            });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.columns(2, |columns| {
                     // Source column
                     egui::Frame::group(columns[0].style())
@@ -3582,7 +3612,7 @@ impl eframe::App for TimerApp {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Pomodoro Timer");
                 ui.add_space(SECTION_SPACING);
 
@@ -3826,7 +3856,7 @@ impl TableApp {
 impl eframe::App for TableApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Data Table");
                 ui.add_space(SECTION_SPACING);
 
@@ -3961,7 +3991,7 @@ struct ModalApp {
 impl eframe::App for ModalApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Modal/Window Dialogs");
                 ui.add_space(SECTION_SPACING);
 
@@ -4103,7 +4133,7 @@ impl Default for PlotApp {
 impl eframe::App for PlotApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Charts & Graphs");
                 ui.add_space(SECTION_SPACING);
 
@@ -4160,14 +4190,10 @@ impl eframe::App for PlotApp {
 
                         plot.show(ui, |plot_ui| match self.plot_type {
                             PlotType::Line => {
-                                plot_ui.line(
-                                    Line::new(sin_data)
-                                        .name("sin(x)")
-                                        .color(Color32::LIGHT_BLUE),
-                                );
-                                plot_ui.line(
-                                    Line::new(cos_data).name("cos(x)").color(Color32::LIGHT_RED),
-                                );
+                                plot_ui
+                                    .line(Line::new("sin(x)", sin_data).color(Color32::LIGHT_BLUE));
+                                plot_ui
+                                    .line(Line::new("cos(x)", cos_data).color(Color32::LIGHT_RED));
                             }
                             PlotType::Bar => {
                                 let bars: Vec<Bar> = (0..10)
@@ -4181,19 +4207,17 @@ impl eframe::App for PlotApp {
                                     })
                                     .collect();
                                 plot_ui.bar_chart(
-                                    BarChart::new(bars).name("Data").color(Color32::LIGHT_GREEN),
+                                    BarChart::new("Data", bars).color(Color32::LIGHT_GREEN),
                                 );
                             }
                             PlotType::Scatter => {
                                 plot_ui.points(
-                                    Points::new(sin_data)
-                                        .name("sin(x)")
+                                    Points::new("sin(x)", sin_data)
                                         .color(Color32::LIGHT_BLUE)
                                         .radius(3.0),
                                 );
                                 plot_ui.points(
-                                    Points::new(cos_data)
-                                        .name("cos(x)")
+                                    Points::new("cos(x)", cos_data)
                                         .color(Color32::LIGHT_RED)
                                         .radius(3.0),
                                 );
@@ -4252,7 +4276,11 @@ impl ImageApp {
                 }
             }
 
-            let image = egui::ColorImage { size, pixels };
+            let image = egui::ColorImage {
+                size,
+                pixels,
+                source_size: egui::Vec2::new(size[0] as f32, size[1] as f32),
+            };
 
             self.generated_texture =
                 Some(ctx.load_texture("gradient", image, egui::TextureOptions::LINEAR));
@@ -4265,7 +4293,7 @@ impl eframe::App for ImageApp {
         self.generate_texture(ctx);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Image Viewer");
                 ui.add_space(SECTION_SPACING);
 
@@ -4374,48 +4402,48 @@ impl eframe::App for MenuApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Menu bar
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+            egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("New").clicked() {
                         self.status = "New file created".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     if ui.button("Open...").clicked() {
                         self.status = "Open dialog (simulated)".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     if ui.button("Save").clicked() {
                         self.status = "File saved".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     ui.separator();
                     if ui.button("Exit").clicked() {
                         self.status = "Exit requested".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                 });
 
                 ui.menu_button("Edit", |ui| {
                     if ui.button("Undo").clicked() {
                         self.status = "Undo".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     if ui.button("Redo").clicked() {
                         self.status = "Redo".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     ui.separator();
                     if ui.button("Cut").clicked() {
                         self.status = "Cut".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     if ui.button("Copy").clicked() {
                         self.status = "Copy".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     if ui.button("Paste").clicked() {
                         self.status = "Paste".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                 });
 
@@ -4432,12 +4460,12 @@ impl eframe::App for MenuApp {
                 ui.menu_button("Help", |ui| {
                     if ui.button("Documentation").clicked() {
                         self.status = "Opening docs...".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                     ui.separator();
                     if ui.button("About").clicked() {
                         self.status = "dx egui - Widget Showcase".to_string();
-                        ui.close_menu();
+                        ui.close();
                     }
                 });
             });
@@ -4476,7 +4504,7 @@ impl eframe::App for MenuApp {
 
         // Main content
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Menu Bar Demo");
                 ui.add_space(SECTION_SPACING);
 
@@ -4538,7 +4566,7 @@ impl Default for ContextApp {
 impl eframe::App for ContextApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Context Menu (Right-Click)");
                 ui.add_space(SECTION_SPACING);
 
@@ -4566,16 +4594,16 @@ impl eframe::App for ContextApp {
                             response.context_menu(|ui| {
                                 if ui.button("Edit").clicked() {
                                     self.last_action = format!("Editing: {}", item);
-                                    ui.close_menu();
+                                    ui.close();
                                 }
                                 if ui.button("Duplicate").clicked() {
                                     self.last_action = format!("Duplicated: {}", item);
-                                    ui.close_menu();
+                                    ui.close();
                                 }
                                 ui.separator();
                                 if ui.button("Delete").clicked() {
                                     to_delete = Some(i);
-                                    ui.close_menu();
+                                    ui.close();
                                 }
                             });
                         }
@@ -4642,7 +4670,7 @@ impl Default for TabsApp {
 impl eframe::App for TabsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Tabbed Interface");
                 ui.add_space(SECTION_SPACING);
 
@@ -4732,7 +4760,7 @@ struct TreeApp {
 impl eframe::App for TreeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Tree View");
                 ui.add_space(SECTION_SPACING);
 
@@ -4915,7 +4943,7 @@ impl Default for CodeApp {
 impl eframe::App for CodeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none().inner_margin(MARGIN).show(ui, |ui| {
+            egui::Frame::NONE.inner_margin(MARGIN).show(ui, |ui| {
                 ui.heading("Code Editor");
                 ui.add_space(SECTION_SPACING);
 
@@ -5003,18 +5031,21 @@ int main() {
                                         ui.ctx(),
                                         ui.style(),
                                     );
-                                let mut layouter = |ui: &egui::Ui, text: &str, wrap_width: f32| {
-                                    let mut layout_job =
-                                        egui_extras::syntax_highlighting::highlight(
-                                            ui.ctx(),
-                                            ui.style(),
-                                            &theme,
-                                            text,
-                                            &self.language,
-                                        );
-                                    layout_job.wrap.max_width = wrap_width;
-                                    ui.fonts(|f| f.layout_job(layout_job))
-                                };
+                                let mut layouter =
+                                    |ui: &egui::Ui,
+                                     text: &dyn egui::TextBuffer,
+                                     wrap_width: f32| {
+                                        let mut layout_job =
+                                            egui_extras::syntax_highlighting::highlight(
+                                                ui.ctx(),
+                                                ui.style(),
+                                                &theme,
+                                                text.as_str(),
+                                                &self.language,
+                                            );
+                                        layout_job.wrap.max_width = wrap_width;
+                                        ui.fonts_mut(|f| f.layout_job(layout_job))
+                                    };
 
                                 ui.add(
                                     egui::TextEdit::multiline(&mut self.code)

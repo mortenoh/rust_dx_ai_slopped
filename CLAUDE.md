@@ -13,6 +13,13 @@ Do not add any AI attribution to commits, PRs, or anywhere else. This means:
 ### Pre-commit Checks
 Always run `make lint` before committing. This runs `cargo fmt` and `cargo clippy --fix`.
 
+### Adding Dependencies
+Always use `cargo add` to add new dependencies instead of manually editing Cargo.toml. This ensures we get the latest compatible versions:
+```bash
+cargo add polars --features lazy,csv,parquet
+cargo add some-crate --no-default-features --features feat1,feat2
+```
+
 ### Feature Completeness
 When adding or modifying features, always update ALL related artifacts:
 - **README.md** - Update feature descriptions and examples
