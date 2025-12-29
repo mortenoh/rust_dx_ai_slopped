@@ -599,7 +599,12 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
 
     // Default columns if none specified
     let col_defs: Vec<(&str, &str)> = if config.columns.is_empty() {
-        vec![("id", "id"), ("cat", "category"), ("value", "float")]
+        vec![
+            ("id", "id"),
+            ("store", "city"),
+            ("item", "fruit"),
+            ("value", "int"),
+        ]
     } else {
         config
             .columns

@@ -48,7 +48,7 @@ pub enum PolarsCommand {
         file: Option<PathBuf>,
 
         /// Number of rows to generate
-        #[arg(short = 'n', long, default_value = "10000")]
+        #[arg(short = 'n', long, default_value = "20")]
         rows: usize,
 
         /// Column definitions: name:type (e.g., "id:id,city:city,score:float")
