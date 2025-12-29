@@ -429,6 +429,15 @@ fn cmd_random(config: RandomConfig) -> Result<()> {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
+    // Check if user wants to list available generators
+    if config.columns.len() == 1 {
+        let first = config.columns[0].to_lowercase();
+        if first == "list" || first == "help" || first == "?" {
+            print_available_generators();
+            return Ok(());
+        }
+    }
+
     let start = Instant::now();
 
     // Initialize RNG with optional seed
@@ -1176,4 +1185,100 @@ fn format_bytes(bytes: u64) -> String {
     } else {
         format!("{} B", bytes)
     }
+}
+
+/// Print available generators
+fn print_available_generators() {
+    println!("{}", "Available Column Generators".cyan().bold());
+    println!("{}", "═".repeat(60));
+    println!();
+
+    println!("{}", "PRIMITIVES".yellow().bold());
+    println!("  {:20} Sequential integers (1, 2, 3, ...)", "id".white());
+    println!(
+        "  {:20} Random integers (--min/--max)",
+        "int, integer, i64".white()
+    );
+    println!(
+        "  {:20} Random floats (--min/--max)",
+        "float, f64, double".white()
+    );
+    println!(
+        "  {:20} Random alphanumeric (--string-len)",
+        "string, str, text".white()
+    );
+    println!("  {:20} Random true/false", "bool, boolean".white());
+    println!("  {:20} Random dates (2020-2025)", "date".white());
+    println!();
+
+    println!("{}", "CATEGORIES".yellow().bold());
+    println!(
+        "  {:20} Generic cat_0..cat_N (--categories)",
+        "category, cat, enum".white()
+    );
+    println!("  {:20} apple, banana, orange, ...", "fruit".white());
+    println!("  {:20} red, blue, green, ...", "color".white());
+    println!("  {:20} New York, London, Tokyo, ...", "city".white());
+    println!("  {:20} USA, Germany, Japan, ...", "country".white());
+    println!("  {:20} pending, active, completed, ...", "status".white());
+    println!("  {:20} low, medium, high, critical", "priority".white());
+    println!(
+        "  {:20} Engineering, Sales, HR, ...",
+        "department, dept".white()
+    );
+    println!("  {:20} Monday, Tuesday, ...", "day".white());
+    println!("  {:20} XS, S, M, L, XL, XXL", "size".white());
+    println!();
+
+    println!("{}", "PERSONAL".yellow().bold());
+    println!("  {:20} James, Mary, ...", "first_name, firstname".white());
+    println!("  {:20} Smith, Johnson, ...", "last_name, lastname".white());
+    println!(
+        "  {:20} James Smith, Mary Johnson, ...",
+        "full_name, name".white()
+    );
+    println!("  {:20} user@example.com", "email".white());
+    println!("  {:20} cool_user42", "username".white());
+    println!("  {:20} (555) 123-4567", "phone".white());
+    println!("  {:20} 123 Main Street", "address, street_address".white());
+    println!("  {:20} 12345", "zip, zip_code, postal_code".white());
+    println!();
+
+    println!("{}", "NETWORK".yellow().bold());
+    println!("  {:20} 192.168.1.100", "ipv4, ip".white());
+    println!("  {:20} 2001:db8::1", "ipv6".white());
+    println!("  {:20} 00:1A:2B:3C:4D:5E", "mac, mac_address".white());
+    println!("  {:20} example.com", "domain".white());
+    println!("  {:20} https://example.com/path", "url".white());
+    println!();
+
+    println!("{}", "IDENTIFIERS".yellow().bold());
+    println!("  {:20} 550e8400-e29b-41d4-...", "uuid, uuid4".white());
+    println!("  {:20} 018f6b1c-... (time-based)", "uuid7".white());
+    println!(
+        "  {:20} 4532015112830366 (Luhn valid)",
+        "credit_card, cc".white()
+    );
+    println!("  {:20} DE89370400440532013000", "iban".white());
+    println!("  {:20} 9780306406157", "isbn, isbn13".white());
+    println!("  {:20} 0306406152", "isbn10".white());
+    println!("  {:20} 123-45-6789 (US format)", "ssn, ssn_us".white());
+    println!("  {:20} 12345678901 (Norwegian)", "ssn_no".white());
+    println!();
+
+    println!("{}", "TEXT".yellow().bold());
+    println!("  {:20} random word", "word".white());
+    println!("  {:20} Lorem ipsum dolor sit amet...", "sentence".white());
+    println!("  {:20} Full paragraph of lorem ipsum", "paragraph".white());
+    println!();
+
+    println!("{}", "OTHER".yellow().bold());
+    println!("  {:20} Secure random password", "password".white());
+    println!("  {:20} Random hex string", "hex".white());
+    println!();
+
+    println!("{}", "USAGE".cyan().bold());
+    println!("  dx polars random -c \"id:id,name:full_name,email:email\"");
+    println!("  dx polars random -c \"id:id,card:credit_card,ip:ipv4\" -n 100");
+    println!("  dx polars random -c \"id:id,book:isbn,price:float\" -f csv");
 }
