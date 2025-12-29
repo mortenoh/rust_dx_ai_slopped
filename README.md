@@ -33,8 +33,10 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 | `http` | - | HTTP client (GET, POST, PUT, DELETE, HEAD) |
 | `watch` | `w` | Watch files and run commands on changes |
 | `system` | `sys` | System information (CPU, memory, OS, uptime) |
-| `ui` | - | Interactive TUI dashboard (requires `--features ui`) |
-| `egui` | - | Native GUI demos (requires `--features egui`) |
+| `polars` | `pl` | DataFrame operations (view, random data generation) |
+| `dhis2` | - | DHIS2 API utilities (org units, data elements, data values) |
+| `ui` | - | Interactive TUI dashboard |
+| `egui` | - | Native GUI demos |
 | `completions` | - | Generate shell completions |
 
 ## Installation
@@ -42,17 +44,7 @@ A production-ready CLI toolkit demonstrating best practices for Rust CLI develop
 ### From Source
 
 ```bash
-# Standard build
 cargo install --path .
-
-# With TUI dashboard support
-cargo install --path . --features ui
-
-# With GUI demos
-cargo install --path . --features egui
-
-# With all features
-cargo install --path . --features ui,egui
 ```
 
 ### Pre-built Binaries
@@ -109,6 +101,15 @@ dx watch . -e rs -- cargo build             # Rebuild on .rs changes
 dx system info                              # CPU, memory, OS details
 dx system uptime                            # System uptime
 
+# DataFrame operations with Polars
+dx polars random                            # Generate random data (screen)
+dx polars random data.parquet               # Generate Parquet file
+dx polars random data.csv -n 1000           # Generate 1000 rows as CSV
+dx polars random -c "id:id,name:fruit,city:city,amount:float"
+dx polars view data.parquet                 # View data from file
+dx polars view data.csv --stats             # Show statistics
+dx polars view data.parquet --schema        # Show schema only
+
 # Fun terminal effects
 dx fun matrix                               # Matrix-style falling code
 dx fun life                                 # Conway's Game of Life
@@ -148,10 +149,10 @@ dx markdown toc README.md                   # Extract TOC
 dx compress compress file.txt               # Compress to file.txt.gz
 dx compress decompress file.txt.gz          # Decompress
 
-# TUI dashboard (requires --features ui)
+# TUI dashboard
 dx ui                                       # Interactive system dashboard
 
-# GUI demos (requires --features egui)
+# GUI demos
 dx egui demo                                # Hello world window
 dx egui counter                             # Counter with buttons
 dx egui clock                               # Live updating clock

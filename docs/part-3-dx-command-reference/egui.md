@@ -2,8 +2,6 @@
 
 The `egui` command provides native GUI application demos using the [egui](https://github.com/emilk/egui) immediate mode GUI library. These tools showcase the full range of egui widgets and serve as practical utilities.
 
-> **Note:** This command requires the `egui` feature flag: `cargo build --features egui`
-
 ## Usage
 
 ```bash

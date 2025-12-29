@@ -1,9 +1,6 @@
 # ui - TUI Dashboard
 
-The `ui` command launches an interactive terminal user interface (TUI) dashboard.
-
-> **Note:** This command requires the `ui` feature flag.
-> Build with: `cargo build --features ui`
+The `ui` command launches an interactive terminal user interface (TUI) dashboard built with [ratatui](https://ratatui.rs/).
 
 ## Usage
 

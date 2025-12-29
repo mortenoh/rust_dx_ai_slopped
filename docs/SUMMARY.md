@@ -59,6 +59,7 @@
 - [http - HTTP Client](./part-3-dx-command-reference/http.md)
 - [watch - File Watcher](./part-3-dx-command-reference/watch.md)
 - [system - System Info](./part-3-dx-command-reference/system.md)
+- [polars - DataFrame Operations](./part-3-dx-command-reference/polars.md)
 - [ui - TUI Dashboard](./part-3-dx-command-reference/ui.md)
 - [egui - Native GUI Demos](./part-3-dx-command-reference/egui.md)
 
