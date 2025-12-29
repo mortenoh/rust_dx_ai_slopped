@@ -3,8 +3,10 @@
 
 [advisories]
 ignore = [
-    # yaml-rust - used by syntect (transitive, unmaintained)
+    # yaml-rust - unmaintained, used by syntect → egui_extras for syntax highlighting
+    # egui_extras doesn't expose syntect feature flags, so we can't disable yaml-load
     "RUSTSEC-2024-0320",
-    # rsa - Marvin Attack timing sidechannel, used by jsonwebtoken (no fix available)
+    # rsa - Marvin Attack timing sidechannel, used by jsonwebtoken
+    # No pure-Rust fix available; aws_lc_rs backend would add C dependency
     "RUSTSEC-2023-0071",
 ]
