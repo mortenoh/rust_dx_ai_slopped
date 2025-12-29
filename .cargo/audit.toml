@@ -1,0 +1,10 @@
+# Security audit configuration
+# Ignore advisories for transitive dependencies we can't control
+
+[advisories]
+ignore = [
+    # paste - used by ratatui, metal, accesskit_windows (transitive)
+    "RUSTSEC-2024-0436",
+    # yaml-rust - used by syntect (transitive, unmaintained)
+    "RUSTSEC-2024-0320",
+]
