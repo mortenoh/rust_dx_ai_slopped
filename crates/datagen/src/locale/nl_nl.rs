@@ -244,10 +244,7 @@ pub fn street_address<R: ?Sized + Rng>(rng: &mut R) -> String {
 pub fn postal_code<R: ?Sized + Rng>(rng: &mut R) -> String {
     let digits: u16 = rng.random_range(1000..9999);
     let letters: String = (0..2)
-        .map(|_| {
-            let c = (b'A' + rng.random_range(0..26)) as char;
-            c
-        })
+        .map(|_| (b'A' + rng.random_range(0..26)) as char)
         .collect();
     format!("{} {}", digits, letters)
 }

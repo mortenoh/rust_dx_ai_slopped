@@ -81,7 +81,7 @@ pub fn youtube_channel<R: Rng + ?Sized>(rng: &mut R) -> String {
         format!("The {} Channel", random_name(rng)),
         format!("{} Gaming", username(rng)),
         format!("{} Vlogs", random_name(rng)),
-        format!("{}", username(rng)),
+        username(rng).to_string(),
     ];
     formats[rng.random_range(0..formats.len())].clone()
 }

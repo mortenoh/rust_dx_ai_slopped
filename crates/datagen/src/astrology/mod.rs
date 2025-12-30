@@ -143,7 +143,7 @@ pub fn birthstone<R: ?Sized + Rng>(rng: &mut R) -> &'static str {
 
 /// Get birthstone for a specific month (1-12).
 pub fn birthstone_for_month(month: u8) -> Option<&'static str> {
-    if month >= 1 && month <= 12 {
+    if (1..=12).contains(&month) {
         Some(BIRTHSTONES[(month - 1) as usize])
     } else {
         None

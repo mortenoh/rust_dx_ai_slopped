@@ -43,7 +43,7 @@ pub fn weighted<R: Rng + ?Sized>(rng: &mut R, args: &[Argument]) -> Result<Strin
         ));
     }
 
-    if args.len() % 2 != 0 {
+    if !args.len().is_multiple_of(2) {
         return Err(FunctionError::new(
             "options.weighted: arguments must be value-weight pairs",
         ));
