@@ -163,7 +163,15 @@ jobs:
           \`\`\`bash
           curl -L https://github.com/${{ github.repository }}/releases/download/latest/dx-linux-x86_64.tar.gz | tar xz
           sudo mv dx /usr/local/bin/
-          \`\`\`" \
+          \`\`\`
+
+          ## macOS Note
+          The macOS binaries are not signed/notarized. To run after downloading:
+          \`\`\`bash
+          # Remove quarantine attribute
+          xattr -d com.apple.quarantine dx
+          \`\`\`
+          Or: Right-click the binary in Finder → Open → Open anyway" \
             --latest \
             release/*
         env:
