@@ -46,6 +46,15 @@
 - [uuid - UUID Generation](./part-3-dx-command-reference/uuid.md)
 - [time - Timestamp Conversion](./part-3-dx-command-reference/time.md)
 - [json - JSON Formatting](./part-3-dx-command-reference/json.md)
+- [yaml - YAML Processing](./part-3-dx-command-reference/yaml.md)
+- [csv - CSV Processing](./part-3-dx-command-reference/csv.md)
+- [xml - XML Processing](./part-3-dx-command-reference/xml.md)
+- [jwt - JWT Tokens](./part-3-dx-command-reference/jwt.md)
+- [encrypt - Encryption](./part-3-dx-command-reference/encrypt.md)
+- [diff - Text Diffing](./part-3-dx-command-reference/diff.md)
+- [template - Template Rendering](./part-3-dx-command-reference/template.md)
+- [markdown - Markdown Utilities](./part-3-dx-command-reference/markdown.md)
+- [compress - Compression](./part-3-dx-command-reference/compress.md)
 - [env - Environment Variables](./part-3-dx-command-reference/env.md)
 - [config - Configuration](./part-3-dx-command-reference/config.md)
 - [rand - Random Generation](./part-3-dx-command-reference/rand.md)
@@ -60,8 +69,10 @@
 - [watch - File Watcher](./part-3-dx-command-reference/watch.md)
 - [system - System Info](./part-3-dx-command-reference/system.md)
 - [polars - DataFrame Operations](./part-3-dx-command-reference/polars.md)
+- [dhis2 - DHIS2 API](./part-3-dx-command-reference/dhis2.md)
 - [ui - TUI Dashboard](./part-3-dx-command-reference/ui.md)
 - [egui - Native GUI Demos](./part-3-dx-command-reference/egui.md)
+- [completions - Shell Completions](./part-3-dx-command-reference/completions.md)
 
 ---
 

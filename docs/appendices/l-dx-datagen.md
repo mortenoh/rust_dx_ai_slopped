@@ -469,16 +469,268 @@ es_es::dni(&mut rng);                // Spanish national ID
 | `nl_NL` | Dutch | Provinces, Dutch names |
 | `sv_SE` | Swedish | Counties, Swedish names |
 
+## Schema Module [feature: `schema`]
+
+The schema module provides schema-based data generation from various formats.
+
+### JSON Schema → Data Generation
+
+```rust
+use dx_datagen::schema::{from_json_schema, from_json_schema_with_options, JsonSchemaOptions};
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+use serde_json::json;
+
+let mut rng = StdRng::seed_from_u64(42);
+
+let schema = json!({
+    "type": "object",
+    "properties": {
+        "name": { "type": "string", "minLength": 5 },
+        "age": { "type": "integer", "minimum": 0, "maximum": 120 },
+        "email": { "type": "string", "format": "email" },
+        "active": { "type": "boolean" }
+    },
+    "required": ["name", "age"]
+});
+
+let data = from_json_schema(&mut rng, &schema);
+// {"name": "xK9mPq2aB3", "age": 42, "email": "user@example.com", "active": true}
+
+// With options
+let options = JsonSchemaOptions {
+    default_string_length: 10,
+    default_max_items: 5,
+    include_optional: true,
+    ..Default::default()
+};
+let data = from_json_schema_with_options(&mut rng, &schema, &options);
+```
+
+Supported JSON Schema features:
+- Types: `string`, `integer`, `number`, `boolean`, `null`, `array`, `object`
+- Formats: `email`, `uuid`, `uri`, `date`, `time`, `date-time`, `ipv4`, `ipv6`, `hostname`
+- Constraints: `minimum`, `maximum`, `minLength`, `maxLength`, `minItems`, `maxItems`, `pattern`
+- Composition: `enum`, `const`, `oneOf`, `anyOf`, `allOf`
+- References: `$ref` to definitions
+
+### Data → JSON Schema Inference
+
+```rust
+use dx_datagen::schema::infer_schema;
+use serde_json::json;
+
+let records = vec![
+    json!({"name": "Alice", "age": 30, "email": "alice@example.com"}),
+    json!({"name": "Bob", "age": 25, "email": "bob@example.com"}),
+];
+
+let schema = infer_schema(&records);
+// {
+//   "type": "object",
+//   "properties": {
+//     "name": { "type": "string" },
+//     "age": { "type": "integer", "minimum": 25, "maximum": 30 },
+//     "email": { "type": "string", "format": "email" }
+//   },
+//   "required": ["name", "age", "email"]
+// }
+```
+
+Format detection: email, UUID, date, time, datetime, URI, IPv4, IPv6.
+
+### SQL DDL/DML Generation
+
+```rust
+use dx_datagen::schema::{to_sql_ddl, to_sql_insert, to_sql_insert_batch, SqlDialect};
+use serde_json::json;
+
+let data = json!({
+    "id": 1,
+    "name": "Alice",
+    "balance": 100.50,
+    "active": true
+});
+
+// CREATE TABLE statement
+let ddl = to_sql_ddl(&data, "users", SqlDialect::PostgreSQL);
+// CREATE TABLE users (
+//     id BIGINT,
+//     name TEXT,
+//     balance DOUBLE PRECISION,
+//     active BOOLEAN
+// );
+
+// INSERT statement
+let insert = to_sql_insert(&data, "users", SqlDialect::PostgreSQL);
+// INSERT INTO users (id, name, balance, active) VALUES (1, 'Alice', 100.5, TRUE);
+
+// Batch insert
+let records = vec![data, json!({"id": 2, "name": "Bob", "balance": 200.0, "active": false})];
+let batch = to_sql_insert_batch(&records, "users", SqlDialect::MySQL);
+```
+
+Supported dialects: `PostgreSQL`, `MySQL`, `SQLite`, `SqlServer`.
+
+### OpenAPI Mock Data
+
+```rust
+use dx_datagen::schema::{from_openapi, OpenApiSpec};
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+
+let mut rng = StdRng::seed_from_u64(42);
+
+// Parse OpenAPI spec (from JSON string)
+let spec: OpenApiSpec = serde_json::from_str(openapi_json)?;
+
+// Generate mock response for GET /users with 200 status
+let response = from_openapi(&mut rng, &spec, "/users", "get", "200");
+```
+
+Features:
+- Path and method lookup
+- `$ref` reference resolution
+- Content-type handling (application/json)
+- Response schema generation
+
+### Avro Schema Support
+
+```rust
+use dx_datagen::schema::from_avro_schema;
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+use serde_json::json;
+
+let mut rng = StdRng::seed_from_u64(42);
+
+let avro_schema = json!({
+    "type": "record",
+    "name": "User",
+    "fields": [
+        { "name": "id", "type": "long" },
+        { "name": "name", "type": "string" },
+        { "name": "active", "type": "boolean" },
+        { "name": "tags", "type": { "type": "array", "items": "string" } }
+    ]
+});
+
+let data = from_avro_schema(&mut rng, &avro_schema);
+// {"id": 123456789, "name": "xK9mPq2aB3", "active": true, "tags": ["abc", "def"]}
+```
+
+Supported Avro types:
+- Primitives: `null`, `boolean`, `int`, `long`, `float`, `double`, `bytes`, `string`
+- Complex: `record`, `enum`, `array`, `map`, `union`, `fixed`
+- Logical types: `date`, `time-millis`, `timestamp-millis`, `uuid`, `decimal`
+
+### GraphQL Mock Data
+
+```rust
+use dx_datagen::schema::{from_graphql_schema, from_graphql_query};
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+
+let mut rng = StdRng::seed_from_u64(42);
+
+let schema_sdl = r#"
+    type User {
+        id: ID!
+        name: String!
+        email: String
+        posts: [Post!]!
+    }
+
+    type Post {
+        id: ID!
+        title: String!
+        published: Boolean!
+    }
+
+    type Query {
+        user(id: ID!): User
+        users: [User!]!
+    }
+"#;
+
+// Generate data for a type
+let user = from_graphql_schema(&mut rng, schema_sdl, "User")?;
+// {"id": "550e8400-...", "name": "xK9mPq2aB3", "email": "user@example.com", "posts": [...]}
+
+// Execute a query
+let query = "{ user { id name posts { title } } }";
+let result = from_graphql_query(&mut rng, schema_sdl, query)?;
+// {"data": {"user": {"id": "...", "name": "...", "posts": [{"title": "..."}]}}}
+```
+
+Supported GraphQL features:
+- Types: `ID`, `String`, `Int`, `Float`, `Boolean`
+- Custom scalars: `DateTime`, `Date`, `Time`, `JSON`, `UUID`, `Email`, `URL`, `IP`
+- Lists: `[Type]`, `[Type!]`, `[Type]!`, `[Type!]!`
+- Non-null: `Type!`
+- Enums, nested types, type references
+
+## Expression DSL Module
+
+The expression module provides a faker-style expression DSL for generating data.
+
+```rust
+use dx_datagen::expression::evaluate;
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+
+let mut rng = StdRng::seed_from_u64(42);
+
+// Provider calls (faker-style)
+let name = evaluate(&mut rng, "#{Name.firstName}")?;           // "Emma"
+let email = evaluate(&mut rng, "#{Internet.email}")?;          // "emma@example.com"
+let company = evaluate(&mut rng, "#{Company.name}")?;          // "Acme Corp"
+
+// Mixed with literals
+let greeting = evaluate(&mut rng, "Hello, #{Name.firstName}!")?;
+
+// Regex generation
+let code = evaluate(&mut rng, "#{regexify '[A-Z]{3}-[0-9]{4}'}")?;  // "ABC-1234"
+
+// Numeric ranges
+let age = evaluate(&mut rng, "#{Number.between 18, 65}")?;     // "42"
+let price = evaluate(&mut rng, "#{Number.decimal 0.0, 100.0}")?; // "42.50"
+
+// Random choice
+let color = evaluate(&mut rng, "#{options.option 'red', 'green', 'blue'}")?;
+
+// Weighted choice
+let status = evaluate(&mut rng, "#{options.weighted 'active', 80, 'inactive', 20}")?;
+
+// Template patterns
+let phone = evaluate(&mut rng, "#{numerify '###-###-####'}")?; // "555-123-4567"
+let id = evaluate(&mut rng, "#{letterify '???-###'}")?;        // "ABC-123"
+```
+
+Available providers: `Name`, `Internet`, `Address`, `Company`, `Commerce`, `Vehicle`, `Science`, `Color`, `File`, `Lorem`, `Number`, `options`.
+
 ## Feature Flags
 
 | Feature | Description |
 |---------|-------------|
-| `chrono` | Enable temporal generators with chrono types (NaiveDate, NaiveTime, etc.) |
-| `geojson` | Enable GeoJSON point generation |
+| `temporal` | Enable temporal generators with chrono types |
+| `geo` | Enable GeoJSON point generation |
+| `schema` | Enable schema-based generation (JSON Schema, SQL, OpenAPI, Avro, GraphQL) |
+| `full` | Enable all features |
 
 ```toml
 [dependencies]
-dx-datagen = { path = "crates/datagen", features = ["chrono", "geojson"] }
+# Basic usage
+dx-datagen = { path = "crates/datagen" }
+
+# With specific features
+dx-datagen = { path = "crates/datagen", features = ["temporal", "geo"] }
+
+# With schema support
+dx-datagen = { path = "crates/datagen", features = ["schema"] }
+
+# All features
+dx-datagen = { path = "crates/datagen", features = ["full"] }
 ```
 
 ## Deterministic Generation
