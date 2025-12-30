@@ -11,7 +11,7 @@ description = "Data generation utilities for test data, random values, and prede
 default = []
 temporal = ["dep:chrono"]
 locales = []
-schema = ["dep:serde_json"]
+schema = ["dep:serde", "dep:serde_json"]
 geo = ["dep:geojson"]
 full = ["temporal", "locales", "schema", "geo"]
 
@@ -20,6 +20,7 @@ rand = "0.9"
 uuid = { version = "1", features = ["v4", "v7"] }
 ulid = "1"
 chrono = { version = "0.4", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
 geojson = { version = "0.24", optional = true }
 

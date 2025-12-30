@@ -78,6 +78,10 @@ pub mod temporal;
 // Geo module (always available, but GeoJSON output requires "geo" feature)
 pub mod geo;
 
+// Schema module - schema-based data generation (requires "schema" feature)
+#[cfg(feature = "schema")]
+pub mod schema;
+
 // Re-export commonly used items at crate root
 pub use generators::{
     alphanumeric, boolean, float_range, hex_bytes, hex_string, int_range, pick_one, shuffle,

@@ -43,7 +43,7 @@
 //! ```rust
 //! use rand::SeedableRng;
 //! use rand_chacha::ChaCha8Rng;
-//! use datagen::expression::evaluate;
+//! use dx_datagen::expression::evaluate;
 //!
 //! let mut rng = ChaCha8Rng::seed_from_u64(42);
 //!
